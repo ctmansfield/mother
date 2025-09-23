@@ -1,0 +1,9 @@
+/mother.egg-info/
+/build/
+/dist/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.venv/
+.env

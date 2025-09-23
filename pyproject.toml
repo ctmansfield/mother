@@ -1,16 +1,29 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "mother"
 version = "0.1.0"
-requires-python = ">=3.11"
+description = "Mother API and CLI"
+requires-python = ">=3.10"
 dependencies = [
-  "fastapi",
-  "uvicorn[standard]",
-  "httpx",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "httpx>=0.26",
   "pydantic>=2",
-  "typer",
-  "python-dotenv",
-  "requests"
+  "typer>=0.9",
+  "python-dotenv>=1.0",
+  "requests>=2.31"
 ]
 
 [project.scripts]
 mother = "mother.facehugger.cli:app"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+
+[tool.setuptools.packages.find]
+include = ["mother*"]
+exclude = ["ops*", "scripts*", "tests*"]
