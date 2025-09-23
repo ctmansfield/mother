@@ -19,11 +19,6 @@ def health():
     return {"status": "ok"}
 
 
-@app.get("/debug/echo")
-def debug_echo():
-    return {"ok": True, "note": "JSON works"}
-
-
 @app.get("/nudge/demo")
 def nudge_demo(user_id: str = "default"):
     msg = tone.apply(demo_nudge(), "routine")
