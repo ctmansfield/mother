@@ -1,3 +1,4 @@
+from mother.core import tone
 from fastapi import FastAPI
 from mother.core.nudges import NudgeRequest, compose_nudge, demo_nudge
 
@@ -11,7 +12,7 @@ def health():
 
 @app.post("/nudge/preview")
 def nudge_preview(nr: NudgeRequest):
-    return {"message": compose_nudge(nr)}
+    return {"message": tone.apply(compose_nudge(nr), "routine")}
 
 
 @app.get("/nudge/demo")

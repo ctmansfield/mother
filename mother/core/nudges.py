@@ -9,7 +9,7 @@ class NudgeRequest(BaseModel):
 
 
 def compose_nudge(nr: NudgeRequest) -> str:
-    recap = f"You planned {nr.routine}" + (f" because {nr.why}." if nr.why else ".")
+    recap = f"We scheduled {nr.routine}" + (f" because {nr.why}." if nr.why else ".")
     ask = f"Let’s take the first {nr.micro_step} now — {', '.join(nr.choices)}?"
     return f"{recap} {ask}"
 
