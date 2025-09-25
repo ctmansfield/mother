@@ -8,3 +8,13 @@ __pycache__/
 .venv/
 .env
 /data/
+#mother-gitignore-marker
+.venv/
+__pycache__/
+.DS_Store
+out/
+data/fixtures/
+
+# backup artifacts
+*.bak.*
+*.patched
