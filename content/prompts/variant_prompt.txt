@@ -1,0 +1,1 @@
+User prefers {tones}. Reasons: {reasons}. Create {k} variants encouraging {intent}. Include a 1-line why-now.

@@ -1,0 +1,6 @@
+policy:
+  budget_per_day: 6
+  cooldowns: { hydration: '90m', posture: '120m', movement: '60m' }
+  quiet_hours: ['22:00-07:00']
+  send_threshold: 0.28
+  penalty_dismiss: 0.2

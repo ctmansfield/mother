@@ -1,0 +1,10 @@
+ash:
+  holdout_rate: 0.10        # control split for randomized experimentation
+  join_window_s: 1800       # default join window if category-specific missing
+  min_cell: 20              # minimum exposures (t+c) to trust a cell
+  alpha: 1.0                # Beta/mean smoothing priors
+  beta: 1.0
+  tau: 0.01                 # default global threshold if no per-category override
+  default_uplift: 0.01
+  method: "to"              # "to" (Transformed Outcome) or "diff" (treat-ctrl rate diff)
+  features: [category, daypart, tone, channel]

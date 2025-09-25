@@ -1,0 +1,29 @@
+hydration:
+  - text: "Drink a glass of water—tiny reset."
+    tags: {tone: gentle, segments: [baseline-you, fatigued-you]}
+  - text: "Quick pour now = better focus later."
+    tags: {tone: strict, segments: [morning-you, baseline-you]}
+  - text: "Hydration checkpoint—take 3 sips."
+    tags: {tone: humor, segments: [active-you, baseline-you]}
+movement:
+  - text: "Stand up, stretch shoulders, 30 seconds."
+    tags: {tone: gentle, segments: [baseline-you, fatigued-you]}
+  - text: "Walk the hallway once—back in 2 minutes."
+    tags: {tone: strict, segments: [morning-you, active-you]}
+  - text: "Post-meeting lap? One quick loop."
+    tags: {tone: humor, segments: [baseline-you, active-you]}
+posture:
+  - text: "Un-hunch: roll shoulders back."
+    tags: {tone: gentle, segments: [baseline-you, fatigued-you]}
+  - text: "Check chair height + screen distance."
+    tags: {tone: strict, segments: [morning-you, baseline-you]}
+focus:
+  - text: "30-min deep focus—notifications off?"
+    tags: {tone: strict, segments: [morning-you, baseline-you]}
+  - text: "Tiny checklist: top 1 task now."
+    tags: {tone: gentle, segments: [baseline-you, fatigued-you]}
+sleep:
+  - text: "Wind-down: screens off 30 minutes earlier."
+    tags: {tone: gentle, segments: [fatigued-you, baseline-you]}
+  - text: "Prep tomorrow’s outfit—brain loves closure."
+    tags: {tone: humor, segments: [baseline-you]}

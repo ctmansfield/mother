@@ -1,0 +1,10 @@
+vasquez:
+  hours_per_day: 6       # number of best hours to allow per category (0..24)
+  neighbor_pad: 1        # expand each picked hour by ±pad
+  min_shows: 10          # minimum effective shows needed to trust a category
+  half_life_days: 14     # exponential decay half-life for history weighting
+  window_days: 30        # how much history to read from logs (rolling)
+  match_window_s: 1800   # join exposure→feedback if within 30m
+  alpha: 1.0             # Beta prior alpha for CTR smoothing
+  beta: 3.0              # Beta prior beta  for CTR smoothing
+  fallback_hours: [10,12,14,16,18,20]   # used if no data for a category

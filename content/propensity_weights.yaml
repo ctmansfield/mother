@@ -1,0 +1,18 @@
+# Default weights for Ripley (logistic regression). Edit to tune behavior.
+# Features are one-hot keys derived from the arm: daypart_|tone_|channel_|category_| + bias
+weights:
+  bias:  -0.50
+  daypart_morning:    0.02
+  daypart_midday:     0.05
+  daypart_afternoon:  0.15
+  daypart_evening:    0.04
+  tone_gentle:        0.20
+  tone_humor:         0.05
+  tone_strict:       -0.02
+  channel_push:       0.02
+  channel_in_app:     0.00
+  category_hydration: 0.05
+  category_posture:   0.03
+  category_movement:  0.04
+  category_focus:     0.03
+  category_sleep:    -0.01

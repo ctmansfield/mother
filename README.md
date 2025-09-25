@@ -1,7 +1,8 @@
-# mother (Nostromo)
+# MOTHER
+Local, privacy-first behavioral optimization framework (Alien-verse themed).
 
-A motherly, warm-but-firm nudging LLM. Local model on your main box; API+worker on the coach VM.
-
-- Model: local Ollama (llama3.1:8b) via OpenAI-compatible API
-- DB: Postgres at 192.168.1.225:55432
-- Services (VM): FastAPI (`api.py`) and worker (nudges), via Docker Compose
+Components: Mother Core (orchestrator/event bus), models (Nostromo, Ripley, Bishop, ...), content packs, scripts.
+## CI & Dev
+- `make install` to set up venv and dev deps
+- `make verify` to run synthetic checks
+- `make test` to run pytest

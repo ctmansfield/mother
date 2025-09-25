@@ -1,0 +1,11 @@
+lambert:
+  sources:
+    - content/templates/reminders.yaml
+    - content/templates/reminders_lambert.yaml
+  stopwords: [a,an,the,and,or,of,to,for,in,on,at,with,up,off,your,just]
+  weights:
+    keyword_overlap: 0.7      # context keywords vs text tokens
+    tone_match:      0.2      # prefer texts tagged for requested tone
+    segment_match:   0.1      # prefer texts tagged for current Acheron segment
+  diversity_penalty: 0.0      # reserved (text-level history not logged yet)
+  topn: 5                     # keep top-N candidates before tie-breaks

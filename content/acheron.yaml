@@ -1,0 +1,44 @@
+acheron:
+  k: 4                 # clusters
+  iters: 40            # kmeans iterations
+  window_days: 30      # history horizon
+  min_rows: 40         # need at least this many exposures to train
+  features:            # computed from nudges.csv (+ash_log.csv if present)
+    - hour_sin
+    - hour_cos
+    - dow_onehot       # expands to 7 dims internally
+    - ctr_overall
+    - ctr_hydration
+    - ctr_movement
+    - dismiss_rate
+    - night_flag
+  label_heuristics:    # simple human-readable labels based on centroids
+    - name: fatigued-you
+      when:
+        night_flag: ">= 0.5"
+        ctr_overall: "< 0.12"
+    - name: morning-you
+      when:
+        hour_cos: ">= 0.5"   # around morning/forenoon
+    - name: active-you
+      when:
+        ctr_movement: ">= 0.22"
+    - name: baseline-you
+      when: {}               # fallback
+  bias:                # how to bias selection for each segment
+    fatigued-you:
+      tone_pref:    [gentle, humor, strict]
+      channel_pref: [in_app, push]
+      threshold_delta: -0.02
+    morning-you:
+      tone_pref:    [strict, gentle, humor]
+      channel_pref: [push, in_app]
+      threshold_delta: 0.00
+    active-you:
+      tone_pref:    [humor, gentle, strict]
+      channel_pref: [push, in_app]
+      threshold_delta: 0.00
+    baseline-you:
+      tone_pref:    [gentle, humor, strict]
+      channel_pref: [push, in_app]
+      threshold_delta: 0.00

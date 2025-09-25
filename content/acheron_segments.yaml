@@ -1,0 +1,19 @@
+acheron_segments:
+  trained_at: '2025-09-24T23:20:55.184565'
+  feat_names:
+  - hour_sin
+  - hour_cos
+  - ctr_overall
+  - ctr_hydration
+  - ctr_movement
+  - dismiss_rate
+  - night_flag
+  - dow_0
+  - dow_1
+  - dow_2
+  - dow_3
+  - dow_4
+  - dow_5
+  - dow_6
+  centroids: []
+  labels: []

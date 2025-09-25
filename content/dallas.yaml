@@ -1,0 +1,8 @@
+dallas:
+  window_days: 45         # how far back to read history
+  half_life_days: 14      # recency decay for feedback
+  min_events: 12          # need at least this many (pos+neg) to trust
+  alpha: 1.0              # Beta smoothing priors
+  beta:  3.0
+  combine_weight: 0.25    # weight for Dallas when mixing with Ripley p
+  level: "arm"            # "arm" or "category_tone_channel" aggregation

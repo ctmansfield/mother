@@ -1,0 +1,7 @@
+weyland:
+  method: hash_ngrams      # simple local embedding (privacy-first)
+  ngram: 3                 # char n-grams
+  dim: 512                 # hashed vector size
+  normalize: true
+  use_index: true          # precompute embeddings for Lambert texts
+  context_sources: [reasons, segment, category]  # combined as context text

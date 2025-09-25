@@ -1,0 +1,15 @@
+# HUDSON — A/B experiments
+# Subject identity is taken from $MOTHER_SUBJECT (fallback: hostname)
+experiments:
+  - id: exp_move_tone_channel_v1
+    category: movement
+    start: "2025-09-01"
+    end:   "2026-01-01"
+    active: true          # kill-switch
+    traffic: 1.0          # percent of subjects in this test (0..1)
+    variants:
+      gentle_push:   { tone: gentle, channel: push,   weight: 0.40 }
+      humor_push:    { tone: humor,  channel: push,   weight: 0.30 }
+      gentle_inapp:  { tone: gentle, channel: in_app, weight: 0.30 }
+    metric: "act_10m"
+    note: "Baseline grid for movement; lightweight assignment + logging"

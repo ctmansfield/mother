@@ -1,18 +1,76 @@
 services:
+  vllm-5005:
+    image: vllm:cu121-ok
+    # either one of these works; prefer gpus: all on modern Docker
+    gpus: all
+    # runtime: nvidia
+    restart: unless-stopped
+    ports: ["5005:8000"]
+    volumes:
+      - /mnt/llmstore/hf:/hf
+    command:
+      - --model
+      - /hf/Qwen2.5-Coder-7B-Instruct
+      - --served-model-name
+      - qwen2.5-coder-7b-instruct
+      - --dtype
+      - float16
+      - --max-model-len
+      - "8192"
+      - --gpu-memory-utilization
+      - "0.92"
+    healthcheck:
+      # Use Python instead of curl (curl isn't in your committed image)
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=2).getcode()==200 else 1)\""]
+      interval: 20s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  # OpenAI-compatible proxy so tools/SDKs can hit :8001/v1/*
+  openai-proxy:
+    image: python:3.11-slim
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      UPSTREAM: "http://vllm-5005:8000"
+      # Optional auth:
+      # OPENAI_PROXY_KEY: ${OPENAI_PROXY_KEY}
+    ports: ["8001:8001"]
+    volumes:
+      - ./openai_proxy.py:/app/openai_proxy.py:ro
+    command: >
+      bash -lc "
+      pip install --no-cache-dir fastapi uvicorn httpx &&
+      uvicorn openai_proxy:app --host 0.0.0.0 --port 8001
+      "
+    depends_on:
+      vllm-5005:
+        condition: service_healthy
+
   mother-api:
     image: python:3.11-slim
     working_dir: /app
+    restart: unless-stopped
     volumes: ["../:/app"]
     command: bash -lc "pip install -e . && uvicorn mother.api:app --host 0.0.0.0 --port 8000"
     environment:
-      - MOTHER_MODEL_ENDPOINT=${MOTHER_MODEL_ENDPOINT}
+      - MOTHER_MODEL_ENDPOINT=${MOTHER_MODEL_ENDPOINT}   # e.g. http://vllm-5005:8000/v1
       - MOTHER_DB_DSN=${MOTHER_DB_DSN}
     ports: ["8000:8000"]
+    depends_on:
+      vllm-5005:
+        condition: service_healthy
+
   mother-worker:
     image: python:3.11-slim
     working_dir: /app
+    restart: unless-stopped
     volumes: ["../:/app"]
-    command: bash -lc "pip install -e . && python -c 'import time; print("worker online"); time.sleep(360000)'"
+    command: bash -lc "pip install -e . && python -c 'import time; print(\"worker online\"); time.sleep(360000)'"
     environment:
       - MOTHER_MODEL_ENDPOINT=${MOTHER_MODEL_ENDPOINT}
       - MOTHER_DB_DSN=${MOTHER_DB_DSN}
+    depends_on:
+      vllm-5005:
+        condition: service_healthy

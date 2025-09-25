@@ -1,0 +1,15 @@
+nostromo:
+  w_ripley: 0.6
+  w_dallas: 0.25
+  w_uplift: 0.15
+  vasquez_bonus: 0.03
+  pref_bonus: 0.02
+  min_p: 0.05
+  use_threshold: true
+  topk: 6
+  explain_top: 3
+  fallback: ripley
+  uplift_source:
+    path: content/ash_table.yaml
+  w_weyland: 0.1
+  w_gorman: 0.1

@@ -1,0 +1,13 @@
+vasquez_windows:
+  generated_at: "2025-09-24T22:03:23.771623"
+  by_category:
+    hydration:
+      hours: [10,12,14,16,18,20]
+    movement:
+      hours: [10,12,14,16,18,20]
+    posture:
+      hours: [10,12,14,16,18,20]
+    focus:
+      hours: [10,12,14,16,18,20]
+    sleep:
+      hours: [10,12,14,16,18,20]

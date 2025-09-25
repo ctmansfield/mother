@@ -1,0 +1,14 @@
+bishop:
+  # Default algo for convenience (you can still override via CLI)
+  default_algo: linucb         # linucb | thompson | beta | contextual
+  # LinUCB
+  linucb:
+    alpha: 1.0                 # exploration weight
+    l2: 1.0                    # ridge regularization (A starts as l2*I)
+  # Thompson (linear Gaussian approx)
+  thompson:
+    v: 0.1                     # posterior scale
+    l2: 1.0
+  # Shared
+  half_life_days: 21           # recency decay for offline training
+  reward_cap: 1.0

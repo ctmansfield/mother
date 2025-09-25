@@ -1,0 +1,9 @@
+gorman:
+  order: 3             # n-gram order over categories (1..3 recommended)
+  window_days: 45      # how much history to read from logs
+  half_life_days: 14   # recency decay for counts
+  min_events: 20       # need this many total events to trust a context
+  add_alpha: 0.5       # add-k smoothing
+  backoff: 0.4         # interpolate with lower orders
+  fallback_prior: uniform   # uniform | freq
+  model_path: out/gorman_model.json

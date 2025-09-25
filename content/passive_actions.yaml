@@ -1,0 +1,19 @@
+passive:
+  # Map raw event names to categories (used if CSV lacks category)
+  map:
+    water_intake_ml: hydration
+    water_log_delta: hydration
+    steps_delta: movement
+    walk_segment: movement
+    posture_corrected: posture
+    focus_session_start: focus
+    dnd_on: focus
+    winddown_on: sleep
+    lights_out: sleep
+  # Join windows per category (seconds)
+  join_window_s:
+    hydration: 1800
+    movement: 3600
+    posture: 1800
+    focus: 900
+    sleep: 7200

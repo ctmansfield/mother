@@ -1,0 +1,17 @@
+rules:
+  elevated_rhr:
+    metric: resting_hr
+    cond: "> baseline + 6"
+    persist: "2d"
+    tier: ALERT
+    category: hydration
+    msg: "Resting HR elevated 2 days—lighter activity + hydrate."
+    cooldown: "24h"
+  low_hrv:
+    metric: hrv
+    cond: "< baseline * 0.90"
+    persist: "1d"
+    tier: NOTICE
+    category: sleep
+    msg: "HRV lower than usual—prioritize recovery."
+    cooldown: "12h"

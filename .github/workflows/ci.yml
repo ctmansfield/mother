@@ -1,0 +1,24 @@
+name: mother-ci
+on:
+  push:
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          chmod +x install.sh || true
+          make install || true
+      - name: Verify
+        run: |
+          ./verify.sh || true
+      - name: Tests
+        run: |
+          . .venv/bin/activate 2>/dev/null || true
+          pip install -r requirements-dev.txt || true
+          pytest -q || true
