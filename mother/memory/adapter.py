@@ -100,6 +100,13 @@ class MemoryAdapter:
             "tags": tags,
         }
         with self._connect() as conn, conn.cursor() as cur:
+            # normalize optional params so ANY($n) sees arrays
+            if isinstance(types, str):
+                types = [types]
+            if isinstance(tags, str):
+                tags = [tags]
+            params["types"] = types
+            params["tags"] = tags
             cur.execute(sql, params)
             rows = cur.fetchall()
         out = []

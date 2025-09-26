@@ -16,7 +16,7 @@ def cmd_upsert(args: argparse.Namespace) -> None:
         payload=json.loads(args.payload) if args.payload else None,
         confidence=float(args.confidence),
     )
-    print(json.dumps({"id": vid, "ok": True}, ensure_ascii=False))
+    print(json.dumps({"id": vid, "ok": True}, ensure_ascii=False, default=str))
 
 
 def cmd_search(args: argparse.Namespace) -> None:
@@ -28,7 +28,7 @@ def cmd_search(args: argparse.Namespace) -> None:
         types=args.types,
         tags=args.tags,
     )
-    print(json.dumps({"results": rows}, ensure_ascii=False))
+    print(json.dumps({"results": rows}, ensure_ascii=False, default=str))
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -1,275 +1,199 @@
 #!/usr/bin/env python3
-import os
 import csv
-import json
-import math
-import argparse
+import os
 import time
-from datetime import datetime
+import yaml
+import json
+import random
 
 try:
     import numpy as np
 except Exception:
     np = None
 
+FEATS = [
+    "daypart_morning",
+    "daypart_midday",
+    "daypart_afternoon",
+    "daypart_evening",
+    "tone_gentle",
+    "tone_humor",
+    "tone_strict",
+    "channel_push",
+    "channel_in_app",
+    "category_hydration",
+    "category_posture",
+    "category_movement",
+    "category_focus",
+    "category_sleep",
+]
+D = len(FEATS)
 
-def load_yaml(path):
+
+def _cfg():
     try:
-        import yaml
-
-        with open(path, "r") as f:
-            return yaml.safe_load(f)
+        return (yaml.safe_load(open("content/acheron.yaml")) or {}).get("acheron", {})
     except Exception:
-        return None
+        return {}
 
 
-def read_nudges(path="out/nudges.csv", start_ts=None):
+def _parts(arm):
+    p = (arm or "").split("|")
+    return (
+        p[0] if len(p) > 0 else "",
+        p[1] if len(p) > 1 else "",
+        p[2] if len(p) > 2 else "",
+        p[3] if len(p) > 3 else "",
+    )
+
+
+def _x_from_arm(arm):
+    dp, tn, ch, ct = _parts(arm)
+    x = [0.0] * D
+
+    def set1(name):
+        if name in FEATS:
+            x[FEATS.index(name)] = 1.0
+
+    set1(f"daypart_{dp}")
+    set1(f"tone_{tn}")
+    set1(f"channel_{ch}")
+    set1(f"category_{ct}")
+    if np is not None:
+        return np.array(x, dtype=float)
+    return x
+
+
+def _decay(now, ts, half):
+    if not half or half <= 0:
+        return 1.0
+    age = (now - ts) / 86400.0
+    return 0.5 ** (age / half)
+
+
+def _read_rows(path, start_ts):
     rows = []
     if not os.path.exists(path):
         return rows
     with open(path, "r") as f:
         rd = csv.reader(f)
         for r in rd:
-            if not r:
+            if not r or len(r) < 2:
                 continue
             try:
                 ts = int(r[0])
                 arm = r[1]
-                rw = r[2] if len(r) > 2 and r[2] != "" else None
-                if (start_ts is not None) and (ts < start_ts):
-                    continue
-                reward = int(rw) if rw is not None else None
-                rows.append((ts, arm, reward))
+                rw = None if len(r) < 3 or r[2] == "" else float(r[2])
             except Exception:
                 continue
+            if ts < start_ts:
+                continue
+            rows.append((ts, arm, 1.0 if (rw or 0.0) > 0 else 0.0))
+    rows.sort(key=lambda t: t[0])
     return rows
 
 
-def feats_for_ts(ts):
-    dt = datetime.fromtimestamp(ts)
-    h = dt.hour
-    m = dt.minute
-    xh = (h * 60 + m) / 1440.0 * 2 * math.pi
-    hour_sin = math.sin(xh)
-    hour_cos = math.cos(xh)
-    dow = dt.weekday()  # 0..6
-    return hour_sin, hour_cos, dow
-
-
-def build_dataset(nudges, window_days=30):
-    if not nudges:
-        return [], [], []
-    cutoff = int(time.time()) - window_days * 86400
-    nudges = [r for r in nudges if r[0] >= cutoff]
-    if not nudges:
-        return [], [], []
-    # global CTRs
-    shows = 0
-    clicks = 0
-    dismiss = 0
-    by_cat = {"hydration": [0, 0], "movement": [0, 0]}
-    for ts, arm, r in nudges:
-        shows += 1
-        if r == 1:
-            clicks += 1
-        if r == 0:
-            dismiss += 1
-        parts = (arm or "").split("|")
-        cat = parts[3] if len(parts) > 3 else ""
-        if cat in by_cat:
-            by_cat[cat][0] += 1
-            if r == 1:
-                by_cat[cat][1] += 1
-    ctr_overall = (clicks / shows) if shows else 0.0
-    ctr_hyd = (
-        (by_cat["hydration"][1] / by_cat["hydration"][0])
-        if by_cat["hydration"][0]
-        else 0.0
-    )
-    ctr_move = (
-        (by_cat["movement"][1] / by_cat["movement"][0])
-        if by_cat["movement"][0]
-        else 0.0
-    )
-    dismiss_rate = (dismiss / shows) if shows else 0.0
-
-    X = []
-    meta = []
-    for ts, arm, r in nudges:
-        hour_sin, hour_cos, dow = feats_for_ts(ts)
-        night_flag = (
-            1.0
-            if (
-                hour_cos < -0.3
-                or (
-                    datetime.fromtimestamp(ts).hour >= 22
-                    or datetime.fromtimestamp(ts).hour < 7
-                )
-            )
-            else 0.0
-        )
-        row = [
-            hour_sin,
-            hour_cos,
-            ctr_overall,
-            ctr_hyd,
-            ctr_move,
-            dismiss_rate,
-            night_flag,
-        ]
-        # expand DOW onehot
-        for d in range(7):
-            row.append(1.0 if d == dow else 0.0)
-        X.append(row)
-        meta.append((ts, arm, r))
-    return (
-        X,
-        meta,
-        [
-            "hour_sin",
-            "hour_cos",
-            "ctr_overall",
-            "ctr_hydration",
-            "ctr_movement",
-            "dismiss_rate",
-            "night_flag",
-        ]
-        + [f"dow_{i}" for i in range(7)],
-    )
-
-
-def kmeans(X, k=4, iters=40):
-    # X: list of lists
-    if np is None:
-        # simple pure python kmeans (cosine-ish via L2)
-        import random
-
-        n = len(X)
-        d = len(X[0])
-        C = [X[i] for i in [int(random.random() * n) for _ in range(k)]]
-        for _ in range(iters):
-            asn = [
-                min(
-                    range(k),
-                    key=lambda j: sum((X[i][m] - C[j][m]) ** 2 for m in range(d)),
-                )
-                for i in range(n)
-            ]
-            newC = [[0.0] * d for _ in range(k)]
-            cnt = [0] * k
-            for i, a in enumerate(asn):
-                cnt[a] += 1
-                for m in range(d):
-                    newC[a][m] += X[i][m]
-            for j in range(k):
-                if cnt[j] > 0:
-                    newC[j] = [v / cnt[j] for v in newC[j]]
-                else:
-                    newC[j] = C[j]
-            C = newC
-        return C, asn
-    else:
-        Xn = np.array(X, dtype=float)
-        n, d = Xn.shape
-        rng = np.random.default_rng()
-        C = Xn[rng.choice(n, size=k, replace=False)]
+def _kmeans(X, W, k, iters):
+    # X: list/np (n,D), W: weights (n,)
+    n = len(X)
+    idx = list(range(n))
+    random.shuffle(idx)
+    pick = idx[:k] if n >= k else [0] * k
+    if np is not None:
+        C = np.stack([X[i] for i in pick], axis=0).astype(float)
+        w = np.array(W, dtype=float)
         for _ in range(iters):
             # assign
-            # squared distances
-            dists = ((Xn[:, None, :] - C[None, :, :]) ** 2).sum(axis=2)
-            asn = np.argmin(dists, axis=1)
+            dists = ((X[:, None, :] - C[None, :, :]) ** 2).sum(axis=2)  # (n,k)
+            A = np.argmin(dists, axis=1)
             # update
             for j in range(k):
-                pts = Xn[asn == j]
-                if len(pts) > 0:
-                    C[j] = pts.mean(axis=0)
-        return C.tolist(), asn.tolist()
-
-
-def label_centroids(C, feat_names, cfg):
-    labs = []
-    rules = cfg.get("label_heuristics", [])
-    # index lookup
-    idx = {n: i for i, n in enumerate(feat_names)}
-
-    def val(c, name):
-        i = idx.get(name)
-        return c[i] if i is not None else 0.0
-
-    for c in C:
-        chosen = None
-        for r in rules:
-            ok = True
-            for k, expr in (r.get("when") or {}).items():
-                v = val(c, k)
-                try:
-                    expr = expr.strip()
-                    if expr.startswith(">="):
-                        ok &= v >= float(expr[2:].strip())
-                    elif expr.startswith("<="):
-                        ok &= v <= float(expr[2:].strip())
-                    elif expr.startswith(">"):
-                        ok &= v > float(expr[1:].strip())
-                    elif expr.startswith("<"):
-                        ok &= v < float(expr[1:].strip())
-                    else:
-                        ok &= False
-                except Exception:
-                    ok = False
-            if ok:
-                chosen = r.get("name")
-                break
-        labs.append(chosen or "baseline-you")
-    return labs
+                mask = A == j
+                ww = w[mask]
+                if ww.size == 0 or ww.sum() <= 0:
+                    C[j] = X[random.randrange(n)]
+                else:
+                    C[j] = (X[mask] * ww[:, None]).sum(axis=0) / max(ww.sum(), 1e-9)
+        return C, A
+    else:
+        # pure python
+        C = [X[i][:] for i in pick]
+        A = [0] * n
+        for _ in range(iters):
+            # assign
+            for i in range(n):
+                bestj = 0
+                bestd = 1e18
+                for j in range(k):
+                    d = sum((X[i][d] - C[j][d]) ** 2 for d in range(len(X[i])))
+                    if d < bestd:
+                        bestd = d
+                        bestj = j
+                A[i] = bestj
+            # update
+            for j in range(k):
+                num = [0.0] * len(X[0])
+                den = 0.0
+                for i in range(n):
+                    if A[i] == j:
+                        w = W[i]
+                        den += w
+                        for d in range(len(X[i])):
+                            num[d] += X[i][d] * w
+                if den > 0:
+                    C[j] = [v / den for v in num]
+        return C, A
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="content/acheron_segments.yaml")
-    args = ap.parse_args()
-    cfg = (load_yaml("content/acheron.yaml") or {}).get("acheron", {})
+    cfg = _cfg()
+    now = time.time()
+    start = (
+        now - int(cfg.get("half_life_days", 21)) * 86400 * 3
+    )  # read a few half-lives
+    rows = _read_rows("out/nudges.csv", start)
+    if len(rows) < int(cfg.get("min_events", 40)):
+        print(json.dumps({"status": "insufficient_data", "rows": len(rows)}))
+        return
+    X = []
+    W = []
+    Y = []
+    for ts, arm, rw in rows:
+        x = _x_from_arm(arm)
+        w = _decay(now, ts, float(cfg.get("half_life_days", 21)))
+        X.append(x)
+        W.append(w)
+        Y.append(rw)
+    if np is not None:
+        X = np.array(X, dtype=float)
     k = int(cfg.get("k", 4))
-    iters = int(cfg.get("iters", 40))
-    window_days = int(cfg.get("window_days", 30))
-    min_rows = int(cfg.get("min_rows", 40))
-    nudges = read_nudges(
-        "out/nudges.csv", start_ts=int(time.time()) - window_days * 86400
-    )
-    X, meta, feat_names = build_dataset(nudges, window_days)
-    if not X or len(X) < min_rows:
-        # write empty (fallback to baseline)
-        out = {
-            "acheron_segments": {
-                "trained_at": datetime.now().isoformat(),
-                "feat_names": feat_names,
-                "centroids": [],
-                "labels": [],
-            }
-        }
-    else:
-        C, asn = kmeans(X, k=k, iters=iters)
-        labels = label_centroids(C, feat_names, cfg)
-        out = {
-            "acheron_segments": {
-                "trained_at": datetime.now().isoformat(),
-                "feat_names": feat_names,
-                "centroids": C,
-                "labels": labels,
-            }
-        }
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    try:
-        import yaml
-
-        with open(args.out, "w") as f:
-            yaml.safe_dump(out, f, sort_keys=False)
-    except Exception:
-        # json fallback
-        with open(args.out, "w") as f:
-            f.write(json.dumps(out))
-    print(
-        json.dumps({"written": args.out, "k": len(out["acheron_segments"]["labels"])})
-    )
+    iters = int(cfg.get("iters", 25))
+    C, A = _kmeans(X, W, k, iters)
+    # stats
+    seg_stats = [{"shows": 0, "clicks": 0} for _ in range(k)]
+    for i, seg in enumerate(list(A if np is not None else A)):
+        seg_stats[seg]["shows"] += 1
+        seg_stats[seg]["clicks"] += 1 if Y[i] > 0 else 0
+    for s in seg_stats:
+        s["ctr"] = (s["clicks"] / s["shows"]) if s["shows"] > 0 else 0.0
+    # names
+    names = cfg.get("names", {}) or {}
+    seg_names = {}
+    for j in range(k):
+        seg_names[str(j)] = names.get(j, names.get(str(j), f"Segment-{j}"))
+    # write model
+    model = {
+        "feats": FEATS,
+        "k": k,
+        "centroids": (C.tolist() if np is not None else C),
+        "stats": seg_stats,
+        "names": seg_names,
+        "generated_at": int(now),
+    }
+    os.makedirs("content", exist_ok=True)
+    with open("content/acheron_model.yaml", "w") as f:
+        yaml.safe_dump({"acheron_model": model}, f, sort_keys=False)
+    print(json.dumps({"status": "ok", "k": k, "rows": len(rows)}))
 
 
 if __name__ == "__main__":

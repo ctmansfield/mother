@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 def upsert_memory_sql(distance_ops: str = "vector_cosine_ops") -> str:
-    return f"""
+    return """
     INSERT INTO memory_item (
         id, user_id, type, text, tags, confidence, ttl_days, retention_policy,
         embedding_model, embedding_dim, embedding, payload
@@ -34,8 +34,8 @@ def search_memory_sql(metric: str = "cosine") -> str:
            (embedding <-> %(query_vec)s::vector) AS distance
     FROM memory_item
     WHERE user_id = %(user_id)s
-      AND (%(types)s IS NULL OR type = ANY (%(types)s))
-      AND (%(tags)s IS NULL OR tags && %(tags)s)
+      AND (%(types)s::text[] IS NULL OR type = ANY (%(types)s::text[]))
+      AND (%(tags)s::text[] IS NULL OR tags && %(tags)s::text[])
     ORDER BY embedding <-> %(query_vec)s::vector
     LIMIT %(limit)s
     ;
