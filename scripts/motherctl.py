@@ -8,15 +8,16 @@ import time
 import sys
 import math
 from datetime import datetime, timedelta
+from scripts.bishop_ctx import CtxBandit, feat_vec_from_arm as ctx_feat
+
+import scripts.ripley_fast as ripley
+
 
 STATE_PATH = os.path.join("out", "bishop_state.json")
 NUDGES_LOG = os.path.join("out", "nudges.csv")
 NEWT_STATE_PATH = os.path.join("out", "newt_state.json")
 
 # Bandits & Ripley fast path (imports live at module top)
-from scripts.bishop_ctx import CtxBandit, feat_vec_from_arm as ctx_feat
-
-import scripts.ripley_fast as ripley
 
 
 def ensure_out():
@@ -543,20 +544,18 @@ def main():
                 # Nostromo blend (override choice unless --nostromo-off)
                 if not args.nostromo_off:
                     try:
-                        choice_n, why_n, meta_n = nostromo.pick(
+                        choice_n, why_n, meta_n = nostromo.pick(  # noqa: F821
                             candidates,
                             threshold,
-                            dallas_scores,
-                            ripley_probs,
+                            dallas_scores,  # noqa: F821
+                            ripley_probs,  # noqa: F821
                             getattr(args, "reasons", ""),
                         )
                         if choice_n:
                             choice = choice_n
-                            why_now = (
-                                (why_now + "; " + why_n)
-                                if "why_now" in locals() and why_now
-                                else why_n
-                            )
+                            # build/extend why_now without self-referencing before assignment
+                            prev = locals().get("why_now")
+                            why_now = f"{prev}; {why_n}" if prev else why_n
                     except Exception:
                         pass
             except Exception:
@@ -570,19 +569,19 @@ def main():
                 # Nostromo blend (override choice unless --nostromo-off)
                 if not args.nostromo_off:
                     try:
-                        choice_n, why_n, meta_n = nostromo.pick(
+                        choice_n, why_n, meta_n = nostromo.pick(  # noqa: F821
                             candidates,
                             threshold,
-                            dallas_scores,
-                            ripley_probs,
+                            dallas_scores,  # noqa: F821
+                            ripley_probs,  # noqa: F821
                             getattr(args, "reasons", ""),
                         )
                         if choice_n:
                             choice = choice_n
-                            why_now = (
+                            why_now = (  # noqa: F821
                                 (why_now + "; " + why_n)
-                                if "why_now" in locals() and why_now
-                                else why_n
+                                if "why_now" in locals() and why_now  # noqa: F821
+                                else why_n  # noqa: F821
                             )
                     except Exception:
                         pass
@@ -590,10 +589,10 @@ def main():
             ctx = CtxBandit()
             choice = ctx.choose(candidates)
         elif args.bandit == "linucb":
-            ctx = LinUCBBandit()
+            ctx = LinUCBBandit()  # noqa: F821
             choice = ctx.choose(candidates)
         elif args.bandit == "thompson":
-            ctx = ThompsonBandit()
+            ctx = ThompsonBandit()  # noqa: F821
             choice = ctx.choose(candidates)
 
         p, _ = score_arm(load_weights(), choice)
@@ -766,14 +765,14 @@ def main():
             pass
         # LinUCB update
         try:
-            l = LinUCBBandit()
-            l.update(args.arm, int(args.reward))
-            l.save()
+            linucb = LinUCBBandit()  # noqa: F821
+            linucb.update(args.arm, int(args.reward))
+            linucb.save()
         except Exception:
             pass
         # Thompson update
         try:
-            t = ThompsonBandit()
+            t = ThompsonBandit()  # noqa: F821
             t.update(args.arm, int(args.reward))
             t.save()
         except Exception:

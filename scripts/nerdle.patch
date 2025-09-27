@@ -1,0 +1,131 @@
+diff --git a/mother/app/nerdle_api.py b/mother/app/nerdle_api.py
+--- a/mother/app/nerdle_api.py
++++ b/mother/app/nerdle_api.py
+@@ -1,17 +1,27 @@
+-from fastapi import FastAPI
++from fastapi import FastAPI, HTTPException
++import json
++from typing import Any, Dict, List, Optional
+ import uuid
+
+-from mother.app.nerdle.engine import (
+-    tiles_from_guess,
+-    try_make_target,
+-    constraints_from_history,
+-    suggest_probe,
+-)
++from mother.app.nerdle.engine import (
++    tiles_from_guess,
++    try_make_target,
++)
+ from mother.app.nerdle.storage import load_game, save_game
+@@
+ app = FastAPI()
+
++# ---------------------------------------------------------------------------
++# Helpers
++# ---------------------------------------------------------------------------
++def _as_json(v: Any):
++    """Return a Python dict/list for JSON/JSONB DB fields, tolerating strings."""
++    if isinstance(v, (dict, list)):
++        return v
++    if v in (None, ""):
++        return {}
++    return json.loads(v)
++
+ # (any existing Pydantic models / routes above or below remain unchanged)
+@@
+ def start_game(req: StartRequest):
+-    target = try_make_target(req.length, req.ops)
+-    if not target:
+-        raise HTTPException(500, "could not generate target of requested length/ops")
+-    row = {
++    target = try_make_target(req.length, req.ops)
++    if not target:
++        raise HTTPException(500, "could not generate target of requested length/ops")
++    difficulty = getattr(req, "difficulty", None) or "normal"
++    row = {
+         "game_id": str(uuid.uuid4()),
+         "user_id": req.user_id,
+         "target": target,
+         "max_attempts": req.max_attempts,
+         "attempts_used": 0,
+-        "history": json.dumps([]),
+-        "settings": json.dumps(
+-            {
+-                "length": req.length,
+-                "ops": req.ops,
+-                "allow_multi_digit": True,
+-            }
+-        ),
+-        "status": "active",
+-        "difficulty": getattr(req, "difficulty", "normal"),
++        "history": [],
++        "settings": {
++            "length": req.length,
++            "ops": req.ops,
++            "allow_multi_digit": True,
++        },
++        "status": "active",
++        "difficulty": difficulty,
+     }
+     save_game(row)
+     return {
+@@
+ def make_guess(req: GuessRequest):
+     row = load_game(req.game_id, req.user_id)
+-    target = row["target"]
+-    length = json.loads(row["settings"])["length"]
+-    ops = json.loads(row["settings"])["ops"]
++    target = row["target"]
++    settings = _as_json(row["settings"])
++    length = settings.get("length", 8)
++    ops = settings.get("ops", "+-*/")
+@@
+-    hist = json.loads(row["history"])
++    hist = _as_json(row["history"]) or []
+     hist.append(
+         {
+             "guess": guess,
+             "tiles": tiles,
+         }
+     )
+     row["attempts_used"] += 1
+-    row["history"] = json.dumps(hist)
++    row["history"] = hist
+@@
+ def get_hint(req: HintRequest):
+-    row = load_game(req.game_id, req.user_id)
+-    hist = json.loads(row["history"])
+-    target = row["target"]
+-    length = json.loads(row["settings"])["length"]
++    row = load_game(req.game_id, req.user_id)
++    hist = _as_json(row["history"]) or []
++    target = row["target"]
++    settings = _as_json(row["settings"])
++    length = settings.get("length", 8)
+@@
+-    if req.kind == "operator":
+-        ops = [ch for ch in target if ch in OPS]
+-        return {"hint": f"Operator set includes: {''.join(sorted(set(ops)))}"}
++    if req.kind == "operator":
++        allowed_ops = settings.get("ops", "+-*/")
++        ops_in_target = [ch for ch in target if ch in allowed_ops]
++        return {"hint": f"Operator set includes: {''.join(sorted(set(ops_in_target)))}"}
+@@
+ def coach(req: CoachRequest):
+-    row = load_game(req.game_id, req.user_id)
+-    hist = json.loads(row["history"])
+-    settings = json.loads(row["settings"])
++    row = load_game(req.game_id, req.user_id)
++    hist = _as_json(row["history"]) or []
++    settings = _as_json(row["settings"])
+     cns = constraints_from_history(hist)
+     tips = coaching_tips(hist)
+@@
+-# Coaching (constraints + simple next-probe heuristic)
+-# ──────────────────────────────────────────────────────────────────────────────
+-# NOTE: If you keep local definitions of `constraints_from_history` and
+-# `suggest_probe` below, ensure you do NOT import them above to avoid F811.
++# NOTE: If you keep local definitions of `constraints_from_history` and
++# `suggest_probe` below, ensure they are not also imported to avoid F811.

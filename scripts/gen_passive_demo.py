@@ -25,7 +25,7 @@ def main():
             wr.writerow(["ts", "event", "value", "category"])
         for row in r:
             ts = int(row["ts"])
-            arm = row["arm"]
+            _ = row["arm"]  # unused; read for compatibility
             cat = row["category"]
             treat = int(row["treatment"])
             # modest uplift: treatment more likely to act

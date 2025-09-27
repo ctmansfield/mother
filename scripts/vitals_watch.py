@@ -26,11 +26,11 @@ def parse_days(s):
     if s.endswith("d"):
         try:
             return int(float(s[:-1]))
-        except:
+        except Exception:
             return 1
     try:
         return int(float(s))
-    except:
+    except Exception:
         return 1
 
 
