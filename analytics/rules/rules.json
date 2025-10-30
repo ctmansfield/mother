@@ -1,0 +1,16 @@
+{
+  "rules": [
+    {
+      "id": "dev_rule_1",
+      "event": "night_hypo_60m",
+      "if_all": [
+        {
+          "feature": "cgm_delta_10",
+          "op": "<=",
+          "value": -1.0
+        }
+      ],
+      "action": "slow_carb_protein_snack"
+    }
+  ]
+}

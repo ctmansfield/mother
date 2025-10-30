@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+.tile {
+  @apply w-12 h-12 md:w-14 md:h-14 grid place-items-center text-xl md:text-2xl font-bold rounded-lg border border-tile-border select-none;
+  background: theme(colors.tile.empty);
+}
+.tile-correct { background: theme(colors.tile.correct); border-color: transparent; }
+.tile-present { background: theme(colors.tile.present); border-color: transparent; }
+.tile-absent  { background: theme(colors.tile.absent);  border-color: transparent; }
+
+.button {
+  @apply inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold bg-neutral-800 hover:bg-neutral-700 active:scale-[.98] transition;
+}

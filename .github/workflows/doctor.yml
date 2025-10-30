@@ -1,0 +1,64 @@
+name: Mother Doctor
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install light deps
+        run: |
+          python -m pip install --upgrade pip
+          # doctor.py may read YAML; ensure PyYAML is available
+          pip install pyyaml >/dev/null 2>&1 || true
+
+      - name: Run doctor
+        run: |
+          mkdir -p out || true
+          python scripts/doctor.py > doctor.json || echo '{}' > doctor.json
+          python - <<'PY'
+          import json, os
+          p='doctor.json'
+          try:
+            d=json.load(open(p))
+            def yesno(x): return "yes" if x else "no"
+            lines=[
+              "# Mother Doctor Report",
+              "",
+              f"**Generated:** {d.get('now','unknown')}",
+              "",
+              "## Policy",
+              f"- Quiet hours active: **{yesno(d.get('policy',{}).get('quiet_active'))}**",
+              f"- Daily budget: **{d.get('policy',{}).get('budget_per_day','-')}**",
+              f"- Send threshold: **{d.get('policy',{}).get('send_threshold','-')}**",
+              "",
+              "## Vasquez",
+              f"- Windows loaded for categories: **{', '.join(d.get('vasquez',{}).get('categories',[])) or '(none)'}**",
+              "",
+              "## Suggestions",
+            ]
+            sugg=d.get('suggestions') or []
+            if not sugg: lines.append("- (none)")
+            else: lines += [f"- {s}" for s in sugg]
+            open(os.environ.get('GITHUB_STEP_SUMMARY','/tmp/summary.md'),'w').write("\n".join(lines))
+          except Exception as e:
+            open(os.environ.get('GITHUB_STEP_SUMMARY','/tmp/summary.md'),'w').write(f"# Mother Doctor Report\n\n(doctor.json parse error: {e})\n")
+          PY
+
+
+      - name: Upload doctor.json artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-json
+          path: doctor.json
+          retention-days: 7

@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Health Stack API
+  version: 0.0.1
+paths:
+  /api/models/predict:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model: { type: string }
+                features: { type: object }
+      responses:
+        '200':
+          description: ok
+  /api/behavior/events:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: ok
+  /api/reminders:
+    get:
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string }
+        - in: query
+          name: to
+          schema: { type: string }
+      responses:
+        '200': { description: ok }
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: ok }

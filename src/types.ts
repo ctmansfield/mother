@@ -1,0 +1,56 @@
+export type TileState = "correct" | "present" | "absent" | "empty";
+
+export type StartRequest = {
+  user_id: string;
+  difficulty?: "normal" | "hard" | string;
+  length?: number;
+  ops?: string;
+  max_attempts?: number;
+};
+export type StartResponse = {
+  game_id: string;
+  user_id: string;
+  length: number;
+  max_attempts: number;
+  attempts_used: number;
+  status: "active" | "won" | "lost";
+};
+
+export type GuessRequest = {
+  game_id: string;
+  user_id: string;
+  guess: string;
+};
+
+export type ServerTile =
+  | { ch?: string; state: "correct" | "present" | "absent" }
+  | "correct"
+  | "present"
+  | "absent";
+
+export type GuessResponse = {
+  valid: boolean;
+  reason?: string | null;
+  tiles?: ServerTile[] | null;
+  attempts_used?: number;
+  attempts_left?: number;
+  status?: "active" | "won" | "lost";
+  hint?: string | null;
+};
+
+export type HintKind = "position" | "operator";
+export type HintRequest = { game_id: string; user_id: string; kind: HintKind };
+export type HintResponse = { hint: string };
+
+export type Constraints = {
+  must_have?: string[];
+  cannot_have?: string[];
+  fixed?: Record<number, string>; // position -> char
+  banned?: Record<number, string[]>; // position -> disallowed chars
+};
+
+export type CoachResponse = {
+  tips?: string[];
+  constraints?: Constraints;
+  probe?: string;
+};

@@ -1,0 +1,9 @@
+import type { StartRequest, StartResponse, GuessRequest, GuessResponse, HintRequest, HintResponse, CoachResponse } from "../types";
+import { getSettings } from "../state/SettingsContext";
+async function j<T>(res: Response): Promise<T> { if(!res.ok){ throw new Error(`HTTP ${res.status}: ${await res.text()}`); } return res.json() as Promise<T>; }
+export const api = {
+  async start(req: StartRequest){ const b=getSettings().apiBase; return j<StartResponse>(await fetch(`${b}/nerdle/start`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(req)})); },
+  async guess(req: GuessRequest){ const b=getSettings().apiBase; return j<GuessResponse>(await fetch(`${b}/nerdle/guess`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(req)})); },
+  async hint(req: HintRequest){ const b=getSettings().apiBase; return j<HintResponse>(await fetch(`${b}/nerdle/hint`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(req)})); },
+  async coach(game_id: string, user_id: string){ const b=getSettings().apiBase; return j<CoachResponse>(await fetch(`${b}/nerdle/coach`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({game_id,user_id})})); }
+};

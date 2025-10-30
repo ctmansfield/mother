@@ -1,0 +1,16 @@
+resample_minutes: 5
+horizon_minutes: [30, 60]
+lags_minutes: [15, 30, 60, 120, 180]
+# Event label controls
+hypo_threshold_mgdl: 80     # relax for initial testing; set back to 70 for production
+night_hours_only: true
+night_hours: [22, 8]
+
+cgm_features: [delta_10, delta_30, slope_15, slope_30, pct_time_below_70_2h, pct_time_below_70_4h]
+hrv_features: [rmssd_lag15, rmssd_lag30]
+meal_features: [carb_g, protein_g, fat_g, minutes_since_meal]
+electrolytes: [na_mEq_6h, k_mEq_6h, mg_mg_12h]
+meds_decay:
+  tadalafil: {half_life_h: 17.5}
+  clonidine: {half_life_h: 12}
+  testosterone: {half_life_h: 120}
