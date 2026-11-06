@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="en_US">
+  <ExportDate value="2026-01-12 10:00:00 +1000" />
+  <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="Synthetic Watch" unit="count/min" creationDate="2026-01-11 06:05:00 +1000" startDate="2026-01-10 22:00:00 +1000" endDate="2026-01-10 22:00:00 +1000" value="62" />
+  <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="Synthetic Watch" unit="count/min" startDate="2026-01-11 00:00:00 +1000" endDate="2026-01-11 00:00:00 +1000" value="58" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Synthetic Watch" unit="ms" startDate="2026-01-10 23:00:00 +1000" endDate="2026-01-10 23:01:00 +1000" value="40" />
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Synthetic Watch" startDate="2026-01-10 22:00:00 +1000" endDate="2026-01-11 06:00:00 +1000" value="HKCategoryValueSleepAnalysisAsleepUnspecified" />
+  <Workout workoutActivityType="HKWorkoutActivityTypeWalking" sourceName="Synthetic Watch" startDate="2026-01-10 16:30:00 +1000" endDate="2026-01-10 17:00:00 +1000" duration="30" durationUnit="min" />
+  <Record type="HKQuantityTypeIdentifierHeartRate" sourceName="Synthetic Watch" unit="count/min" startDate="invalid" endDate="invalid" value="65" />
+  <Record type="HKQuantityTypeIdentifierUnknownFixture" sourceName="Synthetic Watch" unit="unknown" startDate="2026-01-10 23:00:00 +1000" endDate="2026-01-10 23:00:00 +1000" value="1" />
+</HealthData>

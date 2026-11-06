@@ -1,4 +1,13 @@
 resample_minutes: 5
+feature_ffill_minutes: 15
+# Historical source availability is unknown in legacy exports. This explicit
+# assumption enables retrospective exploration; it is not live-equivalent proof.
+# Use strict when evaluating records with genuine source availability metadata.
+availability_policy: assume_at_measurement
+# Engineering fallback only. Override per historical source period; do not infer
+# the wearer's historical timezone from their current residence or host timezone.
+timezone: UTC
+timezone_basis: engineering_fallback_not_verified_personal_history
 horizon_minutes: [30, 60]
 lags_minutes: [15, 30, 60, 120, 180]
 # Event label controls
@@ -10,6 +19,10 @@ cgm_features: [delta_10, delta_30, slope_15, slope_30, pct_time_below_70_2h, pct
 hrv_features: [rmssd_lag15, rmssd_lag30]
 meal_features: [carb_g, protein_g, fat_g, minutes_since_meal]
 electrolytes: [na_mEq_6h, k_mEq_6h, mg_mg_12h]
+# No amount conversions or totals until units are explicitly configured.
+intake_units: {}
+# Legacy exploratory kernels: units remain unconfigured, so dose-derived
+# features abstain. These are not measured concentrations or dosing policies.
 meds_decay:
   tadalafil: {half_life_h: 17.5}
   clonidine: {half_life_h: 12}
