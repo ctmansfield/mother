@@ -107,3 +107,7 @@ The tag resolves to Ollama commit
 evidence; only a returned local report can establish this installation's
 runtime behavior. A model's advertised tool capability is not itself a passed
 native-tool test.
+
+The next bounded artifact trial is documented in [QUALIFY.md](QUALIFY.md).
+Its structured-generation path does not require native tool calling and
+preserves the original probe's independent capability outcomes.
