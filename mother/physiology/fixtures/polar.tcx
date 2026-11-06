@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2">
+ <Activities><Activity Sport="Other"><Id>2026-01-10T06:30:00Z</Id>
+ <Lap StartTime="2026-01-10T06:30:00Z"><TotalTimeSeconds>2100</TotalTimeSeconds><Track>
+  <Trackpoint><Time>2026-01-10T06:30:00Z</Time><HeartRateBpm><Value>105</Value></HeartRateBpm></Trackpoint>
+  <Trackpoint><Time>2026-01-10T07:00:00Z</Time><HeartRateBpm><Value>140</Value></HeartRateBpm></Trackpoint>
+  <Trackpoint><Time>2026-01-10T07:01:00Z</Time><HeartRateBpm><Value>121</Value></HeartRateBpm></Trackpoint>
+  <Trackpoint><Time>2026-01-10T07:05:00Z</Time><HeartRateBpm><Value>94</Value></HeartRateBpm></Trackpoint>
+ </Track></Lap><Creator><Name>Synthetic Polar-compatible export; sensor unverified</Name></Creator>
+ </Activity></Activities>
+</TrainingCenterDatabase>

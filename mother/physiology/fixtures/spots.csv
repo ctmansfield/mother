@@ -1,0 +1,5 @@
+native_id,ts,channel,value,unit,measurement_group_id,method,specimen,analyte
+fixture-bp-sys,2026-01-10T07:15:00Z,blood_pressure_systolic,118,mmHg,fixture-bp-1,manual meter transcription,,
+fixture-bp-dia,2026-01-10T07:15:00Z,blood_pressure_diastolic,76,mmHg,fixture-bp-1,manual meter transcription,,
+fixture-lactate,2026-01-10T07:20:00Z,lactate,2.2,mmol/L,,manual meter transcription,,
+fixture-ketone,2026-01-10T07:20:00Z,ketone,0.5,mmol/L,,manual meter transcription,,
