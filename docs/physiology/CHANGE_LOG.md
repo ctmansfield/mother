@@ -84,3 +84,28 @@ Paired Mother receiver test revision:
 
 This increment does not claim deployment, live operation, or therapeutic
 efficacy. No credentials or running services were altered.
+
+
+## 7 November 2026 — I01-U offline user-facing capture
+
+1. Reconciled Coach I01-T1 and Mother I01-T2 draft heads, retaining the
+   existing single-owner shared contract 1.0.0 and archive migration.
+2. Coach interaction owner added a static, offline factual-event form and
+   deterministic, Unicode-safe browser envelope producer. Unknown clocks
+   remain unknown, recorded time is the browser's stated clock, and typed
+   parent links never infer an action or outcome. No automatic prompts or
+   subjective readiness scores were introduced.
+3. Independent Node acceptance verified 11 synthetic cases including exact
+   event/envelope bytes, timestamps, calendar rejection, UTF-8, null values,
+   parent kinds, and a no-network page policy.
+4. Mother integration worker pinned the actual Coach JavaScript builder
+   at `6ab02988c44e3069d5b5e6ef4bca4966330b3d8e` and verified
+   four synthetic UI→Mother archive/restart/replay cases, alongside the
+   existing nine receiver cases. Black/Ruff and general CI passed.
+5. Updated the versioned task board and review documentation. Browser
+   visual/download behavior, authenticated subject ingress, actual data,
+   installed NAS revisions, and service deployment remain unverified.
+
+No personal data or production service was used; no credential or database
+migration was changed. Offline event export does not establish archival
+receipt.
