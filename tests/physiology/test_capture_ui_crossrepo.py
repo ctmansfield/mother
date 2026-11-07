@@ -13,7 +13,6 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import sys
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -77,8 +76,9 @@ class CoachUICrossRepoAcceptance(unittest.TestCase):
                     replay["events"][0]["source_revision_id"],
                     replay["source_revisions"][0]["id"],
                 )
-                self.assertEqual(replay["events"][0]["payload"]["text"],
-                    event["payload"]["text"])
+                self.assertEqual(
+                    replay["events"][0]["payload"]["text"], event["payload"]["text"]
+                )
 
     def test_repeated_transfer_after_restart_is_idempotent(self):
         wire = from_actual_coach("marker")
@@ -108,9 +108,12 @@ class CoachUICrossRepoAcceptance(unittest.TestCase):
             )
             accept_envelope(archive, outcome, received_at=RECEIPT)
             records = {e["event_kind"]: e for e in archive.current_records("event")}
-            self.assertEqual(records["outcome"]["related_ids"],
-                [records["reported_action"]["id"]])
-            self.assertNotEqual(records["reported_action"]["id"], records["outcome"]["id"])
+            self.assertEqual(
+                records["outcome"]["related_ids"], [records["reported_action"]["id"]]
+            )
+            self.assertNotEqual(
+                records["reported_action"]["id"], records["outcome"]["id"]
+            )
             self.assertEqual(records["outcome"]["epistemic_type"], "reported")
 
     def test_relayed_or_modified_event_does_not_fake_independent_measurements(self):
