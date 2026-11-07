@@ -7,7 +7,6 @@ No network, device APIs, credentials, or notifications are invoked by tests.
 import base64
 import hashlib
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -28,9 +27,7 @@ from mother.physiology.replay import build_replay
 STAMP = "2026-11-07T04:10:00Z"
 RECEIVED = "2026-11-07T04:15:00Z"
 SUBJECT = "synthetic-subject"
-RECEIVER = (
-    Path(__file__).parents[2] / "mother" / "physiology" / "handoff.py"
-)
+RECEIVER = Path(__file__).parents[2] / "mother" / "physiology" / "handoff.py"
 
 
 def marker(event_id="synthetic:marker"):
@@ -57,9 +54,7 @@ class OfflineHandoffTests(unittest.TestCase):
         original = unpack_event(envelope)
         self.assertEqual(json.loads(original), event)
         with Archive(":memory:") as archive:
-            result = accept_envelope(
-                archive, envelope, received_at=RECEIVED
-            )
+            result = accept_envelope(archive, envelope, received_at=RECEIVED)
             self.assertEqual(result["status"], "new")
             source = archive.revision(result["revision_id"])
             self.assertEqual(source["source_available_at"], None)
@@ -134,19 +129,13 @@ class OfflineHandoffTests(unittest.TestCase):
                 accept_envelope(
                     archive, pack_manual_event(outcome), received_at=RECEIVED
                 )
-            accept_envelope(
-                archive, pack_manual_event(action), received_at=RECEIVED
-            )
+            accept_envelope(archive, pack_manual_event(action), received_at=RECEIVED)
             self.assertEqual(
                 [x["event_kind"] for x in archive.current_records("event")],
                 ["reported_action"],
             )
-            accept_envelope(
-                archive, pack_manual_event(outcome), received_at=RECEIVED
-            )
-            self.assertEqual(
-                len(archive.current_records(kind="event")), 2
-            )
+            accept_envelope(archive, pack_manual_event(outcome), received_at=RECEIVED)
+            self.assertEqual(len(archive.current_records(kind="event")), 2)
             self.assertEqual(
                 next(
                     x
@@ -206,9 +195,7 @@ class OfflineHandoffTests(unittest.TestCase):
         changed = marker()
         changed["payload"] = {"description": "changed"}
         with Archive(":memory:") as archive:
-            accept_envelope(
-                archive, pack_manual_event(event), received_at=RECEIVED
-            )
+            accept_envelope(archive, pack_manual_event(event), received_at=RECEIVED)
             with self.assertRaises(ValueError):
                 accept_envelope(
                     archive, pack_manual_event(changed), received_at=RECEIVED
@@ -235,16 +222,12 @@ class OfflineHandoffTests(unittest.TestCase):
             self.assertEqual(json.loads(result.stdout)["status"], "new")
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(
-                json.loads(result.stdout)["status"], "already_archived"
-            )
+            self.assertEqual(json.loads(result.stdout)["status"], "already_archived")
             alias = root / "symlink.json"
             alias.symlink_to(file)
             bad = command.copy()
             bad[bad.index(str(file))] = str(alias)
-            self.assertEqual(
-                subprocess.run(bad, capture_output=True).returncode, 2
-            )
+            self.assertEqual(subprocess.run(bad, capture_output=True).returncode, 2)
             self.assertTrue(db.exists())
 
     def test_cli_bad_input_does_not_create_archive(self):
