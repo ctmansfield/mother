@@ -37,8 +37,18 @@ passed gate. See VERIFICATION.md for the final evidence level.
 | E01 / M4 evaluation harness | Analytics worker; evaluator module and tests | C01, explicit caller-defined endpoints | Chronological split, shared outcome grouping, label embargo, baseline comparison and uncertainty | Integrated; author and independent synthetic checks passed; no personal model claim |
 | E02 / M4 personal performance | Independent evaluation | E01 + representative independent episodes | Later held-out episodes; per-channel error/coverage/calibration; no synthetic wearer claims | Blocked: data and endpoint eligibility |
 | L01 / M5 live acquisition | Device workstream after replay | R02 + verified device/server capabilities | Freshness, interruption/restart, buffered reconciliation, archive agreement | Blocked: actual integration capability and runtime evidence |
-| I01 / interaction completion | Future Coach worker; new annotation/prompt workflow files, assigned before start | R02, event contract, factual trigger policy | Durable markers, prompt/answer times, separate recommendation/ack/action/outcome, unknown nonresponse | Contract/storage/replay foundation implemented; full entry/trigger workflow queued |
+| I01-P / manual event draft | Coach interaction owner; Coach [PR #2](https://github.com/ctmansfield/coach/pull/2) | C01 | Factual event, typed links, nulls and separate actions/outcomes | Synthetic acceptance passed; draft only |
+| I01-D / durable manual ingestion | Mother acquisition owner; Mother [PR #5](https://github.com/ctmansfield/mother/pull/5) | C01, I01-P | Immutable source revisions and original bytes, idempotent restart and replay | 10 synthetic tests passed; no live service |
+| I01-T / offline cross-app handoff | Coach sender [PR #3](https://github.com/ctmansfield/coach/pull/3) and Mother receiver [PR #6](https://github.com/ctmansfield/mother/pull/6) on separate branches and exclusive files | I01-D, I01-P | Versioned packet, SHA-256 integrity, explicit private file, pinned paired test, restart/replay; no network | Coach 9 offline and Mother 9 paired + 10 archive tests passed in dedicated CI; reviewed drafts |
+| I01 / interaction completion | Future Coach UI/authorized transport owner; no existing service edits | I01-T, current runtime reconciliation and authorization design; factual trigger policy for later automatic questions | Manual save UI and authenticated ingress, pending outcomes unknown; controlled end-to-end verify | **Open:** no live API, account authentication, automatic questions, or deployed workflow |
 | V01 / release | Independent worker (no authoring of reviewed Mother fixes); PM integration | C01/A01/D01/U01/R01 | Compatible revisions, adversarial fixtures, clean apply/install, repeatable VERIFY, documented limitations | Independent source/synthetic gate passed; final bundle evidence recorded separately |
+
+The I01-T offline handoff has completed its synthetic gate without access to
+the restored NAS installation. User has deferred host checks, original exports
+and local-LLM worker qualification. No deployed system has been modified.
+The next I01 task is **authentication/subject authorization design and a
+controlled capture UI** after deployment reconciliation; it is not a reason
+to enable live endpoints during routine development.
 
 ## Next bounded assignments
 
