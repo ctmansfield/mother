@@ -65,9 +65,7 @@ def seed_parent(archive, kind, parent_id):
     raw = {"synthetic_kind": kind, "synthetic_id": parent_id}
     source_key = "native:" + parent_id
     revision_hash = content_hash(raw)
-    revision_id = stable_id(
-        "revision", source, collection, source_key, revision_hash
-    )
+    revision_id = stable_id("revision", source, collection, source_key, revision_hash)
     run = archive.begin_run(
         source,
         collection,
@@ -115,11 +113,11 @@ class ManualArchiveAcceptance(unittest.TestCase):
         with Archive(":memory:") as archive:
             raw = draft()
             data = wire(raw)
-            result = ingest_manual_event(
-                archive, data, received_at=RECEIVED
-            )
+            result = ingest_manual_event(archive, data, received_at=RECEIVED)
             self.assertEqual(result["new_records"], 1)
-            self.assertEqual(result["artifact_sha256"], hashlib.sha256(data).hexdigest())
+            self.assertEqual(
+                result["artifact_sha256"], hashlib.sha256(data).hexdigest()
+            )
             original = archive.connection.execute(
                 "SELECT content FROM raw_artifacts WHERE sha256=?",
                 (result["artifact_sha256"],),
@@ -139,9 +137,7 @@ class ManualArchiveAcceptance(unittest.TestCase):
             database = Path(directory) / "archive.sqlite3"
             data = wire(draft())
             with Archive(database) as archive:
-                first = ingest_manual_event(
-                    archive, data, received_at=RECEIVED
-                )
+                first = ingest_manual_event(archive, data, received_at=RECEIVED)
                 self.assertEqual(first["new_records"], 1)
             with Archive(database) as archive:
                 later = ingest_manual_event(
@@ -171,7 +167,9 @@ class ManualArchiveAcceptance(unittest.TestCase):
             )
             self.assertEqual(len(archive.revisions()), 1)
             self.assertEqual(
-                len([run for run in archive.import_runs() if run["status"] == "failed"]),
+                len(
+                    [run for run in archive.import_runs() if run["status"] == "failed"]
+                ),
                 1,
             )
 
@@ -191,11 +189,14 @@ class ManualArchiveAcceptance(unittest.TestCase):
             )
             ingest_manual_event(archive, wire(outcome), received_at=RECEIVED)
             stored = archive.current_records(kind="event")
-            self.assertEqual({r["event_kind"] for r in stored}, {
-                "reported_action", "outcome"
-            })
             self.assertEqual(
-                next(r for r in stored if r["event_kind"] == "outcome")["payload"]["value"], 0
+                {r["event_kind"] for r in stored}, {"reported_action", "outcome"}
+            )
+            self.assertEqual(
+                next(r for r in stored if r["event_kind"] == "outcome")["payload"][
+                    "value"
+                ],
+                0,
             )
 
     def test_unknown_or_incompatible_parents_rejected(self):
@@ -207,7 +208,8 @@ class ManualArchiveAcceptance(unittest.TestCase):
                     received_at=RECEIVED,
                 )
             ingest_manual_event(
-                archive, wire(draft("action:1", "reported_action")),
+                archive,
+                wire(draft("action:1", "reported_action")),
                 received_at=RECEIVED,
             )
             with self.assertRaises(ManualIngestError):
@@ -222,16 +224,10 @@ class ManualArchiveAcceptance(unittest.TestCase):
             seed_parent(archive, "question", "question:1")
             seed_parent(archive, "recommendation", "recommendation:1")
             answer = draft("answer:1", "answer", related_ids=["question:1"])
-            ack = draft(
-                "ack:1", "acknowledgment", related_ids=["recommendation:1"]
-            )
-            action = draft(
-                "action:1", "reported_action", related_ids=["ack:1"]
-            )
+            ack = draft("ack:1", "acknowledgment", related_ids=["recommendation:1"])
+            action = draft("action:1", "reported_action", related_ids=["ack:1"])
             for record in (answer, ack, action):
-                ingest_manual_event(
-                    archive, wire(record), received_at=RECEIVED
-                )
+                ingest_manual_event(archive, wire(record), received_at=RECEIVED)
             kinds = {r["id"]: r["event_kind"] for r in archive.current_records("event")}
             self.assertEqual(kinds["answer:1"], "answer")
             self.assertEqual(kinds["ack:1"], "acknowledgment")
@@ -240,18 +236,21 @@ class ManualArchiveAcceptance(unittest.TestCase):
     def test_different_subject_parent_and_session_are_rejected(self):
         with Archive(":memory:") as archive:
             ingest_manual_event(
-                archive, wire(draft("action:1", "reported_action")),
+                archive,
+                wire(draft("action:1", "reported_action")),
                 received_at=RECEIVED,
             )
             with self.assertRaises(ManualIngestError):
                 ingest_manual_event(
                     archive,
-                    wire(draft(
-                        "cross:1",
-                        "outcome",
-                        subject_id="other-subject",
-                        related_ids=["action:1"],
-                    )),
+                    wire(
+                        draft(
+                            "cross:1",
+                            "outcome",
+                            subject_id="other-subject",
+                            related_ids=["action:1"],
+                        )
+                    ),
                     received_at=RECEIVED,
                 )
             with self.assertRaises(ManualIngestError):
@@ -274,21 +273,19 @@ class ManualArchiveAcceptance(unittest.TestCase):
             ]:
                 with self.subTest(invalid=invalid[:40]):
                     with self.assertRaises(ValueError):
-                        ingest_manual_event(
-                            archive, invalid, received_at=RECEIVED
-                        )
+                        ingest_manual_event(archive, invalid, received_at=RECEIVED)
             self.assertEqual(archive.revisions(), [])
 
     def test_bounded_input_and_no_unknown_revisions(self):
         with Archive(":memory:") as archive:
             with self.assertRaises(ManualIngestError):
                 ingest_manual_event(
-                    archive, b"x" * (256 * 1024 + 1),
-                    received_at=RECEIVED
+                    archive, b"x" * (256 * 1024 + 1), received_at=RECEIVED
                 )
             with self.assertRaises(ManualIngestError):
                 ingest_manual_event(
-                    archive, wire(draft(related_ids=["action:missing"])),
+                    archive,
+                    wire(draft(related_ids=["action:missing"])),
                     received_at=RECEIVED,
                 )
             self.assertEqual(len(archive.revisions()), 0)
@@ -302,9 +299,7 @@ class ManualArchiveAcceptance(unittest.TestCase):
                     draft("action:1", "reported_action"),
                     draft("outcome:1", "outcome", related_ids=["action:1"]),
                 ):
-                    ingest_manual_event(
-                        archive, wire(row), received_at=RECEIVED
-                    )
+                    ingest_manual_event(archive, wire(row), received_at=RECEIVED)
             with Archive(database) as archive:
                 bundle = build_replay(
                     archive,
@@ -314,14 +309,17 @@ class ManualArchiveAcceptance(unittest.TestCase):
                 )
                 self.assertEqual(len(bundle["events"]), 3)
                 self.assertEqual(len(bundle["source_revisions"]), 3)
-                self.assertTrue(all(
-                    r["source_revision_id"] in {
-                        s["id"] for s in bundle["source_revisions"]
-                    }
-                    for r in bundle["events"]
-                ))
+                self.assertTrue(
+                    all(
+                        r["source_revision_id"]
+                        in {s["id"] for s in bundle["source_revisions"]}
+                        for r in bundle["events"]
+                    )
+                )
                 self.assertEqual(
-                    next(r for r in bundle["events"] if r["id"] == "outcome:1")["related_ids"],
+                    next(r for r in bundle["events"] if r["id"] == "outcome:1")[
+                        "related_ids"
+                    ],
                     ["action:1"],
                 )
 
