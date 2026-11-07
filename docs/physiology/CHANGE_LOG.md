@@ -52,3 +52,35 @@ Dates use Pacific/Guam for user-facing project records. Test logs retain UTC.
 No deployment, credential change, notification, device capture or personal-data
 evaluation is implied by this log. The optional old MI/bootstrap run was stopped
 with exit 130 and is not a passed acceptance gate.
+
+
+## 7 November 2026 — I01-T offline cross-application handoff
+
+1. Rechecked Mother PF-001 and I01-D, Coach PF-001 and I01-P source branches
+   and their open draft PR states before writing. Chose explicit file transfer
+   rather than making runtime/authentication assumptions while the NAS was
+   being restored.
+2. Coach outbound owner created a canonical, SHA-256-pinned manual-event
+   envelope and private, content-addressed outbox writer. A security review
+   added refusal of pre-existing world-readable output files.
+3. Mother ingest owner added a strict packet decoder and optional CLI with
+   mandatory input/archive paths. It verifies exact event bytes and delegates
+   contract, parent and durable revision validation to the existing Mother
+   ingestion path. No schema or migration was changed.
+4. Independent verification pinned the actual Coach source revision and ran
+   nine paired Coach→Mother archive/restart/replay checks plus the ten existing
+   Mother ingestion regressions; the Coach sender passed ten isolated tests.
+   Dedicated GitHub Actions, Mother general CI and Black/Ruff passed.
+5. Published review-only draft branches, explicit INSTALL/VERIFY docs, and
+   updated task-board dependencies. Actual network transport, sender
+   authentication, user interface, deployed NAS configuration and personal
+   source data remain separate unverified gates.
+
+Verified pinned Coach sender:
+`9fbe9b1580203be78ac8e06ae12dfae9f882c24d`.
+Paired Mother receiver test revision:
+`daa56f12c31f6794e24da0118a0e25067782234b`
+(followed by documentation-only revisions).
+
+This increment does not claim deployment, live operation, or therapeutic
+efficacy. No credentials or running services were altered.
