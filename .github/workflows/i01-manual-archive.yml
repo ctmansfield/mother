@@ -1,0 +1,31 @@
+name: I01 manual archive acceptance (offline)
+
+on:
+  pull_request:
+    paths:
+      - 'mother/physiology/manual_ingest.py'
+      - 'tests/physiology/test_manual_ingest.py'
+      - '.github/workflows/i01-manual-archive.yml'
+  push:
+    branches:
+      - 'work/i01-durable-manual-events'
+    paths:
+      - 'mother/physiology/manual_ingest.py'
+      - 'tests/physiology/test_manual_ingest.py'
+      - '.github/workflows/i01-manual-archive.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install schema validation for offline contract tests
+        run: python -m pip install 'jsonschema>=4.18,<5'
+      - name: Run bounded I01 ingestion and replay tests
+        run: python -m unittest discover -s tests/physiology -p test_manual_ingest.py -v
