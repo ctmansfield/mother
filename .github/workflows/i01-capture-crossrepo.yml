@@ -1,0 +1,52 @@
+name: I01 browser capture to Mother archive (offline)
+
+on:
+  pull_request:
+    paths:
+      - 'tests/physiology/generate_ui_fixture.cjs'
+      - 'tests/physiology/test_capture_ui_crossrepo.py'
+      - '.github/workflows/i01-capture-crossrepo.yml'
+  push:
+    branches:
+      - 'work/i01-capture-ui-crossrepo-acceptance'
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-crossrepo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Mother
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Checkout exact Coach capture UI revision
+        uses: actions/checkout@v4
+        with:
+          repository: ctmansfield/coach
+          ref: 6ab02988c44e3069d5b5e6ef4bca4966330b3d8e
+          path: paired-coach
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install contract validator
+        run: python -m pip install 'jsonschema>=4.18,<5'
+      - name: Verify source pin without executing event code
+        run: |
+          actual=$(git -C paired-coach rev-parse HEAD)
+          test "$actual" = "6ab02988c44e3069d5b5e6ef4bca4966330b3d8e"
+      - name: Verify real UI packet in Mother archive and replay
+        env:
+          COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/paired-coach
+        run: python -m unittest discover -s tests/physiology -p test_capture_ui_crossrepo.py -v
+      - name: Re-run Mother offline handoff acceptance
+        env:
+          COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/paired-coach
+        run: python -m unittest discover -s tests/physiology -p test_handoff_crossrepo.py -v
