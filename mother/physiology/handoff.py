@@ -124,13 +124,9 @@ def main(argv=None) -> int:
         if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_ENVELOPE_BYTES:
             raise EnvelopeError("Input is not a bounded regular file")
         fd = os.open(args.input, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
-        try:
-            with os.fdopen(fd, "rb") as handle:
-                content = handle.read(MAX_ENVELOPE_BYTES + 1)
-        except BaseException:
-            os.close(fd)
-            raise
-        original = unpack_event(content)
+        with os.fdopen(fd, "rb") as handle:
+            content = handle.read(MAX_ENVELOPE_BYTES + 1)
+        unpack_event(content)
         # Parse and validate the transport before an Archive may create a file.
         from .archive import Archive
 
