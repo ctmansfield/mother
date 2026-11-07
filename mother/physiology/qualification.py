@@ -11,10 +11,12 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 VERSION = "r02-qualification/0.1.0"
+MAX_INPUT_BYTES = 64 * 1024 * 1024
 
 
 def _instant(value: str) -> datetime:
@@ -203,10 +205,14 @@ def main() -> None:
     args = parser.parse_args()
     if args.input.resolve() == args.output.resolve():
         parser.error("Input and output paths must differ")
+    if args.input.stat().st_size > MAX_INPUT_BYTES:
+        parser.error("Replay exceeds 64 MiB local qualification limit")
     with args.input.open("r", encoding="utf-8") as handle:
         report = assess_replay(json.load(handle, parse_constant=_reject_constant))
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    with args.output.open("x", encoding="utf-8") as handle:
+    # Source names and quality flags may still be sensitive: create privately.
+    fd = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2, ensure_ascii=False, allow_nan=False)
         handle.write("\n")
     print(json.dumps({"report": str(args.output), "evidence_level": report["evidence_level"],
