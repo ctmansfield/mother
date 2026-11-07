@@ -150,9 +150,7 @@ def ingest_manual_event(
     source = "coach:manual:" + raw["subject_id"]
     source_key = "native:" + raw["id"]
     revision_hash = content_hash(raw)
-    revision_id = stable_id(
-        "revision", source, COLLECTION, source_key, revision_hash
-    )
+    revision_id = stable_id("revision", source, COLLECTION, source_key, revision_hash)
     previous = archive.revision(revision_id)
     first_seen_at = previous["first_seen_at"] if previous else observed
     ingested_at = previous["ingested_at"] if previous else observed
