@@ -31,7 +31,7 @@ outcome data.
 ## INSTALL (isolated, no service modifications)
 
 Review the Mother branch based on I01-D PR #5 in an isolated worktree and the
-pinned Coach sender at `93863356a803ce48e1d94fe2db313de586e1c879`.
+pinned Coach sender at `9fbe9b1580203be78ac8e06ae12dfae9f882c24d`.
 
 To submit a **synthetic** envelope already produced by the Coach sender to a
 new, explicitly chosen test archive:
