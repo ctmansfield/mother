@@ -33,7 +33,7 @@ passed gate. See VERIFICATION.md for the final evidence level.
 | U01 / M1 Coach flow hygiene | Coach worker; three malformed flows, flow README, explicit live-test gate | B00 | Strict JSON; canonical mirror preserved; no blanket CGM_SPIKE; offline fixtures; no notification during ordinary checks | Integrated; controlled fixtures passed; deployed flow reconciliation open |
 | W01 / M3 import capability mapping | PM; bounded export readers, unit utilities, fixtures and capability documentation | C01, D01 | Explicit supported source mappings; raw files preserved; gaps, failures, unknowns and true lineage visible | Bounded readers integrated; synthetic checks passed; device/export qualification open |
 | R01 / M3 synchronized replay | PM Mother replay producer; Coach worker replay consumer/tests | C01, D01, W01 | Synthetic end-to-end bundle; lineage, separate clocks, discrete anchors, epistemic states and gaps visible | Synthetic cross-app integration verified; browser visual review open |
-| R02 / M3 real-data acceptance | PM + independent verification | R01 + overlapping exports | Small Nightscout/Watch/Polar episode reconciles with original sources | Blocked: representative source bundle unavailable |
+| R02-P / M3 qualification preflight | Acquisition/qualification worker; `mother/physiology/qualification.py`, `tests/physiology/test_qualification.py`, `docs/physiology/R02_QUALIFICATION.md` | R01 | Offline source/clock/coverage/relay-candidate report, isolated no-network verification; no raw data in repo | Implemented; deterministic synthetic checks; PR review pending; does not satisfy real-data R02 |\n| R02 / M3 real-data acceptance | PM + independent verification | R01 + overlapping exports | Small Nightscout/Watch/Polar episode reconciles with original sources | Blocked: representative source bundle unavailable |
 | E01 / M4 evaluation harness | Analytics worker; evaluator module and tests | C01, explicit caller-defined endpoints | Chronological split, shared outcome grouping, label embargo, baseline comparison and uncertainty | Integrated; author and independent synthetic checks passed; no personal model claim |
 | E02 / M4 personal performance | Independent evaluation | E01 + representative independent episodes | Later held-out episodes; per-channel error/coverage/calibration; no synthetic wearer claims | Blocked: data and endpoint eligibility |
 | L01 / M5 live acquisition | Device workstream after replay | R02 + verified device/server capabilities | Freshness, interruption/restart, buffered reconciliation, archive agreement | Blocked: actual integration capability and runtime evidence |
@@ -42,7 +42,7 @@ passed gate. See VERIFICATION.md for the final evidence level.
 
 ## Next bounded assignments
 
-The immediate critical path is R02 → source backfill/episode qualification →
+R02-P offline qualification can be reviewed independently; it cannot replace the\noriginal-data R02 gate. The local LLM experiment is deferred and has no active\nimplementation assignments.\n\nThe immediate critical path is R02 → source backfill/episode qualification →
 E02, with L01 depending additionally on real runtime and capability evidence.
 No blocked design choice prevents retaining and replaying qualified originals.
 
