@@ -57,7 +57,12 @@ def assess_replay(bundle: dict) -> dict:
         if not isinstance(rev, dict):
             raise ValueError("Invalid source revision")
         ident, source = rev.get("id"), rev.get("source_instance")
-        if not isinstance(ident, str) or not ident or not isinstance(source, str) or not source:
+        if (
+            not isinstance(ident, str)
+            or not ident
+            or not isinstance(source, str)
+            or not source
+        ):
             raise ValueError("Source revision identity is missing")
         if ident in revs:
             raise ValueError("Duplicate source revision identity")
@@ -90,10 +95,20 @@ def assess_replay(bundle: dict) -> dict:
         epistemic_counts[epistemic] += 1
         obs_by_source[source] += 1
         key = (channel, source)
-        item = groups.setdefault(key, {"channel": channel, "source_instance": source,
-                                       "observations": 0, "statuses": Counter(), "epistemic_types": Counter(),
-                                       "units": set(), "unknown_source_availability": 0,
-                                       "original_clock_offsets_checked": 0, "quality_flags": set()})
+        item = groups.setdefault(
+            key,
+            {
+                "channel": channel,
+                "source_instance": source,
+                "observations": 0,
+                "statuses": Counter(),
+                "epistemic_types": Counter(),
+                "units": set(),
+                "unknown_source_availability": 0,
+                "original_clock_offsets_checked": 0,
+                "quality_flags": set(),
+            },
+        )
         item["observations"] += 1
         item["statuses"][state] += 1
         item["epistemic_types"][epistemic] += 1
@@ -106,7 +121,11 @@ def assess_replay(bundle: dict) -> dict:
         elif _instant(available) < measurement:
             checks["availability_before_measurement"] += 1
         seen, ingested = obs.get("first_seen_at"), obs.get("ingested_at")
-        if seen is not None and ingested is not None and _instant(ingested) < _instant(seen):
+        if (
+            seen is not None
+            and ingested is not None
+            and _instant(ingested) < _instant(seen)
+        ):
             checks["ingested_before_first_seen"] += 1
         original_clock = obs.get("clock") or {}
         if not isinstance(original_clock, dict):
@@ -118,8 +137,11 @@ def assess_replay(bundle: dict) -> dict:
                 checks["original_clock_utc_mismatch"] += 1
         # Equal normalized samples are *candidates* for investigation, never
         # proof of duplicate identity or independent evidence.
-        if (state == "valid" and epistemic in {"measured", "vendor_derived", "reported"}
-                and (_is_number(obs.get("value")) or isinstance(obs.get("value"), str))):
+        if (
+            state == "valid"
+            and epistemic in {"measured", "vendor_derived", "reported"}
+            and (_is_number(obs.get("value")) or isinstance(obs.get("value"), str))
+        ):
             signature = (channel, measurement, str(obs.get("value")), obs.get("unit"))
             candidates[signature].add(source)
 
@@ -129,15 +151,17 @@ def assess_replay(bundle: dict) -> dict:
             raise ValueError("Invalid coverage row")
         if not isinstance(item.get("gaps"), list):
             raise ValueError("Coverage gaps must be a list")
-        cov.append({
-            "channel": item["channel"],
-            "source_instance": item.get("source_instance"),
-            "declared_status": item.get("status"),
-            "declared_count": item.get("count"),
-            "declared_valid_count": item.get("valid_count"),
-            "gap_count": len(item["gaps"]),
-            "cadence_seconds": item.get("expected_cadence_seconds"),
-        })
+        cov.append(
+            {
+                "channel": item["channel"],
+                "source_instance": item.get("source_instance"),
+                "declared_status": item.get("status"),
+                "declared_count": item.get("count"),
+                "declared_valid_count": item.get("valid_count"),
+                "gap_count": len(item["gaps"]),
+                "cadence_seconds": item.get("expected_cadence_seconds"),
+            }
+        )
     imported = metadata.get("import_summaries", [])
     if not isinstance(imported, list):
         raise ValueError("Import summaries must be an array")
@@ -153,16 +177,19 @@ def assess_replay(bundle: dict) -> dict:
     source_channels = []
     for key in sorted(groups):
         row = groups[key]
-        source_channels.append({
-            "channel": row["channel"], "source_instance": row["source_instance"],
-            "observations": row["observations"],
-            "value_statuses": dict(sorted(row["statuses"].items())),
-            "epistemic_types": dict(sorted(row["epistemic_types"].items())),
-            "units": sorted(row["units"]),
-            "unknown_source_availability": row["unknown_source_availability"],
-            "original_clock_offsets_checked": row["original_clock_offsets_checked"],
-            "quality_flags": sorted(row["quality_flags"]),
-        })
+        source_channels.append(
+            {
+                "channel": row["channel"],
+                "source_instance": row["source_instance"],
+                "observations": row["observations"],
+                "value_statuses": dict(sorted(row["statuses"].items())),
+                "epistemic_types": dict(sorted(row["epistemic_types"].items())),
+                "units": sorted(row["units"]),
+                "unknown_source_availability": row["unknown_source_availability"],
+                "original_clock_offsets_checked": row["original_clock_offsets_checked"],
+                "quality_flags": sorted(row["quality_flags"]),
+            }
+        )
     relayed = [v for v in candidates.values() if len(v) > 1]
     return {
         "report_version": VERSION,
@@ -174,8 +201,10 @@ def assess_replay(bundle: dict) -> dict:
         "real_data_reconciled": False,
         "live_device_qualified": False,
         "summary": {
-            "observations": len(bundle["observations"]), "events": len(bundle["events"]),
-            "sessions": len(bundle["sessions"]), "source_revisions": len(revs),
+            "observations": len(bundle["observations"]),
+            "events": len(bundle["events"]),
+            "sessions": len(bundle["sessions"]),
+            "source_revisions": len(revs),
             "source_instances": len(obs_by_source),
             "value_statuses": dict(sorted(status_counts.items())),
             "epistemic_types": dict(sorted(epistemic_counts.items())),
@@ -183,7 +212,9 @@ def assess_replay(bundle: dict) -> dict:
             "incomplete_import_runs": incomplete_imports,
         },
         "source_channels": source_channels,
-        "declared_coverage": sorted(cov, key=lambda x: (x["channel"], str(x["source_instance"]))),
+        "declared_coverage": sorted(
+            cov, key=lambda x: (x["channel"], str(x["source_instance"]))
+        ),
         "review_flags": dict(sorted(checks.items())),
         "limitations": [
             "This report checks declared replay content, not original device files or server responses.",
@@ -200,8 +231,12 @@ def _reject_constant(value):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", required=True, type=Path, help="Existing local replay JSON")
-    parser.add_argument("--output", required=True, type=Path, help="New local report JSON")
+    parser.add_argument(
+        "--input", required=True, type=Path, help="Existing local replay JSON"
+    )
+    parser.add_argument(
+        "--output", required=True, type=Path, help="New local report JSON"
+    )
     args = parser.parse_args()
     if args.input.resolve() == args.output.resolve():
         parser.error("Input and output paths must differ")
@@ -215,8 +250,15 @@ def main() -> None:
     with os.fdopen(fd, "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=2, ensure_ascii=False, allow_nan=False)
         handle.write("\n")
-    print(json.dumps({"report": str(args.output), "evidence_level": report["evidence_level"],
-                      "real_data_reconciled": False}))
+    print(
+        json.dumps(
+            {
+                "report": str(args.output),
+                "evidence_level": report["evidence_level"],
+                "real_data_reconciled": False,
+            }
+        )
+    )
 
 
 if __name__ == "__main__":
