@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ctmansfield/coach
-          ref: 93863356a803ce48e1d94fe2db313de586e1c879
+          ref: 9fbe9b1580203be78ac8e06ae12dfae9f882c24d
           path: paired-coach
           persist-credentials: false
       - uses: actions/setup-python@v5
@@ -40,7 +40,7 @@ jobs:
       - name: Verify exact Coach commit and detached source checkout
         run: |
           actual=$(git -C paired-coach rev-parse HEAD)
-          test "$actual" = "93863356a803ce48e1d94fe2db313de586e1c879"
+          test "$actual" = "9fbe9b1580203be78ac8e06ae12dfae9f882c24d"
       - name: Run only no-network paired sender-receiver tests
         run: |
           PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/paired-coach" python -m unittest discover -s tests/physiology -p test_handoff_crossrepo.py -v
