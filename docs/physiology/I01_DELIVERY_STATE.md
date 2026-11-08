@@ -103,7 +103,7 @@ remain explicit later design and deployment acceptance gates.
 ## Executed integration evidence (8–9 November 2026 Guam)
 
 GitHub's dedicated I01-S1 workflow checked out the exact Coach source revision
-above and completed **14 read-only state tests**, **5 actual
+above and completed **15 read-only state tests**, **5 actual
 Mother-report→Coach-viewer tests**, and **12 existing receipt-recovery
 regressions**. The paired acceptance proves compatibility with the real Coach
 JavaScript interpreter and the Mother-produced minimal JSON report, not a
