@@ -1,8 +1,9 @@
 # I01-S1 — Read-only delivery-state reconciliation in Mother
 
 **Status:** Source-level / synthetic acceptance only; no NAS deployment.
-**Base:** Mother I01-R receipt-recovery PR #8; Coach sender pinned to
-`1900d64b4b73706bd0a06871985502b8967f2911`.
+**Base:** Mother I01-R receipt-recovery PR #8; actual Coach delivery viewer
+pinned to `34554b07e0edb531074daa1bd77a28ac301409e9`, containing the
+unchanged original event sender code.
 **Owner:** Mother archive/integration worker. No shared schema, migration, live
 API, credentials, notification, or data-source configuration changes.
 
@@ -98,3 +99,21 @@ independent machine cannot safely claim live Mother confirmation from a
 bare file or SHA-256 digest. Account/subject grants, authenticated status
 transport, retained outbox deletion policy, and real power-loss/live restart
 remain explicit later design and deployment acceptance gates.
+
+## Executed integration evidence (8–9 November 2026 Guam)
+
+GitHub's dedicated I01-S1 workflow checked out the exact Coach source revision
+above and completed **14 read-only state tests**, **5 actual
+Mother-report→Coach-viewer tests**, and **12 existing receipt-recovery
+regressions**. The paired acceptance proves compatibility with the real Coach
+JavaScript interpreter and the Mother-produced minimal JSON report, not a
+test-only copy of the UI state machine.
+
+The paired cases include prepared/attempted, committed without receipt,
+committed with verified receipt, forged digest rejection, and a copied receipt
+without archive access remaining unknown. No actual NAS database, live login,
+personal event record, or network endpoint was used.
+
+**Important:** Tests prove that the browser displays the archived states as
+unauthenticated claims with a keep-original warning. This does not establish
+sender authentication or a safe policy for deleting event envelopes.
