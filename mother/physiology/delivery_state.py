@@ -21,7 +21,6 @@ from urllib.parse import quote
 from .contracts import content_hash, stable_id, validate_record
 from .handoff import MAX_ENVELOPE_BYTES, unpack_event
 from .manual_ingest import (
-    ADAPTER_VERSION,
     COLLECTION,
     COACH_PROCESSING_VERSION,
     _parse_input,
@@ -260,11 +259,16 @@ def main(argv=None) -> int:
         return 0
     except (OSError, ValueError, sqlite3.Error) as exc:
         # A failed read is not evidence of absent archives or lost data.
-        print(json.dumps({
-            "status": "not_reconciled",
-            "error_type": type(exc).__name__,
-            "retain_original": True,
-        }), file=sys.stderr)
+        print(
+            json.dumps(
+                {
+                    "status": "not_reconciled",
+                    "error_type": type(exc).__name__,
+                    "retain_original": True,
+                }
+            ),
+            file=sys.stderr,
+        )
         return 2
 
 
