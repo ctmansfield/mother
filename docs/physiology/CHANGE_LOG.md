@@ -157,7 +157,7 @@ medical inference is added. Production NAS behavior remains unverified.
 4. Added a Coach offline status viewer that SHA-256 checks the original
    event envelope and a matching status report, while clearly marking the
    report's provenance **unauthenticated** in the browser.
-5. Dedicated verification passed 14 Mother state checks, 5 crossrepo tests
+5. Dedicated verification passed 15 Mother state checks, 5 crossrepo tests
    using Mother-generated reports and actual Coach UI JavaScript, 12 Mother
    receipt regressions; Coach passed 13 Node and 5 Chromium tests.
 6. Scoped to isolated branches, synthetic event data and no-network tests.
