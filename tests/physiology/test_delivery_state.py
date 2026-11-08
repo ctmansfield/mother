@@ -306,5 +306,18 @@ class DeliveryStateTests(unittest.TestCase):
                 reconcile_delivery(envelope, archive_path=link, attempted=True)
 
 
+    def test_forged_observed_action_draft_is_not_a_pending_manual_event(self):
+        envelope = packet()
+        wire = json.loads(envelope)
+        raw = json.loads(base64.b64decode(wire["event_base64"], validate=True))
+        raw["event_kind"] = "observed_action"
+        changed = json.dumps(raw, sort_keys=True).encode()
+        wire["event_base64"] = base64.b64encode(changed).decode()
+        wire["event_sha256"] = hashlib.sha256(changed).hexdigest()
+        forged = (json.dumps(wire, sort_keys=True) + "\\n").encode()
+        with self.assertRaises(ValueError):
+            reconcile_delivery(forged)
+
+
 if __name__ == "__main__":
     unittest.main()
