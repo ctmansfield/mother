@@ -63,7 +63,9 @@ class ReceiptRecoveryTests(unittest.TestCase):
             directory = Path(root) / "receipts"
             with Archive(db) as archive:
                 result = ingest_with_receipt(
-                    archive, envelope, receipt_directory=directory,
+                    archive,
+                    envelope,
+                    receipt_directory=directory,
                     received_at=NOW,
                 )
                 self.assertEqual(result["status"], "receipt_written_and_reconciled")
@@ -75,7 +77,9 @@ class ReceiptRecoveryTests(unittest.TestCase):
                 self.assertEqual(receipt.stat().st_mode & 0o777, 0o600)
                 self.assertEqual(directory.stat().st_mode & 0o077, 0)
                 verified = verify_receipt(archive, envelope, receipt.read_bytes())
-                self.assertEqual(verified["status"], "archived_in_selected_local_archive")
+                self.assertEqual(
+                    verified["status"], "archived_in_selected_local_archive"
+                )
                 self.assertEqual(
                     verified["original_event_sha256"],
                     hashlib.sha256(unpack_event(envelope)).hexdigest(),
@@ -166,9 +170,7 @@ class ReceiptRecoveryTests(unittest.TestCase):
             folder = Path(root) / "receipts"
             with Archive(Path(root) / "archive.sqlite3") as archive:
                 with self.assertRaises(ManualIngestError):
-                    ingest_with_receipt(
-                        archive, envelope, receipt_directory=folder
-                    )
+                    ingest_with_receipt(archive, envelope, receipt_directory=folder)
                 self.assertEqual(len(archive.current_records("event")), 0)
                 self.assertFalse(folder.exists())
 
@@ -179,12 +181,16 @@ class ReceiptRecoveryTests(unittest.TestCase):
             folder = Path(root) / "receipts"
             with Archive(Path(root) / "archive.sqlite3") as archive:
                 ingest_with_receipt(
-                    archive, original, receipt_directory=folder,
+                    archive,
+                    original,
+                    receipt_directory=folder,
                     received_at=NOW,
                 )
                 with self.assertRaises(ReceiptError):
                     ingest_with_receipt(
-                        archive, alternate, receipt_directory=folder,
+                        archive,
+                        alternate,
+                        receipt_directory=folder,
                         received_at="2026-11-08T04:15:00Z",
                     )
                 self.assertEqual(len(archive.revisions()), 1)
@@ -195,9 +201,7 @@ class ReceiptRecoveryTests(unittest.TestCase):
         with TemporaryDirectory() as root:
             folder = Path(root) / "receipts"
             with Archive(Path(root) / "archive.sqlite3") as archive:
-                first = ingest_with_receipt(
-                    archive, envelope, receipt_directory=folder
-                )
+                first = ingest_with_receipt(archive, envelope, receipt_directory=folder)
                 path = Path(first["receipt_path"])
                 original = path.read_bytes()
                 path.unlink()
@@ -205,17 +209,13 @@ class ReceiptRecoveryTests(unittest.TestCase):
                 target.write_text("unchanged")
                 path.symlink_to(target)
                 with self.assertRaises(ReceiptError):
-                    ingest_with_receipt(
-                        archive, envelope, receipt_directory=folder
-                    )
+                    ingest_with_receipt(archive, envelope, receipt_directory=folder)
                 self.assertEqual(target.read_text(), "unchanged")
                 path.unlink()
                 path.write_bytes(original)
                 path.chmod(0o644)
                 with self.assertRaises(ReceiptError):
-                    ingest_with_receipt(
-                        archive, envelope, receipt_directory=folder
-                    )
+                    ingest_with_receipt(archive, envelope, receipt_directory=folder)
                 self.assertEqual(path.read_bytes(), original)
 
     def test_receipt_with_changed_envelope_is_not_accepted(self):
@@ -227,9 +227,7 @@ class ReceiptRecoveryTests(unittest.TestCase):
                 )
                 received = Path(result["receipt_path"]).read_bytes()
                 with self.assertRaises(ReceiptError):
-                    verify_receipt(
-                        archive, changed_original_bytes(envelope), received
-                    )
+                    verify_receipt(archive, changed_original_bytes(envelope), received)
 
     def test_cli_retry_does_not_require_a_new_input_or_archive(self):
         envelope = packet()
@@ -239,10 +237,15 @@ class ReceiptRecoveryTests(unittest.TestCase):
             archive_path = Path(root) / "archive.sqlite3"
             folder = Path(root) / "receipts"
             command = [
-                sys.executable, "-m", "mother.physiology.receipt_recovery",
-                "--input", str(input_path),
-                "--archive", str(archive_path),
-                "--receipt-directory", str(folder),
+                sys.executable,
+                "-m",
+                "mother.physiology.receipt_recovery",
+                "--input",
+                str(input_path),
+                "--archive",
+                str(archive_path),
+                "--receipt-directory",
+                str(folder),
             ]
             first = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(first.returncode, 0, first.stderr)
@@ -261,10 +264,15 @@ class ReceiptRecoveryTests(unittest.TestCase):
             archive = Path(root) / "archive.sqlite3"
             folder = Path(root) / "receipts"
             command = [
-                sys.executable, "-m", "mother.physiology.receipt_recovery",
-                "--input", str(file),
-                "--archive", str(archive),
-                "--receipt-directory", str(folder),
+                sys.executable,
+                "-m",
+                "mother.physiology.receipt_recovery",
+                "--input",
+                str(file),
+                "--archive",
+                str(archive),
+                "--receipt-directory",
+                str(folder),
             ]
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 2)
