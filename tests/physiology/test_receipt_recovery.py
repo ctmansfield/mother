@@ -281,7 +281,6 @@ class ReceiptRecoveryTests(unittest.TestCase):
             self.assertFalse(folder.exists())
             self.assertNotIn(SUBJECT, result.stderr)
 
-
     def test_cli_refuses_receipt_path_over_archive_or_input_before_commit(self):
         envelope = packet()
         with TemporaryDirectory() as root:
@@ -308,7 +307,6 @@ class ReceiptRecoveryTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 2)
                     self.assertFalse(archive_file.exists())
             self.assertEqual(envelope_file.read_bytes(), envelope)
-
 
     def test_receipt_requires_full_normalized_record_not_only_payload(self):
         envelope = packet()
