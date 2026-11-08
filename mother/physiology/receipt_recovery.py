@@ -58,6 +58,12 @@ def _archived_event(archive, original: bytes, event_id: str, revision_id: str):
         # A semantic repeat with different whitespace can be a repeated
         # revision in PF-001. Do not falsely attest a new byte identity.
         raise ReceiptError("Archived original bytes differ from this submission")
+    if (
+        revision["source_instance"] != "coach:manual:" + raw["subject_id"]
+        or revision["collection"] != "coach_manual_events"
+        or revision["native_id"] != raw["id"]
+    ):
+        raise ReceiptError("Archived source identity differs")
     if revision["revision_hash"] != content_hash(raw):
         raise ReceiptError("Archived source revision hash differs")
     if revision["raw_json"] != canonical_json(raw):
@@ -74,8 +80,9 @@ def _archived_event(archive, original: bytes, event_id: str, revision_id: str):
     ]
     if len(matches) != 1 or matches[0]["subject_id"] != raw["subject_id"]:
         raise ReceiptError("Selected archive does not project this event")
-    if matches[0]["payload"] != raw["payload"]:
-        raise ReceiptError("Selected archive event payload differs")
+    normalized = dict(raw, source_revision_id=revision_id)
+    if canonical_json(matches[0]) != canonical_json(normalized):
+        raise ReceiptError("Selected archive normalized event differs")
 
 
 def _receipt(
