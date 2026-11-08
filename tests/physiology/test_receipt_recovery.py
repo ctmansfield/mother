@@ -18,6 +18,7 @@ import unittest
 from unittest.mock import patch
 
 from mother.physiology.archive import Archive
+from mother.physiology.contracts import canonical_json
 from mother.physiology.handoff import unpack_event
 from mother.physiology.manual_ingest import ManualIngestError
 from mother.physiology.receipt_recovery import (
@@ -307,6 +308,24 @@ class ReceiptRecoveryTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 2)
                     self.assertFalse(archive_file.exists())
             self.assertEqual(envelope_file.read_bytes(), envelope)
+
+
+    def test_receipt_requires_full_normalized_record_not_only_payload(self):
+        envelope = packet()
+        with TemporaryDirectory() as root:
+            with Archive(Path(root) / "archive.sqlite3") as archive:
+                outcome = ingest_with_receipt(
+                    archive, envelope, receipt_directory=Path(root) / "receipts"
+                )
+                raw_receipt = Path(outcome["receipt_path"]).read_bytes()
+                record = archive.current_records("event")[0]
+                record["recorded_at"] = "2026-11-07T04:12:59Z"
+                archive.connection.execute(
+                    "UPDATE normalized_records SET record_json=? WHERE record_id=?",
+                    (canonical_json(record), record["id"]),
+                )
+                with self.assertRaises(ReceiptError):
+                    verify_receipt(archive, envelope, raw_receipt)
 
 
 if __name__ == "__main__":
