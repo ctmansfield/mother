@@ -305,7 +305,6 @@ class DeliveryStateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 reconcile_delivery(envelope, archive_path=link, attempted=True)
 
-
     def test_forged_observed_action_draft_is_not_a_pending_manual_event(self):
         envelope = packet()
         wire = json.loads(envelope)
@@ -317,7 +316,6 @@ class DeliveryStateTests(unittest.TestCase):
         forged = json.dumps(wire, sort_keys=True).encode()
         with self.assertRaises(ValueError):
             reconcile_delivery(forged)
-
 
 if __name__ == "__main__":
     unittest.main()
