@@ -73,9 +73,7 @@ class ActualMotherReportToCoachTests(unittest.TestCase):
             with Archive(archive_file) as archive:
                 from mother.physiology.handoff import accept_envelope
 
-                accept_envelope(
-                    archive, packet, received_at="2026-11-07T04:15:00Z"
-                )
+                accept_envelope(archive, packet, received_at="2026-11-07T04:15:00Z")
             report = reconcile_delivery(
                 packet, attempted=True, archive_path=archive_file
             )
@@ -148,9 +146,7 @@ class ActualMotherReportToCoachTests(unittest.TestCase):
             self.assertEqual(reported["state"], "delivery_unknown")
             proc = coach_interpret(packet, report=reported, attempted=True)
             self.assertEqual(proc.returncode, 0, proc.stderr)
-            self.assertEqual(
-                json.loads(proc.stdout)["state"], "delivery_unknown"
-            )
+            self.assertEqual(json.loads(proc.stdout)["state"], "delivery_unknown")
 
 
 if __name__ == "__main__":
