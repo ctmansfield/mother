@@ -126,12 +126,12 @@ receipt.
    retrying the **same original envelope** yields exactly one normalized
    event and the expected deterministic receipt.
 4. Added tests rejecting false archive attestations, modified original
-   bytes, missing event parents, receipt-content tampering, symlinked or
+   bytes and altered normalized event fields, missing event parents, receipt-content tampering, symlinked or
    world-readable existing receipts, oversize packets, and invalid CLI
    input that must not create an archive.
 5. Dedicated GitHub Actions pinned the actual Coach browser sender at
    `1900d64b4b73706bd0a06871985502b8967f2911` and passed
-   **10 recovery + 4 UI integration + 10 archive regression tests**.
+   **12 recovery + 4 UI integration + 10 archive regression tests**.
    Black/Ruff also passed after corrective formatting.
 6. Documented INSTALL, VERIFY and the outstanding authorization/queue/
    network-runtime decisions. No shared schema or migration changed.
