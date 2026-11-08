@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ctmansfield/coach
-          ref: 1900d64b4b73706bd0a06871985502b8967f2911
+          ref: 34554b07e0edb531074daa1bd77a28ac301409e9
           path: paired-coach
           persist-credentials: false
       - uses: actions/setup-python@v5
@@ -43,12 +43,17 @@ jobs:
       - name: Verify pinned sender commit
         run: |
           actual=$(git -C paired-coach rev-parse HEAD)
-          test "$actual" = "1900d64b4b73706bd0a06871985502b8967f2911"
+          test "$actual" = "34554b07e0edb531074daa1bd77a28ac301409e9"
       - name: Run read-only reconciliation acceptance
         env:
           COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
           PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/paired-coach
         run: python -m unittest discover -s tests/physiology -p test_delivery_state.py -v
+      - name: Test actual Mother report as interpreted by Coach viewer
+        env:
+          COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/paired-coach
+        run: python -m unittest discover -s tests/physiology -p test_delivery_state_coach.py -v
       - name: Repeat bounded recovery suite
         env:
           COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
