@@ -18,7 +18,6 @@ from pathlib import Path
 import stat
 import sys
 import tempfile
-from typing import Any
 
 from .contracts import canonical_json, content_hash
 from .handoff import MAX_ENVELOPE_BYTES, accept_envelope, unpack_event
@@ -69,9 +68,9 @@ def _archived_event(archive, original: bytes, event_id: str, revision_id: str):
     if row is None or bytes(row[0]) != original:
         raise ReceiptError("Original source artifact is missing")
     matches = [
-        record for record in archive.current_records(kind="event")
-        if record["id"] == event_id
-        and record["source_revision_id"] == revision_id
+        record
+        for record in archive.current_records(kind="event")
+        if record["id"] == event_id and record["source_revision_id"] == revision_id
     ]
     if len(matches) != 1 or matches[0]["subject_id"] != raw["subject_id"]:
         raise ReceiptError("Selected archive does not project this event")
@@ -79,7 +78,9 @@ def _archived_event(archive, original: bytes, event_id: str, revision_id: str):
         raise ReceiptError("Selected archive event payload differs")
 
 
-def _receipt(archive, envelope: bytes, original: bytes, event_id: str, revision_id: str):
+def _receipt(
+    archive, envelope: bytes, original: bytes, event_id: str, revision_id: str
+):
     _archived_event(archive, original, event_id, revision_id)
     return {
         "receipt_version": RECEIPT_VERSION,
@@ -217,9 +218,7 @@ def main(argv: list[str] | None = None) -> int:
             0 < original_stat.st_size <= MAX_ENVELOPE_BYTES
         ):
             raise ReceiptError("Input must be a bounded regular file")
-        descriptor = os.open(
-            args.input, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-        )
+        descriptor = os.open(args.input, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
         with os.fdopen(descriptor, "rb") as handle:
             envelope = handle.read(MAX_ENVELOPE_BYTES + 1)
         unpack_event(envelope)
@@ -232,9 +231,7 @@ def main(argv: list[str] | None = None) -> int:
         from .archive import Archive
 
         with Archive(args.archive) as archive:
-            outcome = ingest_with_receipt(
-                archive, envelope, receipt_directory=folder
-            )
+            outcome = ingest_with_receipt(archive, envelope, receipt_directory=folder)
         print(json.dumps(outcome, sort_keys=True, allow_nan=False))
         return 0
     except (ValueError, OSError) as exc:
