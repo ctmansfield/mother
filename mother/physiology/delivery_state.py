@@ -23,6 +23,7 @@ from .handoff import MAX_ENVELOPE_BYTES, unpack_event
 from .manual_ingest import (
     COLLECTION,
     COACH_PROCESSING_VERSION,
+    MANUAL_KINDS,
     _parse_input,
 )
 from .receipt_recovery import ReceiptError, _archived_event, verify_receipt
@@ -116,6 +117,9 @@ def _validated_original(envelope):
         or raw.get("processing_version") != COACH_PROCESSING_VERSION
         or raw.get("source_revision_id") is not None
         or raw.get("epistemic_type") != "reported"
+        or raw.get("event_kind") not in MANUAL_KINDS
+        or len(raw["id"]) > 256
+        or len(raw["subject_id"]) > 256
     ):
         raise DeliveryStateError("Incompatible Coach event source or version")
     return original, raw
