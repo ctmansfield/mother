@@ -314,7 +314,7 @@ class DeliveryStateTests(unittest.TestCase):
         changed = json.dumps(raw, sort_keys=True).encode()
         wire["event_base64"] = base64.b64encode(changed).decode()
         wire["event_sha256"] = hashlib.sha256(changed).hexdigest()
-        forged = (json.dumps(wire, sort_keys=True) + "\\n").encode()
+        forged = json.dumps(wire, sort_keys=True).encode()
         with self.assertRaises(ValueError):
             reconcile_delivery(forged)
 
