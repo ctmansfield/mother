@@ -211,6 +211,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.input.resolve() == args.archive.resolve():
             raise ReceiptError("Input and archive paths must differ")
+        if args.receipt_directory.resolve() in {
+            args.input.resolve(),
+            args.archive.resolve(),
+        }:
+            raise ReceiptError("Receipt directory must differ from input and archive")
         if args.receipt_directory.is_symlink() or args.archive.is_symlink():
             raise ReceiptError("Symlinked destinations are unsupported")
         original_stat = args.input.lstat()
