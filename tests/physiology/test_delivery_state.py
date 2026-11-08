@@ -317,5 +317,6 @@ class DeliveryStateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             reconcile_delivery(forged)
 
+
 if __name__ == "__main__":
     unittest.main()
