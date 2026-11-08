@@ -109,3 +109,33 @@ efficacy. No credentials or running services were altered.
 No personal data or production service was used; no credential or database
 migration was changed. Offline event export does not establish archival
 receipt.
+
+
+## 8 November 2026 — I01-R durable offline receipt recovery
+
+1. Reconfirmed Coach I01-U2 and Mother I01-U draft bases. No live NAS
+   connection, credentials, application services, or personal datasets
+   were inspected or changed.
+2. Built a bounded synchronous Mother receipt writer/verifier. A receipt is
+   generated **only after** immutable event archival and direct verification
+   of the selected source revision, normalized event and original bytes.
+   It is deterministic and stored privately without overwriting an
+   incompatible existing file.
+3. Added an explicit crash window simulation: an exception after source
+   archival but before receipt persistence. Reopening the archive and
+   retrying the **same original envelope** yields exactly one normalized
+   event and the expected deterministic receipt.
+4. Added tests rejecting false archive attestations, modified original
+   bytes and altered normalized event fields, missing event parents, receipt-content tampering, symlinked or
+   world-readable existing receipts, oversize packets, and invalid CLI
+   input that must not create an archive.
+5. Dedicated GitHub Actions pinned the actual Coach browser sender at
+   `1900d64b4b73706bd0a06871985502b8967f2911` and passed
+   **12 recovery + 4 UI integration + 10 archive regression tests**.
+   Black/Ruff also passed after corrective formatting.
+6. Documented INSTALL, VERIFY and the outstanding authorization/queue/
+   network-runtime decisions. No shared schema or migration changed.
+
+This is **offline synthetic integration**, not authenticated live delivery.
+The sender retains its original envelope; no implicit spool cleanup or
+medical inference is added. Production NAS behavior remains unverified.
