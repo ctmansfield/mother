@@ -139,3 +139,32 @@ receipt.
 This is **offline synthetic integration**, not authenticated live delivery.
 The sender retains its original envelope; no implicit spool cleanup or
 medical inference is added. Production NAS behavior remains unverified.
+
+
+## 8–9 November 2026 — I01-S delivery-state reconciliation
+
+1. Reconciled open draft dependencies: Mother I01-R PR #8 and Coach browser
+   capture PR #5 remained unmerged. Chose a bounded **read-only** state
+   adapter, rather than making a live API or new database migration.
+2. Built a Mother reconciliation module that opens an existing, explicitly
+   selected archive with SQLite `mode=ro`, `query_only`, and a consistent
+   snapshot. It verifies immutable source revision, current record and
+   original bytes before reporting any local archive match.
+3. Distinguishes prepared, attempted-but-unknown, verified-without-receipt,
+   verified-with-receipt, invalid receipt and same-ID conflict. The report
+   always says `safe_to_delete_original: false` and
+   `authenticated_sender: false`. A copied receipt alone is insufficient.
+4. Added a Coach offline status viewer that SHA-256 checks the original
+   event envelope and a matching status report, while clearly marking the
+   report's provenance **unauthenticated** in the browser.
+5. Dedicated verification passed 15 Mother state checks, 5 crossrepo tests
+   using Mother-generated reports and actual Coach UI JavaScript, 12 Mother
+   receipt regressions; Coach passed 13 Node and 5 Chromium tests.
+6. Scoped to isolated branches, synthetic event data and no-network tests.
+   User's NAS restoration, credentials, deployed configuration, personal
+   records and live notification pathways were not touched.
+
+The next gate is an authenticated identity/subject-binding decision and
+deployment reconciliation, not treating copied JSON or SHA-256 as a
+security identity. No inference of therapy outcome or wearer performance
+is implied.
