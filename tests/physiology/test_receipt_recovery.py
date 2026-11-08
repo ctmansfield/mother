@@ -281,5 +281,33 @@ class ReceiptRecoveryTests(unittest.TestCase):
             self.assertNotIn(SUBJECT, result.stderr)
 
 
+    def test_cli_refuses_receipt_path_over_archive_or_input_before_commit(self):
+        envelope = packet()
+        with TemporaryDirectory() as root:
+            envelope_file = Path(root) / "input.coach-event.json"
+            envelope_file.write_bytes(envelope)
+            archive_file = Path(root) / "archive.sqlite3"
+            command = [
+                sys.executable,
+                "-m",
+                "mother.physiology.receipt_recovery",
+                "--input",
+                str(envelope_file),
+                "--archive",
+                str(archive_file),
+                "--receipt-directory",
+            ]
+            for bad_directory in (archive_file, envelope_file):
+                with self.subTest(path=bad_directory.name):
+                    result = subprocess.run(
+                        command + [str(bad_directory)],
+                        capture_output=True,
+                        text=True,
+                    )
+                    self.assertEqual(result.returncode, 2)
+                    self.assertFalse(archive_file.exists())
+            self.assertEqual(envelope_file.read_bytes(), envelope)
+
+
 if __name__ == "__main__":
     unittest.main()
