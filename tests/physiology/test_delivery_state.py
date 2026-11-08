@@ -20,7 +20,6 @@ from unittest.mock import patch
 
 from mother.physiology.archive import Archive
 from mother.physiology.delivery_state import (
-    ReadOnlyArchive,
     reconcile_delivery,
     open_readonly,
 )
@@ -100,9 +99,7 @@ class DeliveryStateTests(unittest.TestCase):
             path = Path(root) / "archive.sqlite3"
             with Archive(path):
                 pass
-            result = reconcile_delivery(
-                envelope, attempted=True, archive_path=path
-            )
+            result = reconcile_delivery(envelope, attempted=True, archive_path=path)
             self.assertEqual(result["state"], "delivery_unknown")
             self.assertTrue(result["archive_checked"])
             self.assertFalse(result["safe_to_delete_original"])
@@ -161,17 +158,18 @@ class DeliveryStateTests(unittest.TestCase):
                 ):
                     with self.assertRaises(OSError):
                         ingest_with_receipt(
-                            archive, envelope, receipt_directory=directory,
+                            archive,
+                            envelope,
+                            receipt_directory=directory,
                             received_at=WHEN,
                         )
-            report = reconcile_delivery(
-                envelope, archive_path=path, attempted=True
-            )
+            report = reconcile_delivery(envelope, archive_path=path, attempted=True)
             self.assertEqual(report["state"], "archive_verified_receipt_missing")
             self.assertFalse(directory.exists())
             with Archive(path) as archive:
                 recovered = ingest_with_receipt(
-                    archive, envelope,
+                    archive,
+                    envelope,
                     receipt_directory=directory,
                     received_at="2026-11-08T04:15:00Z",
                 )
@@ -189,7 +187,8 @@ class DeliveryStateTests(unittest.TestCase):
             path = Path(root) / "archive.sqlite3"
             with Archive(path) as archive:
                 receipt = ingest_with_receipt(
-                    archive, envelope,
+                    archive,
+                    envelope,
                     receipt_directory=Path(root) / "receipts",
                 )
             malformed = json.loads(Path(receipt["receipt_path"]).read_bytes())
@@ -236,9 +235,13 @@ class DeliveryStateTests(unittest.TestCase):
             input_file.write_bytes(envelope)
             nonexistent = Path(root) / "never-create.sqlite3"
             cmd = [
-                sys.executable, "-m", "mother.physiology.delivery_state",
-                "--input", str(input_file),
-                "--archive", str(nonexistent),
+                sys.executable,
+                "-m",
+                "mother.physiology.delivery_state",
+                "--input",
+                str(input_file),
+                "--archive",
+                str(nonexistent),
                 "--attempted",
             ]
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -255,16 +258,24 @@ class DeliveryStateTests(unittest.TestCase):
             output = folder / "state.json"
             input_file.write_bytes(envelope)
             cmd = [
-                sys.executable, "-m", "mother.physiology.delivery_state",
-                "--input", str(input_file),
-                "--output", str(output),
+                sys.executable,
+                "-m",
+                "mother.physiology.delivery_state",
+                "--input",
+                str(input_file),
+                "--output",
+                str(output),
             ]
             self.assertEqual(subprocess.run(cmd, capture_output=True).returncode, 0)
-            self.assertEqual(json.loads(output.read_bytes())["state"], "prepared_pending")
+            self.assertEqual(
+                json.loads(output.read_bytes())["state"], "prepared_pending"
+            )
             self.assertEqual(output.stat().st_mode & 0o777, 0o600)
             self.assertNotEqual(subprocess.run(cmd, capture_output=True).returncode, 0)
             self.assertEqual(input_file.read_bytes(), envelope)
-            self.assertEqual(json.loads(output.read_bytes())["state"], "prepared_pending")
+            self.assertEqual(
+                json.loads(output.read_bytes())["state"], "prepared_pending"
+            )
 
     def test_cli_refuses_report_over_input(self):
         with TemporaryDirectory() as root:
@@ -272,9 +283,13 @@ class DeliveryStateTests(unittest.TestCase):
             envelope = packet()
             input_file.write_bytes(envelope)
             cmd = [
-                sys.executable, "-m", "mother.physiology.delivery_state",
-                "--input", str(input_file),
-                "--output", str(input_file),
+                sys.executable,
+                "-m",
+                "mother.physiology.delivery_state",
+                "--input",
+                str(input_file),
+                "--output",
+                str(input_file),
             ]
             self.assertEqual(subprocess.run(cmd, capture_output=True).returncode, 2)
             self.assertEqual(input_file.read_bytes(), envelope)
