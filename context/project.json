@@ -1,0 +1,12 @@
+{
+  "control_url": "https://github.com/ctmansfield/mother/issues",
+  "policy": {
+    "freshness": "unverified",
+    "url": "https://github.com/ctmansfield/mother/blob/main/.codex/WORKFLOW.md",
+    "version": "context-v1"
+  },
+  "project": "mother",
+  "repository": "ctmansfield/mother",
+  "schema": "context-project",
+  "version": 1
+}
