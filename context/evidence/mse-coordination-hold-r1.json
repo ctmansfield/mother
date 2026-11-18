@@ -1,0 +1,13 @@
+{
+  "schema": "mse-coordination-disposition-excerpt",
+  "version": 1,
+  "source_url": "https://github.com/ctmansfield/production-framework/issues/42#issuecomment-6908655745",
+  "observed_at": "2026-11-18T17:26:58Z",
+  "source_updated_at": "2026-11-16T05:58:19Z",
+  "source_body_sha256": "c8d730b106fce69e011c91c0116bcd308e71eedfaae6270c2855c4fa394ce3e6",
+  "excerpt": "APNs/locked/background, phone power loss, same-VM independence, phone CA disposition, NAS glucose and PR #35 remain excluded/parked.",
+  "application": "Publishing this MSE reference does not reopen NAS glucose or authorize a live execution window.",
+  "limits": [
+    "This is a labeled source excerpt and interpretation, not the complete coordinator ledger or a new runtime receipt."
+  ]
+}

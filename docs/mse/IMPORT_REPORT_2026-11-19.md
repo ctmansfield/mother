@@ -12,6 +12,14 @@ addendum. The selected review branch is
 `work/mse-001-reference-and-design-20261119`, based on MOTHER main
 `818426fe90fab1bfd9583640363d4001b30e633f`. The GitHub publication receipt and
 source-bound context record identify the resulting source commit and draft PR.
+The published source commit is
+[`18f7b040b576294de6570ce6e8247e8ed8590caf`](https://github.com/ctmansfield/mother/commit/18f7b040b576294de6570ce6e8247e8ed8590caf),
+and the review is [MOTHER draft PR #12](https://github.com/ctmansfield/mother/pull/12).
+All 84 publication file blobs and modes matched the prepared package on remote
+readback; unrelated base files remained unchanged. The source-bound handoff is
+`context/tasks/MSE-001-publication-r1.json` with measured evidence under
+`context/evidence/` and a registered index.
+
 This is repository publication, not a production integration or deployment.
 
 ## Preserved source
@@ -71,6 +79,14 @@ The general MOTHER CI is not used as proof because its existing commands suppres
 some failures. The dedicated MSE workflow propagates failures. A remote workflow
 result must be read separately at the exact published head before claiming it
 passed. Local verification does not imply remote CI execution.
+
+At source commit `18f7b040b576294de6570ce6e8247e8ed8590caf`, GitHub readback
+confirmed success for the [dedicated MSE workflow](https://github.com/ctmansfield/mother/actions/runs/44358292209),
+[pre-commit](https://github.com/ctmansfield/mother/actions/runs/44358292136) and
+[general CI](https://github.com/ctmansfield/mother/actions/runs/44358292131)
+on the PR event, with all three push-event runs also successful. These receipts
+cover that source commit. The following metadata/context commit must be checked
+at its own head; the final PR check page is the current result source.
 
 ## Publication contents and limits
 

@@ -1,0 +1,172 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "task_id": "MSE-001-publication",
+  "task_revision": "1",
+  "observed_at": "2026-11-18T17:26:58Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SYNCED_AT_READBACK",
+    "detail": "PR body, source tree and initial-head CI read back; user instruction is mirrored in PR12. Recheck moving heads and owning dispositions before later execution."
+  },
+  "record_kind": "source_projection",
+  "goal": "Save the MSE prototype, complete design, findings and current integration details to ctmansfield/mother.",
+  "scope": [
+    "Immutable original reference and historical findings; current docs, verifier/CI and source-bound handoff on a review branch."
+  ],
+  "acceptance": [
+    "Complete original release preserved; current design reconciled; source read back; offline checks pass; draft PR retained."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Publish the prototype, documentation, findings and current design to Mother; open a review PR."
+    ],
+    "not_authorized": [
+      "Production deployment, main merge, live data/device execution, credentials or automation changes."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Preserve existing ingestion and original source bytes; synthetic fixtures only.",
+    "Keep NAS glucose parked; separate software verification from scientific validation."
+  ],
+  "instruction_binding": {
+    "id": "MSE-001-PUBLICATION-20261119",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/12",
+    "sha256": "cf01bc3e9ecc8f0a91f4e7d51b8711845e3bb9ecd3f9d52cf3380b673e964499",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "MSE-001-PUBLICATION-20261119-R1",
+    "status": "COMPLETED",
+    "instruction_ref": {
+      "id": "MSE-001-PUBLICATION-20261119",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/12",
+      "sha256": "cf01bc3e9ecc8f0a91f4e7d51b8711845e3bb9ecd3f9d52cf3380b673e964499"
+    },
+    "tests_performed": [
+      "56 prototype tests; 25 contracts; 7 SQL invariants; 3 exact patch reconstructions; 50 context tests; integrity and tooling checks.",
+      "All 84 published source blobs/modes matched; initial-head MSE, pre-commit and mother-ci succeeded on push and PR."
+    ],
+    "limitations": [
+      "Initial source-head CI only; verify metadata head separately.",
+      "No calibrated biology, implemented live adapter, runtime acceptance, merge or deployment."
+    ],
+    "requested_decision": "Review draft PR12; no runtime or treatment decision requested.",
+    "next_action": "#next_action",
+    "source": "source"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-001-PUBLICATION-20261119",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/12",
+      "sha256": "cf01bc3e9ecc8f0a91f4e7d51b8711845e3bb9ecd3f9d52cf3380b673e964499"
+    },
+    "source": "receipt"
+  },
+  "decisions": [
+    {
+      "id": "preserve-reference",
+      "value": "Import original v0.1.0 byte-for-byte; place current proposals in docs/mse.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Preserve evidence, failed hypotheses and historical claims while providing a current entry point."
+    },
+    {
+      "id": "preserve-nas-hold",
+      "value": "Keep NAS glucose parked; earlier historical milestone advice does not reopen it.",
+      "source": "hold",
+      "supersedes": [],
+      "reason": "Current owning disposition excludes NAS glucose; this user task authorizes repository publication."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "PUBLISHED_REFERENCE",
+      "detail": "Source commit 18f7b040b576294de6570ce6e8247e8ed8590caf; research/mse/reference-v0.1.0 and docs/mse.",
+      "source": "receipt"
+    },
+    "test": {
+      "status": "PASS_AT_SOURCE_HEAD",
+      "detail": "Local checks and six GitHub workflow runs passed at the initial source head; later heads require their own check.",
+      "source": "receipt"
+    },
+    "merge": {
+      "status": "DRAFT_UNMERGED",
+      "detail": "PR12 open/draft; main remains at 818426fe90fab1bfd9583640363d4001b30e633f.",
+      "source": "receipt"
+    },
+    "deploy": {
+      "status": "NOT_DEPLOYED",
+      "detail": "No production service or database changed.",
+      "source": "source"
+    },
+    "runtime": {
+      "status": "NOT_VALIDATED",
+      "detail": "Offline synthetic reference only; new glucose/federation adapters remain proposals.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Independent reviewer/PM acknowledgment and merge disposition.",
+    "Current live-host state, clinical calibration and individual causal efficacy remain unverified."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "Later integration requires a separately scoped adapter/replay task and current owning disposition."
+  ],
+  "next_action": {
+    "action": "Review PR12 and its exact head; retain the current hold. Select any captured-source adapter as a separate task.",
+    "role": "Chad and MOTHER maintainer/PM"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/mse-publication-source-r1.json",
+      "sha256": "cf01bc3e9ecc8f0a91f4e7d51b8711845e3bb9ecd3f9d52cf3380b673e964499",
+      "observation": {
+        "kind": "exact_body_envelope",
+        "environment": "GitHub connector and isolated Linux staging",
+        "method": "Read actual source; preserve bytes or labeled projection and measured SHA-256.",
+        "result": "PR body matched the published report.",
+        "limitations": [
+          "Digest covers the JSON envelope; body_sha256 separately identifies exact PR body bytes."
+        ],
+        "observed_at": "2026-11-18T17:26:58Z"
+      }
+    },
+    "receipt": {
+      "path": "evidence/mse-publication-readback-r1.json",
+      "sha256": "cd1d6712459933f713d3c39bc107adb2370d890025d71f571bb6b4d902705338",
+      "observation": {
+        "kind": "measured_repository_receipt",
+        "environment": "GitHub connector and isolated Linux staging",
+        "method": "Read actual source; preserve bytes or labeled projection and measured SHA-256.",
+        "result": "84 source files and initial-head CI verified.",
+        "limitations": [
+          "Records publication and software checks only, not independent acknowledgment."
+        ],
+        "observed_at": "2026-11-18T17:26:58Z"
+      }
+    },
+    "hold": {
+      "path": "evidence/mse-coordination-hold-r1.json",
+      "sha256": "1c33ed799aa46f59d282c4ed35e4435a29cee9ddfdd829e4d4587c3ca33c36a3",
+      "observation": {
+        "kind": "labeled_source_excerpt",
+        "environment": "GitHub connector and isolated Linux staging",
+        "method": "Read actual source; preserve bytes or labeled projection and measured SHA-256.",
+        "result": "NAS-glucose parked disposition preserved.",
+        "limitations": [
+          "Recheck the owning channel before any later live work."
+        ],
+        "observed_at": "2026-11-18T17:26:58Z"
+      }
+    }
+  }
+}
