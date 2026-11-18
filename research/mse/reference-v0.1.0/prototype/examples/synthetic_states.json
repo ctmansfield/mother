@@ -1,0 +1,2582 @@
+{
+  "active_observation_count": 26,
+  "availability_policy": "retrospective_snapshot_not_historical_as_available",
+  "config_hash": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+  "configuration": {
+    "availability_policy": "retrospective_snapshot",
+    "blocking_quality_flags": [
+      "clock_error",
+      "corrupt_record",
+      "invalid_calibration",
+      "invalid_measurement",
+      "known_motion_artifact",
+      "sensor_error"
+    ],
+    "config": {
+      "baseline_window_seconds": 604800.0,
+      "max_gap_seconds": 21600.0,
+      "min_baseline": 8
+    },
+    "fixed_channel_parameters": {
+      "glucose": {
+        "equilibrium_variance": 4.0,
+        "tau_seconds": 3600.0,
+        "unit": "mmol/L",
+        "variance_floor": 0.25
+      },
+      "heart_rate": {
+        "equilibrium_variance": 100.0,
+        "tau_seconds": 7200.0,
+        "unit": "bpm",
+        "variance_floor": 4.0
+      },
+      "hrv_sdnn": {
+        "equilibrium_variance": 0.16,
+        "tau_seconds": 21600.0,
+        "unit": "log(ms/ms)",
+        "variance_floor": 0.09
+      }
+    },
+    "interval_policy": "complete_nonoverlapping_intervals_only",
+    "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+    "reference_time_policy": "aggregate_interval_end"
+  },
+  "dataset_hash": "6ec40c6803ef21130a83a7c2012544af68c3404c8a6dbc1fced86b428953c766",
+  "evidence_manifest": {
+    "accepted_observation_ids": [
+      "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+      "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+      "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+      "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+      "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+      "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225",
+      "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+      "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+      "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+      "observation:841837a03ce631ac8fdab878ec3f146feceb39163942926cd86dedc39c2f588e",
+      "observation:8acc1e43971018a5846a31f9a18391ffe69f070dd6a3a0aaf81e760f0e384bd1",
+      "observation:8e8bbf80313fd0a51ae72949ce06f2c4a100ea319e1f2025d927dbae7d2b8f17",
+      "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62",
+      "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+      "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+      "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+      "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+      "observation:d077133f1dfae30511b8a197db8035568d4bc972f5904d5eff95855160f9ef63",
+      "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+      "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+      "observation:dad373deecec4ad630258230d9e408544f42ba1624bb246af26b252329f942c1",
+      "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+      "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+      "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+      "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843",
+      "observation:f8a73b09a8c8719a992e0231ccc1126fd3c6f17828d91614aafd9b2c30f4f9d3"
+    ],
+    "artifact_sha256": [
+      "c3677708f2245d279bccd651d0ca978ff061258d97795039cb8d8dc3789e80a3"
+    ],
+    "rejected_artifact_sha256": [],
+    "tombstone_ids": []
+  },
+  "historical_mother_availability_established": false,
+  "historical_source_availability_established": false,
+  "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+  "intervention_authority": "none",
+  "measurement_request": {
+    "does_not_establish": "Any specific autonomic, endocrine, inflammatory or mitochondrial cause",
+    "expected_discrimination": "Separate context-associated signal variation from a persistent unexplained deviation",
+    "expected_information_gain": null,
+    "mode": "observation_only",
+    "reason": "HR/SDNN patterns are compatible with several mechanisms",
+    "selection_method": "declared heuristic, not validated information gain",
+    "suggested_observation": "Record posture, recent exertion, breathing conditions, sleep and meal timing alongside repeated observations"
+  },
+  "model_version": "mse-ou-reference/0.1.0",
+  "replay_mode": "retrospective_snapshot",
+  "run_id": "run:2bc95da1d8a97242a3ea2be041cf19c2a25b8114364cf874d9259a3cd021ac67",
+  "schema_version": "mse.run/0.1",
+  "snapshot_filter_semantics": "One global source-receipt and completed-interval cutoff; not a separate historical knowledge set at each state time",
+  "source_receipt_cutoff": null,
+  "states": [
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 0,
+      "baseline_observation_ids": [],
+      "baseline_quality_flags": [],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:01:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:3125637baa5c7fdff9cf2cda291a4308d26885d106982471f752bbc4f4978c8f",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 0,
+      "baseline_observation_ids": [],
+      "baseline_quality_flags": [],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:01:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:d7e09136b9c742a04b6563f6078f76efc3c1cbe9fc9bd40245be22da51b7c131",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 1,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:16:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:0d856e1c72413f0d8b5bc0d71a9bb200f6e94ae4a00211efa15c048b66ade493",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:16:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 1,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:16:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:d0df2d535521e72023112505978c54c231ee4597c6598233dbe07ac40ceec7aa",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:16:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 2,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:31:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:661f9a7f5e41f4d2828a7e2b7d333fe94df11fe6278b1b73c96842f04c6e1f50",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:31:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 2,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:31:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:92b9549dde3eb85f259ae163fccb426907280abfeaf4534d4425649e1917a015",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:31:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 3,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:46:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:2a4d909a4a569a6613c6735135a3ffa92db14352d0f4bf711faf686a8bf728b1",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:46:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 3,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T06:46:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:46cdc0d6f7b21f543771443d1273e27244bedead5efd85070c4d6af80cee0b09",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T06:46:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 4,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:01:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:a8f387981aec5e19b2b80b439ec0c6d0fba87a40b6d8f53b52be8f225182f796",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 4,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:01:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:bdebb5903864cbbe4e512583a1e23ca98091b7eaece5f28c7abecf7cb1487d9f",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 5,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:16:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:625cfb1d375119ad9836ff7b8fd4003499efcd2a5f388229a3256cc0610ae567",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:16:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 5,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:16:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:f5c3d839ebab496f2b7b34fc9458181090bebebbcce7b8157584bf53a73623ac",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:16:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 6,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:31:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:10b2accfa3689cdbc1de67c7bdeae7bd867c37cf34d96842036b2cbdd8cf1806",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:31:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 6,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:31:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:4f91f1055db86d1ab794680768d16de9cc13fbb92f7c5be57fec2526282faea1",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:31:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 7,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:46:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:0963248df218d2ef4e9e7b31a138184531755b085899b8270523ab31b4c50070",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:46:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": null,
+      "baseline_count": 7,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": null,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T07:46:00.000000Z",
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "insufficient_prior_baseline",
+      "reference_95_interval": null,
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:c5b2db6980c960464b7079749b72258aed96644d37f31c2e4aa3676a3411758d",
+      "state_kind": "observed_signal_deviation",
+      "status": "unknown",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T07:46:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": null
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 60.0,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.5
+      },
+      "baseline_count": 8,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": 28.708133971291865,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:01:00.000000Z",
+      "prediction_variance": 100.0,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        24.640852923759347,
+        32.77541501882438
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:9790b8bb11b33a4420cfc1f3ebabe76d97f54431fcbe776b9beafc6a2fd37057",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": 4.30622009569378
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 3.911922985422811,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.01125
+      },
+      "baseline_count": 8,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": -0.4244499356506706,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:01:00.000000Z",
+      "prediction_variance": 0.16,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        -0.9125236613545727,
+        0.0636237900532316
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:e4d222c65dee2dd96448eb057619454e4f913668159a6fc1ffc08fc8dee92465",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": 0.06200956937799042
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 63.333333333333336,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 11.166666666666666
+      },
+      "baseline_count": 9,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": 19.901568055064303,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:16:00.000000Z",
+      "prediction_variance": 25.473609275463637,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        13.85835285476577,
+        25.944783255362836
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:2ba9e9432be02055960db166b42f3f079b112cce6b625595b6cbf76f846cec33",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:16:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": 9.50657277101188
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 3.834917745361188,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.01
+      },
+      "baseline_count": 9,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": -0.41806341400255675,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:16:00.000000Z",
+      "prediction_variance": 0.06984445161909789,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        -0.8155260836093051,
+        -0.02060074439580839
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:45995fc0125a3138044be692bc0f8dacf178e58910476fc589b3f398c44f4717",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:16:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225",
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": 0.04112259832645857
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 65.0,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 11.711111111111112
+      },
+      "baseline_count": 10,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": 10.668806990057536,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:31:00.000000Z",
+      "prediction_variance": 29.52364801124885,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        4.392439129900728,
+        16.945174850214343
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:63ac7a6bb9742b8da377be65be4145c01780ed5ba04674a8da9f72e8bb0931d4",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:31:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:f8a73b09a8c8719a992e0231ccc1126fd3c6f17828d91614aafd9b2c30f4f9d3"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": 10.254267366724635
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 3.7915457089912845,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.009
+      },
+      "baseline_count": 10,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843",
+        "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": -0.3452393118860795,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:31:00.000000Z",
+      "prediction_variance": 0.05062751056461165,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        -0.7039639696530993,
+        0.013485345880940247
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:b55ac0efa02eba0f2e63f47946d25ef601f42e2869c063708800aa46e8b936fd",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:31:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225",
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:d077133f1dfae30511b8a197db8035568d4bc972f5904d5eff95855160f9ef63",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": 0.03349733967359054
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 3.7700731955820235,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.00818181818181818
+      },
+      "baseline_count": 11,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843",
+        "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225",
+        "observation:d077133f1dfae30511b8a197db8035568d4bc972f5904d5eff95855160f9ef63"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": -0.23202624767061292,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:46:00.000000Z",
+      "prediction_variance": 0.0436119339309365,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        -0.5726271011098538,
+        0.10857460576862793
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:843e4429d8d0792ad3d7f2f532d8d5536ef6e275dbf635cabc8ba28b114c6095",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:46:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225",
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:841837a03ce631ac8fdab878ec3f146feceb39163942926cd86dedc39c2f588e",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:d077133f1dfae30511b8a197db8035568d4bc972f5904d5eff95855160f9ef63",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": 0.03019807928038818
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 65.63636363636364,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 9.986776859504133
+      },
+      "baseline_count": 11,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62",
+        "observation:f8a73b09a8c8719a992e0231ccc1126fd3c6f17828d91614aafd9b2c30f4f9d3"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": 1.8693299863792099,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T08:46:00.000000Z",
+      "prediction_variance": 30.1059531478882,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        -4.187670251394667,
+        7.926330224153086
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:d1adbaef39a0458a878604db27a5592f4e87fd959b66f81bffa2799c64efd168",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T08:46:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:dad373deecec4ad630258230d9e408544f42ba1624bb246af26b252329f942c1",
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:f8a73b09a8c8719a992e0231ccc1126fd3c6f17828d91614aafd9b2c30f4f9d3"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": 9.549992680235528
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 65.5,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 8.340909090909092
+      },
+      "baseline_count": 12,
+      "baseline_observation_ids": [
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62",
+        "observation:f8a73b09a8c8719a992e0231ccc1126fd3c6f17828d91614aafd9b2c30f4f9d3",
+        "observation:dad373deecec4ad630258230d9e408544f42ba1624bb246af26b252329f942c1"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "heart_rate",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": -2.688650022780627,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit heart-rate quantity; acquisition method unavailable",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T09:01:00.000000Z",
+      "prediction_variance": 29.557463470553113,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        -8.471802614646526,
+        3.0945025690852717
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:26b0e081fc8663ecd10b468ff05800b8449046c9b68bea82b75e2781b20dffad",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T09:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:0608f448f985ff50df65b05b9344378278346bbf58d5ab57dcec8e4aa2a8c2f1",
+        "observation:077cf3448564c9cea7b3880c342018ef186fa5a00cc4374723615b1394dc9e0c",
+        "observation:16789a61cc95f5ba26d4719660d64048361c56968e17943eaf076900e976a8ed",
+        "observation:27bb2863cdcb01ccc6e6f084e49ae1d2edf4c2862c8169b37c458bb835277445",
+        "observation:400d1f9b3a534830f92334ac33beefdf0a7826609db6fb6840d85217f154428f",
+        "observation:7795b9f261b074cfa02384380b052da63d71ec39bc29b2c625b6ff3cacb8f061",
+        "observation:8acc1e43971018a5846a31f9a18391ffe69f070dd6a3a0aaf81e760f0e384bd1",
+        "observation:a2024985868e26a30147f6f53000dfddb1d4311563365026d252656b1f319a62",
+        "observation:b25ff4bb62942935f3be243ebe52b67441c4c31f849d10532deda56838158c67",
+        "observation:dad373deecec4ad630258230d9e408544f42ba1624bb246af26b252329f942c1",
+        "observation:e4ae185ae16f4722ba43ba55c0110e532f0c357f9bed59cae01891c1cf852a35",
+        "observation:ed591569bcf399331c3926ed739941b569c7b360d2f13c6d36a504474702f733",
+        "observation:f8a73b09a8c8719a992e0231ccc1126fd3c6f17828d91614aafd9b2c30f4f9d3"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "bpm",
+      "variance": 8.70596988255031
+    },
+    {
+      "availability_policy": "retrospective_snapshot",
+      "baseline": {
+        "mean": 3.769333772257985,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.0075
+      },
+      "baseline_count": 12,
+      "baseline_observation_ids": [
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843",
+        "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225",
+        "observation:d077133f1dfae30511b8a197db8035568d4bc972f5904d5eff95855160f9ef63",
+        "observation:841837a03ce631ac8fdab878ec3f146feceb39163942926cd86dedc39c2f588e"
+      ],
+      "baseline_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "channel": "hrv_sdnn",
+      "context": "unknown",
+      "current_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "epistemic_type": "statistically_inferred",
+      "excluded_observation_ids": [],
+      "excluded_quality_flags": [],
+      "filter_ancestor_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "historical_mother_availability_established": false,
+      "historical_source_availability_established": false,
+      "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+      "limits": [
+        "No biochemical cause identified",
+        "No sympathetic/vagal fraction inferred",
+        "Parameters are illustrative, not fitted or clinically validated",
+        "Baseline uncertainty uses an independence approximation; serial correlation is unmodeled",
+        "Retrospective event-time estimate; source receipts may occur after this reference time; not an online or historical as-available state",
+        "Acquisition conditions absent; baseline is not adjusted for posture, respiration, activity, sleep or meals"
+      ],
+      "mean": -0.1272186909954508,
+      "measurement_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "measurement_stratum": {
+        "bundle_id": "example.synthetic.watch",
+        "calibration_id": null,
+        "declared_acquisition_window_seconds": null,
+        "device_id": null,
+        "method": "HealthKit SDNN vendor output",
+        "observed_interval_seconds": 60.0
+      },
+      "mechanism_status": "unknown",
+      "model_configuration_sha256": "528051d3afa0bdadcf408e8da4ebde5e01d9fe17a7002f728a7bb52f4d28b186",
+      "model_version": "mse-ou-reference/0.1.0",
+      "observation_reference_policy": "aggregate_interval_end",
+      "observation_reference_time": "2026-01-01T09:01:00.000000Z",
+      "prediction_variance": 0.040576467833762925,
+      "quality_policy": "exclude_known_invalid_and_propagate_all_ancestry",
+      "reason": "reference_filter_update",
+      "reference_95_interval": [
+        -0.4589875845598282,
+        0.2045502025689266
+      ],
+      "schema_version": "mse.state/0.1",
+      "source_instance": "synthetic-healthkit",
+      "state_id": "state:deed6fa8d262b796bc26688701eece6784f54daf9f06e9fbbbb52b6639278abc",
+      "state_kind": "observed_signal_deviation",
+      "status": "estimated",
+      "subject_id": "synthetic-person",
+      "support_quality_flags": [
+        "acquisition_conditions_unknown",
+        "device_identity_unavailable",
+        "measurement_error_unqualified",
+        "source_clock_unqualified"
+      ],
+      "support_source_receipt_max": "2026-01-01T09:01:30.000000Z",
+      "supporting_observation_ids": [
+        "observation:5b5a01b656d2017bc1d133f96da0cbf7570de92dcc63c18c224539e7e56c3225",
+        "observation:687f373505666a7e86c7e03c3b625f3408249ee7ebd45ce04c0c656f4c93f5a8",
+        "observation:7be85e4c5c18a5e62ca0f05ec430ed83fd0a30e300e9c223a325df30a55c31a5",
+        "observation:841837a03ce631ac8fdab878ec3f146feceb39163942926cd86dedc39c2f588e",
+        "observation:8e8bbf80313fd0a51ae72949ce06f2c4a100ea319e1f2025d927dbae7d2b8f17",
+        "observation:a4f5023c39270fe41c8874be1183a5c4811e371ddcc668dd47b262086a36c80c",
+        "observation:bebea56e90208115f5d65dd841a128e6b3f75675ce96289e7c262d348f38c13e",
+        "observation:c4881b40817b36a7ed6746be91ecb0cba766a845eabc9790f2a7e2d62de5a6c0",
+        "observation:d077133f1dfae30511b8a197db8035568d4bc972f5904d5eff95855160f9ef63",
+        "observation:d0a0382688901a75e9c0e707249ddf2be03f5d428d3d10dfbbb688d37a5c716d",
+        "observation:d879d4d3ecc2e06f0162215f36d76c826bd5f1046dd83a46b2ffc852a8513187",
+        "observation:ed7ee6bdac41b33e26d88f45095b9ee445493c779fb1b5d9c9ade04aadd83017",
+        "observation:ed9ad931248e94031f898f1a7e4549d078479e22215db4600f875bb40e163843"
+      ],
+      "uncertainty_status": "uncalibrated_reference_model",
+      "unit": "log(ms/ms)",
+      "variance": 0.02865227997108788
+    }
+  ],
+  "unknown_dimensions": [
+    "insulin_action",
+    "hepatic_glucose_production",
+    "substrate_oxidation",
+    "mitochondrial_function",
+    "inflammation",
+    "microbial_flux",
+    "receptor_occupancy"
+  ]
+}

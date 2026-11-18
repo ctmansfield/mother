@@ -1,0 +1,54 @@
+{
+  "estimated": 10,
+  "historical_source_availability_established": false,
+  "implementation_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+  "import": {
+    "added": 26,
+    "artifact_sha256": "c3677708f2245d279bccd651d0ca978ff061258d97795039cb8d8dc3789e80a3",
+    "duplicates": 0,
+    "new_tombstones": 0,
+    "raw_artifact_retained": true
+  },
+  "peak_states": [
+    {
+      "baseline": {
+        "mean": 60.0,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.5
+      },
+      "baseline_count": 8,
+      "channel": "heart_rate",
+      "mean": 28.708133971291865,
+      "observation_reference_time": "2026-01-01T08:01:00.000000Z",
+      "reference_95_interval": [
+        24.640852923759347,
+        32.77541501882438
+      ],
+      "status": "estimated",
+      "unit": "bpm",
+      "variance": 4.30622009569378
+    },
+    {
+      "baseline": {
+        "mean": 3.911922985422811,
+        "method": "prior complete nonoverlapping intervals; sliding-window mean in transformed space",
+        "variance": 0.01125
+      },
+      "baseline_count": 8,
+      "channel": "hrv_sdnn",
+      "mean": -0.4244499356506706,
+      "observation_reference_time": "2026-01-01T08:01:00.000000Z",
+      "reference_95_interval": [
+        -0.9125236613545727,
+        0.0636237900532316
+      ],
+      "status": "estimated",
+      "unit": "log(ms/ms)",
+      "variance": 0.06200956937799042
+    }
+  ],
+  "replay_mode": "retrospective_snapshot",
+  "run_id": "run:2bc95da1d8a97242a3ea2be041cf19c2a25b8114364cf874d9259a3cd021ac67",
+  "states_total": 26,
+  "unknown": 16
+}

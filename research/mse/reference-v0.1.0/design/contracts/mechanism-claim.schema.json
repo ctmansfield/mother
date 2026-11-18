@@ -1,0 +1,405 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/mechanism-claim.schema.json",
+  "title": "mechanism-claim",
+  "description": "Proposed revisioned conditional mechanistic hyperedge; scoped evidence is distinct from E1 premise and simulation.",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "0.1.0"
+    },
+    "contract_status": {
+      "const": "proposal"
+    },
+    "id": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_origin": {
+      "enum": [
+        "synthetic_example",
+        "curated_research",
+        "runtime",
+        "manual"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
+    },
+    "extensions": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
+    },
+    "snapshot": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/snapshot_ref"
+    },
+    "claim_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "claim_type": {
+      "enum": [
+        "reaction",
+        "transport",
+        "regulatory",
+        "ecological",
+        "receptor_binding",
+        "receptor_signaling",
+        "premise"
+      ]
+    },
+    "assertion_status": {
+      "enum": [
+        "established_in_scope",
+        "hypothesis",
+        "project_premise"
+      ]
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entity": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/entity_ref"
+          },
+          "role": {
+            "enum": [
+              "substrate",
+              "product",
+              "catalyst",
+              "cofactor",
+              "modifier",
+              "ligand",
+              "receptor",
+              "organism",
+              "host_response",
+              "transport_source",
+              "transport_destination",
+              "state"
+            ]
+          },
+          "stoichiometric_coefficient": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "compartment_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "entity",
+          "role",
+          "stoichiometric_coefficient",
+          "compartment_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "scope": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/scope"
+    },
+    "conditions": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
+    },
+    "effect": {
+      "type": "object",
+      "properties": {
+        "target_entity_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/direction"
+        },
+        "delay": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
+        },
+        "functional_form": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "target_entity_id",
+        "direction",
+        "delay",
+        "functional_form"
+      ],
+      "additionalProperties": false
+    },
+    "physical_constraints": {
+      "type": "object",
+      "properties": {
+        "element_balance": {
+          "enum": [
+            "verified",
+            "not_checked",
+            "not_applicable"
+          ]
+        },
+        "charge_balance": {
+          "enum": [
+            "verified",
+            "not_checked",
+            "not_applicable"
+          ]
+        },
+        "electron_balance": {
+          "enum": [
+            "verified",
+            "not_checked",
+            "not_applicable"
+          ]
+        },
+        "thermodynamic_status": {
+          "enum": [
+            "feasible_in_scope",
+            "infeasible_in_scope",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/parameter"
+          },
+          "minItems": 0
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "element_balance",
+        "charge_balance",
+        "electron_balance",
+        "thermodynamic_status",
+        "parameters",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "receptor_model": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ligand_concentration_node_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "surface_receptor_node_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "occupancy_node_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "signaling_node_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "internalized_receptor_node_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 0
+            },
+            "parameters": {
+              "type": "array",
+              "items": {
+                "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/parameter"
+              },
+              "minItems": 0
+            },
+            "binding_model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "transduction_model": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "assumptions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "ligand_concentration_node_ids",
+            "surface_receptor_node_ids",
+            "occupancy_node_ids",
+            "signaling_node_ids",
+            "internalized_receptor_node_ids",
+            "parameters",
+            "binding_model",
+            "transduction_model",
+            "assumptions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/evidence"
+      },
+      "minItems": 0
+    },
+    "uncertainty": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/uncertainty"
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "contradicted_claim_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "contract_version",
+    "contract_status",
+    "id",
+    "revision",
+    "created_at",
+    "record_origin",
+    "provenance",
+    "extensions",
+    "snapshot",
+    "claim_text",
+    "claim_type",
+    "assertion_status",
+    "participants",
+    "scope",
+    "conditions",
+    "effect",
+    "physical_constraints",
+    "receptor_model",
+    "evidence",
+    "uncertainty",
+    "supersedes",
+    "contradicted_claim_refs"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "assertion_status": {
+            "const": "established_in_scope"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "minItems": 1,
+            "contains": {
+              "properties": {
+                "relationship": {
+                  "const": "supports"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "assertion_status": {
+            "const": "project_premise"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "claim_type": {
+            "const": "premise"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "claim_type": {
+            "enum": [
+              "receptor_binding",
+              "receptor_signaling"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "receptor_model": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ]
+}

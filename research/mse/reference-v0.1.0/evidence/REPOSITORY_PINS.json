@@ -1,0 +1,22 @@
+{
+  "audit_date_guam": "2026-11-13",
+  "source_inspection_only": true,
+  "health_bridge": {
+    "main": "32aa85ef756186c64e7b747780d522e2e65156d3",
+    "feature/sqlite-v0.4": "b2baa2e6bd2d018b6e34a07c783b7c3523366374",
+    "feature/mother-glucose-read-v1": "e84a848796689b9bcb247a57024bc9f8d6e576c1"
+  },
+  "mother": {
+    "main": "e4510efbb05f711f7fdc47fbab0fd6c19e8324fd",
+    "work/physiology-foundation-pf001": "5a6f71a45dc64880bc06a0e1a50c7d05ff119cba",
+    "work/i01-delivery-state-readonly": "81c3fcceadcf5bf7462bf813427b98e4f87721e0",
+    "work/r02-source-qualification-01": "03e422075d584ff5de92578bacb4749f94412f4c"
+  },
+  "coach": {
+    "main": "1dd63725dbed112fc33d9c9a64b60b1d7263c246",
+    "work/i01-delivery-status-view": "184606fe9d5022997f09a2e4d6ef38e5dca4a9bc"
+  },
+  "unresolved_server_pin": "59a6ce9c0a4fb303e13302ed38deaaacdded277d",
+  "prototype_is_new_isolated_code": true,
+  "deployed": false
+}

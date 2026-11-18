@@ -1,3 +1,8 @@
+# The imported MSE release is a byte-preserved historical reference. Its dedicated
+# workflow verifies every file against the original manifest and runs its checks.
+# Format new work outside this versioned snapshot instead of rewriting evidence.
+exclude: ^research/mse/reference-v0\.1\.0/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

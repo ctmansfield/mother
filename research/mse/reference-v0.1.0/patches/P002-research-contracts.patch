@@ -1,0 +1,3508 @@
+diff --git a/mse-design/contracts/README.md b/mse-design/contracts/README.md
+new file mode 100644
+index 0000000..c81ae448f28f1ea89a6e26ff4646190ceb78e9c9
+--- /dev/null
++++ b/mse-design/contracts/README.md
+@@ -0,0 +1,78 @@
++# Proposed MSE mechanism and intervention contracts — v0.1.0
++
++These are **new proposals**, not existing repository schemas or deployed APIs. They define data objects only. No network service, treatment, dosing, device control, scheduling or autonomous intervention is implemented. The example records are synthetic and contain no personal observations or claimed individual efficacy.
++
++## Files and relationships
++
++| File | Record boundary |
++|---|---|
++| `mechanism-claim.schema.json` | One revisioned, scoped conditional biological claim or reaction hyperedge |
++| `intervention-hypothesis.schema.json` | One proposed observation/simulation/hypothesis test; eligibility, alternatives and expected outcomes |
++| `causal-analysis.schema.json` | One analysis of an outcome effect with estimand, lineage, methods, uncertainty and validity status |
++| `measurement-request.schema.json` | One additional observation proposed to discriminate candidate mechanisms |
++| `common.schema.json` | Shared identifiers, scoped evidence, intervals, predicates and provenance |
++| `examples/` | Four schema-valid synthetic records and a small immutable snapshot fixture |
++| `validate_contracts.py` | Offline schema, fixture-integrity, semantic and boundary verification |
++
++The JSON Schema dialect is Draft 2020-12. `$id` uses a reserved `.invalid` hostname as a namespace, not a downloadable API. The validator registers all schemas from disk and never retrieves remote references. `contract_version` and `contract_status` are fixed. Critical objects reject undeclared properties. `extensions` accepts inert scalar metadata; consuming services must never execute it or use it to bypass the schema's mode/authority restrictions.
++
++Stable IDs identify concepts or records; integer revisions identify immutable versions. A foreign reference is always `{id, revision}`, not an unpinned current alias. The mechanism bundle has a snapshot ID and SHA-256. The example hashes the exact UTF-8 bytes of `examples/mechanism-snapshot.json`; that small fixture is a catalog of declared claim references, not a complete research graph. External example references deliberately illustrate future joins and do not assert that matching repository records exist. A production snapshot manifest must enumerate and hash its complete contained claim/evidence files and be validated before promotion.
++
++Suggested relational storage: `mechanism_claim(id, revision, snapshot_id, body_json)`, `claim_participant(claim_id, claim_revision, entity_id, role, compartment, coefficient)`, `claim_evidence(claim_id, claim_revision, evidence_id, relation, scope)`, plus separate tables for hypotheses, protocols, assignments, exposures, outcomes and analyses. Reaction/claim records serve as hyperedge nodes, so multiple substrates, cofactors, partners and contextual prerequisites remain associated. A graph database is not required. Add materialized graph views or specialized graph queries only when a measured workload justifies them.
++
++## Three-valued conditions
++
++Every leaf declares `missing_result: "unknown"`. The interpreter treats variable names as literal keys; it never evaluates strings as code. Units must already match the declared normalized unit. Missing values, missing units or mismatched units produce `unknown`; conversion belongs in a separate validated normalization layer. Boolean `true` and numeric `1` are not interchangeable.
++
++| Operator | Decisive case | Otherwise |
++|---|---|---|
++| `all_of` | Any `false` → `false` | All `true` → `true`; otherwise `unknown` |
++| `any_of` | Any `true` → `true` | All `false` → `false`; otherwise `unknown` |
++| `not` | `true` ↔ `false` | `unknown` remains `unknown` |
++
++An intervention can enter human review only when its prerequisites evaluate `true` **and** exclusions evaluate `false`. Either being unknown withholds recommendation. An unknown measurement-request rule must retain unknown/deferred status rather than permit a claim. Passing review eligibility still grants no execution authority; that field is fixed to `none`.
++
++## Scoped evidence grades A–D
++
++Grades apply to an evidence record **for a specified claim in a specified context**. They are curated judgments with written rationale, limitations and applicability. They are not numerical probabilities and are not assigned automatically by publication type, journal, species, sample size or algorithm score.
++
++| Grade | Proposed interpretation |
++|---|---|
++| A | Strong, convergent direct evidence for the stated relationship in the specified context; major competing explanations were experimentally addressed and independent support is available |
++| B | Direct support in the stated context with material limits in replication, precision or discrimination among mechanisms |
++| C | Indirect, observational or transported-context evidence that supports plausibility with explicit unresolved causal/transport assumptions |
++| D | Exploratory or model-dependent evidence with substantial unresolved assumptions; suitable for hypothesis generation |
++
++An experiment in mice can support a high-grade claim explicitly scoped to those mice, while remaining indirect evidence for the corresponding human claim. A human trial can support an outcome effect without identifying the biochemical mechanism. `supports`, `contradicts` and `qualifies` remain separate relations. A source DOI/PMID/URL is required for any evidence entry; examples use empty evidence arrays because no study is being asserted as support for their synthetic individual records.
++
++E1 is represented with `assertion_status: "project_premise"` and `claim_type: "premise"`. Its premise status is separate from evidence grading and is not repeatedly regraded. Downstream testable claims each receive their own scoped evidence. An `established_in_scope` claim requires a supporting evidence record structurally, but passing that validation does not prove the assertion true: scientific review is still necessary.
++
++## Receptors, fluxes and unknown parameters
++
++Ligand concentrations, surface receptor amounts, occupancy and signaling use different IDs. A receptor record explicitly names its binding and transduction model; a null transduction model is an unknown rather than an implied one-to-one response. Affinity parameters may be unknown (`value: null`, `status: "unknown"`); EC50 must not be silently substituted for Kd. Thermodynamic feasibility, element/charge/electron balances and measured flux remain distinct properties.
++
++The receptor illustration is dimensionally transparent: with no competitors, occupied surface receptor amount is `Rs*(L/K)/(1+L/K)`. Changing `L/K` from 1 to 4 and `Rs` from 1 to 0.2 changes occupancy fraction from 0.5 to 0.8 but occupied receptor amount from 0.5 to 0.16. Those are synthetic arbitrary receptor units. Signaling still requires an efficacy/transduction model. No tissue-specific or clinical claim follows from this arithmetic.
++
++## Intervention hypotheses, exposures and causal analyses
++
++An intervention hypothesis links target states and mechanism versions to prerequisites, exclusions, expected direction/delay, measurable/adverse outcomes, confounders, literature and individual analysis history. Its allowed modes are exactly `observation`, `simulation`, and `hypothesis_test`. It contains no executable dosing fields. Exposures are recorded separately from planned assignments, outcome observations and analysis conclusions. Recording an outcome does not establish efficacy.
++
++The causal-analysis contract fixes the estimand, comparator, individual/context and time horizon. It distinguishes assignment-based, exposure-based, adherence-restricted and observational analysis; preserves raw-to-feature-to-outcome lineage; and records missingness, carryover, autocorrelation, multiplicity and protocol deviations. `individual_effect_replicated` requires references to earlier analyses; supported individual effects require a numeric estimate, interval and pinned input/code hashes. Scientific sufficiency is not guaranteed by those fields. A simulation must carry `simulation_only` validity and a simulated or unknown estimate; it cannot claim an observed association or individual effect. A null or failed analysis can retain unknown effect estimates and absent hashes honestly. `mechanism_established` is fixed false in this outcome-analysis object: any directly tested biochemical mechanism requires a separate scoped claim and evidence record.
++
++Negative, adverse, null and failed results persist. Corrections supersede old revisions; they do not delete them. A model retirement must retain the code, assumptions, accepted and failed validation results and individual-response histories needed for replay and successor evaluation.
++
++## Measurement requests
++
++Each request links to its input state and pinned mechanism snapshot, at least two candidate explanations and their contrasting observation patterns, and an unmodeled alternative. The acquisition method, timing, context, feasibility and burden are explicit. A qualitative priority is not an information-gain calculation. Numeric expected information gain is a different tagged object requiring a model version, calibration record, method, interval and assumptions. The synthetic example deliberately uses a qualitative score with unknown quantitative predictions.
++
++## Verification
++
++The reference verifier needs Python with `jsonschema` and `referencing` available. It installs nothing and has no network calls. From this directory run:
++
++```bash
++python3 validate_contracts.py
++```
++
++The verifier checks the five schema definitions, four examples, snapshot digests, reversed time windows, forbidden modes/fields, unsupported established claims, missing-as-false errors, unjustified individual-effect status, incomplete numeric information-gain claims, and three-valued logic. It writes `validation-report.json`. These are software/data-contract checks; biological validity, causal validity, model calibration, actual device behavior, and complete external-reference integrity remain separate research and integration tasks.
++
++No production files are changed. Rollback for this proposal consists of leaving this isolated directory uninstalled; no service or database migration exists. Future integration should vendor the schemas under a versioned namespace and preserve old versions for historical replay.
+diff --git a/mse-design/contracts/causal-analysis.schema.json b/mse-design/contracts/causal-analysis.schema.json
+new file mode 100644
+index 0000000..9a0bd44c0601be160e3062fc3333acbdfa6cc65a
+--- /dev/null
++++ b/mse-design/contracts/causal-analysis.schema.json
+@@ -0,0 +1,612 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/causal-analysis.schema.json",
++  "title": "causal-analysis",
++  "description": "Proposed outcome-effect analysis record independent of exposures and mechanisms. A supported outcome effect does not itself establish a biochemical mechanism.",
++  "type": "object",
++  "properties": {
++    "contract_version": {
++      "const": "0.1.0"
++    },
++    "contract_status": {
++      "const": "proposal"
++    },
++    "id": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
++    },
++    "revision": {
++      "type": "integer",
++      "minimum": 1
++    },
++    "created_at": {
++      "type": "string",
++      "format": "date-time"
++    },
++    "record_origin": {
++      "enum": [
++        "synthetic_example",
++        "curated_research",
++        "runtime",
++        "manual"
++      ]
++    },
++    "provenance": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
++    },
++    "extensions": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
++    },
++    "hypothesis_ref": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++    },
++    "protocol_ref": {
++      "anyOf": [
++        {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++        },
++        {
++          "type": "null"
++        }
++      ]
++    },
++    "estimand": {
++      "type": "object",
++      "properties": {
++        "subject_id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "intervention_description": {
++          "type": "string",
++          "minLength": 1
++        },
++        "comparator_description": {
++          "type": "string",
++          "minLength": 1
++        },
++        "outcome_id": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
++        },
++        "contrast": {
++          "type": "string",
++          "minLength": 1
++        },
++        "unit": {
++          "type": "string",
++          "minLength": 1
++        },
++        "target_context": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
++        },
++        "horizon": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
++        },
++        "analysis_population": {
++          "enum": [
++            "assignment_based",
++            "adherent_periods",
++            "exposure_based",
++            "observational"
++          ]
++        }
++      },
++      "required": [
++        "subject_id",
++        "intervention_description",
++        "comparator_description",
++        "outcome_id",
++        "contrast",
++        "unit",
++        "target_context",
++        "horizon",
++        "analysis_population"
++      ],
++      "additionalProperties": false
++    },
++    "design": {
++      "type": "object",
++      "properties": {
++        "type": {
++          "enum": [
++            "randomized_n_of_1",
++            "randomized_series",
++            "observational_longitudinal",
++            "within_person_nonrandomized",
++            "simulation"
++          ]
++        },
++        "randomization_description": {
++          "type": [
++            "string",
++            "null"
++          ]
++        },
++        "blinding_description": {
++          "type": [
++            "string",
++            "null"
++          ]
++        },
++        "prespecified_at": {
++          "type": [
++            "string",
++            "null"
++          ],
++          "format": "date-time"
++        },
++        "periods_planned": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "periods_analyzed": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "replication_analysis_refs": {
++          "type": "array",
++          "items": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "type",
++        "randomization_description",
++        "blinding_description",
++        "prespecified_at",
++        "periods_planned",
++        "periods_analyzed",
++        "replication_analysis_refs"
++      ],
++      "additionalProperties": false
++    },
++    "assignment_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    },
++    "actual_exposure_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    },
++    "outcome_lineage": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "properties": {
++          "outcome_ref": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++          },
++          "raw_observation_refs": {
++            "type": "array",
++            "items": {
++              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++            },
++            "minItems": 1
++          },
++          "feature_definition_version": {
++            "type": "string",
++            "minLength": 1
++          },
++          "input_manifest_sha256": {
++            "anyOf": [
++              {
++                "type": "string",
++                "pattern": "^[0-9a-f]{64}$"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          }
++        },
++        "required": [
++          "outcome_ref",
++          "raw_observation_refs",
++          "feature_definition_version",
++          "input_manifest_sha256"
++        ],
++        "additionalProperties": false
++      },
++      "minItems": 1
++    },
++    "covariate_plan": {
++      "type": "object",
++      "properties": {
++        "pre_exposure_covariates": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        },
++        "time_varying_covariates": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        },
++        "mediators_excluded_from_total_effect_adjustment": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        },
++        "unmeasured_confounding_assumptions": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "pre_exposure_covariates",
++        "time_varying_covariates",
++        "mediators_excluded_from_total_effect_adjustment",
++        "unmeasured_confounding_assumptions"
++      ],
++      "additionalProperties": false
++    },
++    "missingness": {
++      "type": "object",
++      "properties": {
++        "missing_periods": {
++          "type": "integer",
++          "minimum": 0
++        },
++        "reasons": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        },
++        "handling": {
++          "type": "string",
++          "minLength": 1
++        },
++        "sensitivity_analysis": {
++          "type": "string",
++          "minLength": 1
++        }
++      },
++      "required": [
++        "missing_periods",
++        "reasons",
++        "handling",
++        "sensitivity_analysis"
++      ],
++      "additionalProperties": false
++    },
++    "carryover": {
++      "type": "object",
++      "properties": {
++        "assumption": {
++          "type": "string",
++          "minLength": 1
++        },
++        "washout_description": {
++          "type": [
++            "string",
++            "null"
++          ]
++        },
++        "assessment": {
++          "type": "string",
++          "minLength": 1
++        },
++        "residual_carryover_status": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/truth_value"
++        }
++      },
++      "required": [
++        "assumption",
++        "washout_description",
++        "assessment",
++        "residual_carryover_status"
++      ],
++      "additionalProperties": false
++    },
++    "analysis": {
++      "type": "object",
++      "properties": {
++        "method": {
++          "type": "string",
++          "minLength": 1
++        },
++        "software_version": {
++          "type": "string",
++          "minLength": 1
++        },
++        "code_sha256": {
++          "anyOf": [
++            {
++              "type": "string",
++              "pattern": "^[0-9a-f]{64}$"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "autocorrelation_handling": {
++          "type": "string",
++          "minLength": 1
++        },
++        "multiplicity_handling": {
++          "type": "string",
++          "minLength": 1
++        },
++        "sensitivity_analyses": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        },
++        "deviations_from_protocol": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "method",
++        "software_version",
++        "code_sha256",
++        "autocorrelation_handling",
++        "multiplicity_handling",
++        "sensitivity_analyses",
++        "deviations_from_protocol"
++      ],
++      "additionalProperties": false
++    },
++    "effect_estimate": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/quantity_estimate"
++    },
++    "result": {
++      "enum": [
++        "beneficial",
++        "adverse",
++        "null_within_precision",
++        "mixed",
++        "inconclusive",
++        "failed_analysis"
++      ]
++    },
++    "validity_status": {
++      "enum": [
++        "association_only",
++        "individual_effect_supported",
++        "individual_effect_replicated",
++        "simulation_only",
++        "inconclusive",
++        "invalid"
++      ]
++    },
++    "validity_rationale": {
++      "type": "string",
++      "minLength": 1
++    },
++    "criteria_met": {
++      "type": "array",
++      "items": {
++        "type": "string",
++        "minLength": 1
++      },
++      "minItems": 0
++    },
++    "criteria_not_met": {
++      "type": "array",
++      "items": {
++        "type": "string",
++        "minLength": 1
++      },
++      "minItems": 0
++    },
++    "mechanism_established": {
++      "const": false
++    },
++    "mechanism_followup_claim_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    },
++    "retention": {
++      "type": "object",
++      "properties": {
++        "preserve_null_failed_and_adverse_results": {
++          "const": true
++        },
++        "supersedes_analysis_ref": {
++          "anyOf": [
++            {
++              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        }
++      },
++      "required": [
++        "preserve_null_failed_and_adverse_results",
++        "supersedes_analysis_ref"
++      ],
++      "additionalProperties": false
++    }
++  },
++  "required": [
++    "contract_version",
++    "contract_status",
++    "id",
++    "revision",
++    "created_at",
++    "record_origin",
++    "provenance",
++    "extensions",
++    "hypothesis_ref",
++    "protocol_ref",
++    "estimand",
++    "design",
++    "assignment_refs",
++    "actual_exposure_refs",
++    "outcome_lineage",
++    "covariate_plan",
++    "missingness",
++    "carryover",
++    "analysis",
++    "effect_estimate",
++    "result",
++    "validity_status",
++    "validity_rationale",
++    "criteria_met",
++    "criteria_not_met",
++    "mechanism_established",
++    "mechanism_followup_claim_refs",
++    "retention"
++  ],
++  "additionalProperties": false,
++  "allOf": [
++    {
++      "if": {
++        "properties": {
++          "design": {
++            "properties": {
++              "type": {
++                "const": "simulation"
++              }
++            }
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "validity_status": {
++            "const": "simulation_only"
++          },
++          "effect_estimate": {
++            "properties": {
++              "epistemic_status": {
++                "enum": [
++                  "simulated",
++                  "unknown"
++                ]
++              }
++            }
++          }
++        }
++      }
++    },
++    {
++      "if": {
++        "properties": {
++          "design": {
++            "properties": {
++              "type": {
++                "enum": [
++                  "randomized_n_of_1",
++                  "randomized_series"
++                ]
++              }
++            }
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "assignment_refs": {
++            "minItems": 1
++          }
++        }
++      }
++    },
++    {
++      "if": {
++        "properties": {
++          "validity_status": {
++            "const": "individual_effect_replicated"
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "design": {
++            "properties": {
++              "replication_analysis_refs": {
++                "minItems": 1
++              }
++            }
++          }
++        }
++      }
++    },
++    {
++      "if": {
++        "properties": {
++          "validity_status": {
++            "enum": [
++              "individual_effect_supported",
++              "individual_effect_replicated"
++            ]
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "criteria_met": {
++            "minItems": 1
++          },
++          "analysis": {
++            "properties": {
++              "code_sha256": {
++                "type": "string",
++                "pattern": "^[0-9a-f]{64}$"
++              }
++            }
++          },
++          "outcome_lineage": {
++            "items": {
++              "properties": {
++                "input_manifest_sha256": {
++                  "type": "string",
++                  "pattern": "^[0-9a-f]{64}$"
++                }
++              }
++            }
++          },
++          "effect_estimate": {
++            "properties": {
++              "value": {
++                "type": "number"
++              },
++              "interval": {
++                "type": "object"
++              }
++            }
++          }
++        }
++      }
++    }
++  ]
++}
+diff --git a/mse-design/contracts/common.schema.json b/mse-design/contracts/common.schema.json
+new file mode 100644
+index 0000000..7ca51a9d481eeea96ae576903adb335991eb8cfc
+--- /dev/null
++++ b/mse-design/contracts/common.schema.json
+@@ -0,0 +1,802 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json",
++  "title": "common",
++  "description": "Shared data-only definitions for proposed MSE contracts v0.1.0. No existing API is asserted.",
++  "$defs": {
++    "stable_id": {
++      "type": "string",
++      "pattern": "^urn:mse:[A-Za-z0-9][A-Za-z0-9:._-]*$"
++    },
++    "record_ref": {
++      "type": "object",
++      "properties": {
++        "id": {
++          "$ref": "#/$defs/stable_id"
++        },
++        "revision": {
++          "type": "integer",
++          "minimum": 1
++        }
++      },
++      "required": [
++        "id",
++        "revision"
++      ],
++      "additionalProperties": false
++    },
++    "entity_ref": {
++      "type": "object",
++      "properties": {
++        "id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "label": {
++          "type": "string",
++          "minLength": 1
++        },
++        "namespace": {
++          "type": "string",
++          "minLength": 1
++        }
++      },
++      "required": [
++        "id",
++        "label",
++        "namespace"
++      ],
++      "additionalProperties": false
++    },
++    "snapshot_ref": {
++      "type": "object",
++      "properties": {
++        "id": {
++          "$ref": "#/$defs/stable_id"
++        },
++        "sha256": {
++          "type": "string",
++          "pattern": "^[0-9a-f]{64}$"
++        },
++        "canonicalization": {
++          "type": "string",
++          "minLength": 1
++        }
++      },
++      "required": [
++        "id",
++        "sha256",
++        "canonicalization"
++      ],
++      "additionalProperties": false
++    },
++    "extensions": {
++      "type": "object",
++      "propertyNames": {
++        "pattern": "^[a-z][a-z0-9_.-]*$"
++      },
++      "additionalProperties": {
++        "type": [
++          "string",
++          "number",
++          "boolean",
++          "null"
++        ]
++      },
++      "description": "Inert scalar metadata only. Consumers must never execute extension values."
++    },
++    "truth_value": {
++      "enum": [
++        "true",
++        "false",
++        "unknown"
++      ]
++    },
++    "provenance": {
++      "type": "object",
++      "properties": {
++        "author_or_model_id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "method_version": {
++          "type": "string",
++          "minLength": 1
++        },
++        "source_record_refs": {
++          "type": "array",
++          "items": {
++            "$ref": "#/$defs/record_ref"
++          },
++          "minItems": 0
++        },
++        "notes": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "author_or_model_id",
++        "method_version",
++        "source_record_refs",
++        "notes"
++      ],
++      "additionalProperties": false
++    },
++    "uncertainty": {
++      "type": "object",
++      "properties": {
++        "status": {
++          "enum": [
++            "quantified",
++            "qualitative",
++            "unknown"
++          ]
++        },
++        "description": {
++          "type": "string",
++          "minLength": 1
++        },
++        "sources": {
++          "type": "array",
++          "items": {
++            "enum": [
++              "measurement",
++              "parameter",
++              "model",
++              "context_transport",
++              "missingness",
++              "causal"
++            ]
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "status",
++        "description",
++        "sources"
++      ],
++      "additionalProperties": false
++    },
++    "interval": {
++      "type": "object",
++      "properties": {
++        "lower": {
++          "type": "number"
++        },
++        "upper": {
++          "type": "number"
++        },
++        "level": {
++          "type": "number",
++          "exclusiveMinimum": 0,
++          "exclusiveMaximum": 1
++        },
++        "kind": {
++          "enum": [
++            "confidence",
++            "credible",
++            "prediction",
++            "bounds"
++          ]
++        },
++        "method": {
++          "type": "string",
++          "minLength": 1
++        }
++      },
++      "required": [
++        "lower",
++        "upper",
++        "level",
++        "kind",
++        "method"
++      ],
++      "additionalProperties": false
++    },
++    "quantity_estimate": {
++      "type": "object",
++      "properties": {
++        "quantity_id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "value": {
++          "type": [
++            "number",
++            "null"
++          ]
++        },
++        "unit": {
++          "type": "string",
++          "minLength": 1
++        },
++        "interval": {
++          "anyOf": [
++            {
++              "$ref": "#/$defs/interval"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "epistemic_status": {
++          "enum": [
++            "measured",
++            "inferred",
++            "simulated",
++            "unknown"
++          ]
++        },
++        "uncertainty": {
++          "$ref": "#/$defs/uncertainty"
++        }
++      },
++      "required": [
++        "quantity_id",
++        "value",
++        "unit",
++        "interval",
++        "epistemic_status",
++        "uncertainty"
++      ],
++      "additionalProperties": false
++    },
++    "delay": {
++      "type": "object",
++      "properties": {
++        "earliest_seconds": {
++          "type": [
++            "number",
++            "null"
++          ],
++          "minimum": 0
++        },
++        "latest_seconds": {
++          "type": [
++            "number",
++            "null"
++          ],
++          "minimum": 0
++        },
++        "distribution": {
++          "type": [
++            "string",
++            "null"
++          ]
++        },
++        "basis": {
++          "type": "string",
++          "minLength": 1
++        }
++      },
++      "required": [
++        "earliest_seconds",
++        "latest_seconds",
++        "distribution",
++        "basis"
++      ],
++      "additionalProperties": false
++    },
++    "direction": {
++      "enum": [
++        "increase",
++        "decrease",
++        "no_change",
++        "nonmonotonic",
++        "context_dependent",
++        "unknown"
++      ]
++    },
++    "parameter": {
++      "type": "object",
++      "properties": {
++        "name": {
++          "type": "string",
++          "minLength": 1
++        },
++        "value": {
++          "type": [
++            "number",
++            "null"
++          ]
++        },
++        "unit": {
++          "type": "string",
++          "minLength": 1
++        },
++        "status": {
++          "enum": [
++            "measured",
++            "estimated",
++            "assumed",
++            "unknown"
++          ]
++        },
++        "interval": {
++          "anyOf": [
++            {
++              "$ref": "#/$defs/interval"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "assumptions": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "name",
++        "value",
++        "unit",
++        "status",
++        "interval",
++        "assumptions"
++      ],
++      "additionalProperties": false
++    },
++    "scope": {
++      "type": "object",
++      "properties": {
++        "species": {
++          "type": "array",
++          "items": {
++            "$ref": "#/$defs/entity_ref"
++          },
++          "minItems": 0
++        },
++        "strains": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        },
++        "tissues": {
++          "type": "array",
++          "items": {
++            "$ref": "#/$defs/entity_ref"
++          },
++          "minItems": 0
++        },
++        "cell_types": {
++          "type": "array",
++          "items": {
++            "$ref": "#/$defs/entity_ref"
++          },
++          "minItems": 0
++        },
++        "compartments": {
++          "type": "array",
++          "items": {
++            "$ref": "#/$defs/entity_ref"
++          },
++          "minItems": 0
++        },
++        "context_description": {
++          "type": "string",
++          "minLength": 1
++        },
++        "valid_from": {
++          "type": [
++            "string",
++            "null"
++          ],
++          "format": "date-time"
++        },
++        "valid_until": {
++          "type": [
++            "string",
++            "null"
++          ],
++          "format": "date-time"
++        },
++        "scope_status": {
++          "enum": [
++            "specified",
++            "partial",
++            "unknown"
++          ]
++        }
++      },
++      "required": [
++        "species",
++        "strains",
++        "tissues",
++        "cell_types",
++        "compartments",
++        "context_description",
++        "valid_from",
++        "valid_until",
++        "scope_status"
++      ],
++      "additionalProperties": false
++    },
++    "evidence": {
++      "type": "object",
++      "properties": {
++        "source": {
++          "type": "object",
++          "properties": {
++            "doi": {
++              "type": [
++                "string",
++                "null"
++              ],
++              "pattern": "^10\\.[0-9]{4,9}/\\S+$"
++            },
++            "pmid": {
++              "type": [
++                "string",
++                "null"
++              ],
++              "pattern": "^[0-9]+$"
++            },
++            "url": {
++              "type": [
++                "string",
++                "null"
++              ],
++              "format": "uri"
++            },
++            "title": {
++              "type": "string",
++              "minLength": 1
++            },
++            "verified_at": {
++              "type": [
++                "string",
++                "null"
++              ],
++              "format": "date-time"
++            }
++          },
++          "required": [
++            "doi",
++            "pmid",
++            "url",
++            "title",
++            "verified_at"
++          ],
++          "additionalProperties": false,
++          "anyOf": [
++            {
++              "properties": {
++                "doi": {
++                  "type": "string"
++                }
++              }
++            },
++            {
++              "properties": {
++                "pmid": {
++                  "type": "string"
++                }
++              }
++            },
++            {
++              "properties": {
++                "url": {
++                  "type": "string"
++                }
++              }
++            }
++          ]
++        },
++        "relationship": {
++          "enum": [
++            "supports",
++            "contradicts",
++            "qualifies"
++          ]
++        },
++        "grade": {
++          "enum": [
++            "A",
++            "B",
++            "C",
++            "D"
++          ]
++        },
++        "grade_rationale": {
++          "type": "string",
++          "minLength": 1
++        },
++        "claim_supported_or_challenged": {
++          "type": "string",
++          "minLength": 1
++        },
++        "study_context": {
++          "$ref": "#/$defs/scope"
++        },
++        "limitations": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        },
++        "applicability": {
++          "enum": [
++            "same_scope",
++            "transport_assumptions_required",
++            "unknown"
++          ]
++        }
++      },
++      "required": [
++        "source",
++        "relationship",
++        "grade",
++        "grade_rationale",
++        "claim_supported_or_challenged",
++        "study_context",
++        "limitations",
++        "applicability"
++      ],
++      "additionalProperties": false
++    },
++    "predicate": {
++      "oneOf": [
++        {
++          "type": "object",
++          "properties": {
++            "op": {
++              "enum": [
++                "compare"
++              ]
++            },
++            "variable": {
++              "type": "string",
++              "minLength": 1
++            },
++            "comparator": {
++              "enum": [
++                "eq",
++                "ne",
++                "lt",
++                "le",
++                "gt",
++                "ge",
++                "in"
++              ]
++            },
++            "expected": {
++              "type": [
++                "string",
++                "number",
++                "boolean",
++                "array"
++              ]
++            },
++            "unit": {
++              "type": [
++                "string",
++                "null"
++              ]
++            },
++            "missing_result": {
++              "const": "unknown"
++            }
++          },
++          "required": [
++            "op",
++            "variable",
++            "comparator",
++            "expected",
++            "unit",
++            "missing_result"
++          ],
++          "additionalProperties": false,
++          "allOf": [
++            {
++              "if": {
++                "properties": {
++                  "comparator": {
++                    "const": "in"
++                  }
++                }
++              },
++              "then": {
++                "properties": {
++                  "expected": {
++                    "type": "array",
++                    "minItems": 1,
++                    "items": {
++                      "type": [
++                        "string",
++                        "number",
++                        "boolean"
++                      ]
++                    }
++                  }
++                }
++              },
++              "else": {
++                "properties": {
++                  "expected": {
++                    "type": [
++                      "string",
++                      "number",
++                      "boolean"
++                    ]
++                  }
++                }
++              }
++            }
++          ]
++        },
++        {
++          "type": "object",
++          "properties": {
++            "op": {
++              "enum": [
++                "all_of"
++              ]
++            },
++            "terms": {
++              "type": "array",
++              "items": {
++                "$ref": "#/$defs/predicate"
++              },
++              "minItems": 1
++            }
++          },
++          "required": [
++            "op",
++            "terms"
++          ],
++          "additionalProperties": false
++        },
++        {
++          "type": "object",
++          "properties": {
++            "op": {
++              "enum": [
++                "any_of"
++              ]
++            },
++            "terms": {
++              "type": "array",
++              "items": {
++                "$ref": "#/$defs/predicate"
++              },
++              "minItems": 1
++            }
++          },
++          "required": [
++            "op",
++            "terms"
++          ],
++          "additionalProperties": false
++        },
++        {
++          "type": "object",
++          "properties": {
++            "op": {
++              "enum": [
++                "not"
++              ]
++            },
++            "term": {
++              "$ref": "#/$defs/predicate"
++            }
++          },
++          "required": [
++            "op",
++            "term"
++          ],
++          "additionalProperties": false
++        },
++        {
++          "type": "object",
++          "properties": {
++            "op": {
++              "enum": [
++                "constant"
++              ]
++            },
++            "value": {
++              "$ref": "#/$defs/truth_value"
++            }
++          },
++          "required": [
++            "op",
++            "value"
++          ],
++          "additionalProperties": false
++        }
++      ],
++      "description": "Kleene three-valued logic. Missing variables are unknown; no closed-world false default."
++    },
++    "outcome_spec": {
++      "type": "object",
++      "properties": {
++        "outcome_id": {
++          "$ref": "#/$defs/stable_id"
++        },
++        "quantity_id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "unit": {
++          "type": "string",
++          "minLength": 1
++        },
++        "window": {
++          "$ref": "#/$defs/delay"
++        },
++        "extraction_method_version": {
++          "type": "string",
++          "minLength": 1
++        },
++        "role": {
++          "enum": [
++            "primary",
++            "secondary",
++            "adverse",
++            "exploratory"
++          ]
++        }
++      },
++      "required": [
++        "outcome_id",
++        "quantity_id",
++        "unit",
++        "window",
++        "extraction_method_version",
++        "role"
++      ],
++      "additionalProperties": false
++    },
++    "hypothesis_prediction": {
++      "type": "object",
++      "properties": {
++        "mechanism_ref": {
++          "$ref": "#/$defs/record_ref"
++        },
++        "observable_quantity_id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "direction": {
++          "$ref": "#/$defs/direction"
++        },
++        "prediction": {
++          "$ref": "#/$defs/quantity_estimate"
++        },
++        "context": {
++          "$ref": "#/$defs/predicate"
++        },
++        "discriminating_pattern": {
++          "type": "string",
++          "minLength": 1
++        }
++      },
++      "required": [
++        "mechanism_ref",
++        "observable_quantity_id",
++        "direction",
++        "prediction",
++        "context",
++        "discriminating_pattern"
++      ],
++      "additionalProperties": false
++    }
++  }
++}
+diff --git a/mse-design/contracts/examples/causal-analysis.json b/mse-design/contracts/examples/causal-analysis.json
+new file mode 100644
+index 0000000..cc310e0b422244b7bb7adca8405ea1450fbb9641
+--- /dev/null
++++ b/mse-design/contracts/examples/causal-analysis.json
+@@ -0,0 +1,143 @@
++{
++  "contract_version": "0.1.0",
++  "contract_status": "proposal",
++  "id": "urn:mse:example:rest-comparison-analysis",
++  "revision": 1,
++  "created_at": "2026-11-13T00:00:00Z",
++  "record_origin": "synthetic_example",
++  "provenance": {
++    "author_or_model_id": "synthetic-fixture",
++    "method_version": "0.1.0",
++    "source_record_refs": [],
++    "notes": [
++      "Synthetic contract example; no individual data or efficacy result."
++    ]
++  },
++  "extensions": {},
++  "hypothesis_ref": {
++    "id": "urn:mse:example:standardized-rest-context",
++    "revision": 1
++  },
++  "protocol_ref": null,
++  "estimand": {
++    "subject_id": "urn:mse:example:person",
++    "intervention_description": "Recorded comparable rest condition",
++    "comparator_description": "Earlier nonstandardized acquisition condition",
++    "outcome_id": "urn:mse:example:resting-sdnn",
++    "contrast": "Mean difference in SDNN under observed contexts",
++    "unit": "ms",
++    "target_context": {
++      "op": "compare",
++      "variable": "same_measurement_method",
++      "comparator": "eq",
++      "expected": true,
++      "unit": null,
++      "missing_result": "unknown"
++    },
++    "horizon": {
++      "earliest_seconds": 0,
++      "latest_seconds": 300,
++      "distribution": null,
++      "basis": "Illustrative observation interval."
++    },
++    "analysis_population": "observational"
++  },
++  "design": {
++    "type": "within_person_nonrandomized",
++    "randomization_description": null,
++    "blinding_description": null,
++    "prespecified_at": null,
++    "periods_planned": 0,
++    "periods_analyzed": 0,
++    "replication_analysis_refs": []
++  },
++  "assignment_refs": [],
++  "actual_exposure_refs": [
++    {
++      "id": "urn:mse:example:rest-exposure",
++      "revision": 1
++    }
++  ],
++  "outcome_lineage": [
++    {
++      "outcome_ref": {
++        "id": "urn:mse:example:outcome-series",
++        "revision": 1
++      },
++      "raw_observation_refs": [
++        {
++          "id": "urn:mse:example:observation-series",
++          "revision": 1
++        }
++      ],
++      "feature_definition_version": "proposed-comparable-rest-v0.1.0",
++      "input_manifest_sha256": null
++    }
++  ],
++  "covariate_plan": {
++    "pre_exposure_covariates": [
++      "activity",
++      "time_of_day"
++    ],
++    "time_varying_covariates": [
++      "respiration"
++    ],
++    "mediators_excluded_from_total_effect_adjustment": [],
++    "unmeasured_confounding_assumptions": [
++      "Cannot establish exchangeability from these observations."
++    ]
++  },
++  "missingness": {
++    "missing_periods": 0,
++    "reasons": [
++      "No actual trial observations in this synthetic fixture."
++    ],
++    "handling": "Do not impute outcomes.",
++    "sensitivity_analysis": "Not performed."
++  },
++  "carryover": {
++    "assumption": "Unknown",
++    "washout_description": null,
++    "assessment": "Not performed.",
++    "residual_carryover_status": "unknown"
++  },
++  "analysis": {
++    "method": "No analysis executed; illustrative association-only record.",
++    "software_version": "none",
++    "code_sha256": null,
++    "autocorrelation_handling": "Would require period-aware analysis.",
++    "multiplicity_handling": "No claims tested.",
++    "sensitivity_analyses": [],
++    "deviations_from_protocol": []
++  },
++  "effect_estimate": {
++    "quantity_id": "urn:mse:example:sdnn-difference",
++    "value": null,
++    "unit": "ms",
++    "interval": null,
++    "epistemic_status": "unknown",
++    "uncertainty": {
++      "status": "unknown",
++      "description": "No actual observations or estimated effect.",
++      "sources": [
++        "model",
++        "parameter"
++      ]
++    }
++  },
++  "result": "inconclusive",
++  "validity_status": "association_only",
++  "validity_rationale": "Observational context difference would not establish an intervention effect.",
++  "criteria_met": [],
++  "criteria_not_met": [
++    "No randomization",
++    "No estimate",
++    "No replication"
++  ],
++  "mechanism_established": false,
++  "mechanism_followup_claim_refs": [],
++  "retention": {
++    "preserve_null_failed_and_adverse_results": true,
++    "supersedes_analysis_ref": null
++  }
++}
+diff --git a/mse-design/contracts/examples/intervention-hypothesis.json b/mse-design/contracts/examples/intervention-hypothesis.json
+new file mode 100644
+index 0000000..30d59a0f9a728f0d648e1ce6df1507a4aa0214fc
+--- /dev/null
++++ b/mse-design/contracts/examples/intervention-hypothesis.json
+@@ -0,0 +1,145 @@
++{
++  "contract_version": "0.1.0",
++  "contract_status": "proposal",
++  "id": "urn:mse:example:standardized-rest-context",
++  "revision": 1,
++  "created_at": "2026-11-13T00:00:00Z",
++  "record_origin": "synthetic_example",
++  "provenance": {
++    "author_or_model_id": "synthetic-fixture",
++    "method_version": "0.1.0",
++    "source_record_refs": [],
++    "notes": [
++      "Synthetic contract example; no individual data or efficacy result."
++    ]
++  },
++  "extensions": {},
++  "title": "Observe whether the HR/SDNN pattern persists in comparable rest context",
++  "mode": "observation",
++  "target_state_refs": [
++    {
++      "id": "urn:mse:example:context-adjusted-cardiac-deviation",
++      "revision": 1
++    }
++  ],
++  "mechanism_claim_refs": [
++    {
++      "id": "urn:mse:example:respiratory-context",
++      "revision": 1
++    },
++    {
++      "id": "urn:mse:example:general-activation",
++      "revision": 1
++    }
++  ],
++  "mechanism_snapshot": {
++    "id": "urn:mse:example:snapshot",
++    "sha256": "d2707c8b4b7ddcec3ca2ec922e6c543e61bba715401787f526525458f4d0e8c3",
++    "canonicalization": "Exact UTF-8 file bytes, LF line endings; no self-referential hash."
++  },
++  "proposed_mechanism": "Respiration and acquisition context may explain some observed HR/SDNN variation.",
++  "preconditions": {
++    "op": "all_of",
++    "terms": [
++      {
++        "op": "compare",
++        "variable": "measurement_method_available",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      },
++      {
++        "op": "compare",
++        "variable": "context_recorded",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      }
++    ]
++  },
++  "exclusions": {
++    "op": "any_of",
++    "terms": [
++      {
++        "op": "compare",
++        "variable": "active_exertion",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      },
++      {
++        "op": "compare",
++        "variable": "observation_not_appropriate",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      }
++    ]
++  },
++  "unknown_condition_policy": "do_not_recommend",
++  "expected_effects": [
++    {
++      "state_or_outcome_id": "urn:mse:example:resting-sdnn",
++      "direction": "unknown",
++      "delay": {
++        "earliest_seconds": null,
++        "latest_seconds": null,
++        "distribution": null,
++        "basis": "Unknown in this synthetic example"
++      },
++      "uncertainty": {
++        "status": "unknown",
++        "description": "No individual response has been estimated.",
++        "sources": [
++          "model",
++          "parameter"
++        ]
++      }
++    }
++  ],
++  "measurable_outcomes": [
++    {
++      "outcome_id": "urn:mse:example:resting-sdnn",
++      "quantity_id": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
++      "unit": "ms",
++      "window": {
++        "earliest_seconds": 0,
++        "latest_seconds": 300,
++        "distribution": null,
++        "basis": "Illustrative protocol window, not a physiological guarantee."
++      },
++      "extraction_method_version": "proposed-comparable-rest-v0.1.0",
++      "role": "primary"
++    }
++  ],
++  "adverse_response_outcome_ids": [],
++  "confounders": [
++    {
++      "name": "pre_observation_activity",
++      "temporal_role": "pre_exposure",
++      "measurement_status": "planned",
++      "handling_plan": "Record activity and compare within comparable context."
++    }
++  ],
++  "competing_explanations": [
++    "Device artifact",
++    "Unmeasured respiratory change",
++    "Persistent physiological deviation"
++  ],
++  "evidence": [],
++  "individual_history": [],
++  "n_of_1_protocol_ref": null,
++  "recorded_exposure_refs": [],
++  "observed_outcome_refs": [],
++  "causal_analysis_refs": [],
++  "status": "draft",
++  "withholding_reasons": [
++    "Synthetic example has not undergone human review."
++  ],
++  "requires_human_review": true,
++  "execution_authority": "none"
++}
+diff --git a/mse-design/contracts/examples/measurement-request.json b/mse-design/contracts/examples/measurement-request.json
+new file mode 100644
+index 0000000..b32bec655c6dcae2abb4a5124897d8fe80398add
+--- /dev/null
++++ b/mse-design/contracts/examples/measurement-request.json
+@@ -0,0 +1,151 @@
++{
++  "contract_version": "0.1.0",
++  "contract_status": "proposal",
++  "id": "urn:mse:example:request-respiratory-context",
++  "revision": 1,
++  "created_at": "2026-11-13T00:00:00Z",
++  "record_origin": "synthetic_example",
++  "provenance": {
++    "author_or_model_id": "synthetic-fixture",
++    "method_version": "0.1.0",
++    "source_record_refs": [],
++    "notes": [
++      "Synthetic contract example; no individual data or efficacy result."
++    ]
++  },
++  "extensions": {},
++  "input_state_refs": [
++    {
++      "id": "urn:mse:example:context-adjusted-cardiac-deviation",
++      "revision": 1
++    }
++  ],
++  "mechanism_snapshot": {
++    "id": "urn:mse:example:snapshot",
++    "sha256": "d2707c8b4b7ddcec3ca2ec922e6c543e61bba715401787f526525458f4d0e8c3",
++    "canonicalization": "Exact UTF-8 file bytes, LF line endings; no self-referential hash."
++  },
++  "unresolved_question": "Does the observed HR/SDNN deviation persist when acquisition context is comparable?",
++  "hypotheses": [
++    {
++      "mechanism_ref": {
++        "id": "urn:mse:example:respiratory-context",
++        "revision": 1
++      },
++      "observable_quantity_id": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
++      "direction": "unknown",
++      "prediction": {
++        "quantity_id": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
++        "value": null,
++        "unit": "ms",
++        "interval": null,
++        "epistemic_status": "unknown",
++        "uncertainty": {
++          "status": "unknown",
++          "description": "No calibrated quantitative prediction.",
++          "sources": [
++            "model",
++            "parameter"
++          ]
++        }
++      },
++      "context": {
++        "op": "compare",
++        "variable": "comparable_rest_context",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      },
++      "discriminating_pattern": "Deviation attenuates when respiratory and posture context match the baseline."
++    },
++    {
++      "mechanism_ref": {
++        "id": "urn:mse:example:general-activation",
++        "revision": 1
++      },
++      "observable_quantity_id": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
++      "direction": "unknown",
++      "prediction": {
++        "quantity_id": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
++        "value": null,
++        "unit": "ms",
++        "interval": null,
++        "epistemic_status": "unknown",
++        "uncertainty": {
++          "status": "unknown",
++          "description": "No calibrated quantitative prediction.",
++          "sources": [
++            "model",
++            "parameter"
++          ]
++        }
++      },
++      "context": {
++        "op": "compare",
++        "variable": "comparable_rest_context",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      },
++      "discriminating_pattern": "Deviation persists despite comparable context; its biochemical cause remains unidentified."
++    }
++  ],
++  "unmodeled_alternative": "Artifact or another unmeasured mechanism can explain either pattern.",
++  "proposed_observation": {
++    "quantity_id": "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
++    "method": "Comparable device-derived SDNN observation with contemporaneous posture, activity and respiration context.",
++    "unit": "ms",
++    "acquisition_conditions": {
++      "op": "compare",
++      "variable": "same_measurement_method",
++      "comparator": "eq",
++      "expected": true,
++      "unit": null,
++      "missing_result": "unknown"
++    },
++    "timing": {
++      "earliest_seconds": 0,
++      "latest_seconds": 300,
++      "distribution": null,
++      "basis": "Proposed observation window only."
++    },
++    "relative_to_event_id": null,
++    "burden": {
++      "description": "Brief context recording; no treatment.",
++      "minutes": 5,
++      "cost_amount": null,
++      "currency": null
++    },
++    "feasibility": "unknown",
++    "feasibility_reasons": [
++      "Respiratory measurement availability not confirmed."
++    ]
++  },
++  "selection_score": {
++    "kind": "qualitative",
++    "priority": "medium",
++    "rationale": "A context comparison may discriminate acquisition-related variation; no EIG number was computed."
++  },
++  "unknown_rules": [
++    {
++      "condition": {
++        "op": "not",
++        "term": {
++          "op": "compare",
++          "variable": "adequate_context_coverage",
++          "comparator": "eq",
++          "expected": true,
++          "unit": null,
++          "missing_result": "unknown"
++        }
++      },
++      "disposition": "report_unknown",
++      "reason": "Lack of adequate comparison context prevents interpretation."
++    }
++  ],
++  "completion_outcome_refs": [],
++  "status": "proposed",
++  "execution_authority": "none"
++}
+diff --git a/mse-design/contracts/examples/mechanism-claim.json b/mse-design/contracts/examples/mechanism-claim.json
+new file mode 100644
+index 0000000..a2ea0d346e9b49e5eabfc718d8550dc5762870a0
+--- /dev/null
++++ b/mse-design/contracts/examples/mechanism-claim.json
+@@ -0,0 +1,183 @@
++{
++  "contract_version": "0.1.0",
++  "contract_status": "proposal",
++  "id": "urn:mse:example:receptor-availability",
++  "revision": 1,
++  "created_at": "2026-11-13T00:00:00Z",
++  "record_origin": "synthetic_example",
++  "provenance": {
++    "author_or_model_id": "synthetic-fixture",
++    "method_version": "0.1.0",
++    "source_record_refs": [],
++    "notes": [
++      "Synthetic contract example; no individual data or efficacy result."
++    ]
++  },
++  "extensions": {},
++  "snapshot": {
++    "id": "urn:mse:example:snapshot",
++    "sha256": "d2707c8b4b7ddcec3ca2ec922e6c543e61bba715401787f526525458f4d0e8c3",
++    "canonicalization": "Exact UTF-8 file bytes, LF line endings; no self-referential hash."
++  },
++  "claim_text": "An increase in ligand can coexist with a decrease in its occupied surface receptor amount when receptor availability falls or competition increases.",
++  "claim_type": "receptor_binding",
++  "assertion_status": "hypothesis",
++  "participants": [
++    {
++      "entity": {
++        "id": "urn:mse:example:ligand-concentration",
++        "label": "ligand concentration",
++        "namespace": "mse-example"
++      },
++      "role": "ligand",
++      "stoichiometric_coefficient": null,
++      "compartment_id": "urn:mse:example:surface-compartment"
++    },
++    {
++      "entity": {
++        "id": "urn:mse:example:surface-receptor",
++        "label": "surface receptor",
++        "namespace": "mse-example"
++      },
++      "role": "receptor",
++      "stoichiometric_coefficient": null,
++      "compartment_id": "urn:mse:example:surface-compartment"
++    },
++    {
++      "entity": {
++        "id": "urn:mse:example:occupied-surface-receptors",
++        "label": "occupied surface receptors",
++        "namespace": "mse-example"
++      },
++      "role": "state",
++      "stoichiometric_coefficient": null,
++      "compartment_id": "urn:mse:example:surface-compartment"
++    }
++  ],
++  "scope": {
++    "species": [],
++    "strains": [],
++    "tissues": [],
++    "cell_types": [],
++    "compartments": [
++      {
++        "id": "urn:mse:example:surface-compartment",
++        "label": "surface compartment",
++        "namespace": "mse-example"
++      }
++    ],
++    "context_description": "Illustrative receptor model with no species-specific fitted parameters.",
++    "valid_from": null,
++    "valid_until": null,
++    "scope_status": "partial"
++  },
++  "conditions": {
++    "op": "all_of",
++    "terms": [
++      {
++        "op": "compare",
++        "variable": "single_independent_binding_site",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      },
++      {
++        "op": "compare",
++        "variable": "near_equilibrium",
++        "comparator": "eq",
++        "expected": true,
++        "unit": null,
++        "missing_result": "unknown"
++      },
++      {
++        "op": "any_of",
++        "terms": [
++          {
++            "op": "compare",
++            "variable": "surface_receptor_reduction",
++            "comparator": "eq",
++            "expected": true,
++            "unit": null,
++            "missing_result": "unknown"
++          },
++          {
++            "op": "compare",
++            "variable": "competitor_increase",
++            "comparator": "eq",
++            "expected": true,
++            "unit": null,
++            "missing_result": "unknown"
++          }
++        ]
++      }
++    ]
++  },
++  "effect": {
++    "target_entity_id": "urn:mse:example:occupied-surface-receptors",
++    "direction": "context_dependent",
++    "delay": {
++      "earliest_seconds": null,
++      "latest_seconds": null,
++      "distribution": null,
++      "basis": "Unknown in this synthetic example"
++    },
++    "functional_form": "occupied_surface_receptors = Rs * (L/Kd)/(1 + L/Kd + sum(Cj/Kj))"
++  },
++  "physical_constraints": {
++    "element_balance": "not_applicable",
++    "charge_balance": "not_applicable",
++    "electron_balance": "not_applicable",
++    "thermodynamic_status": "unknown",
++    "parameters": [],
++    "notes": [
++      "Concentration binding equilibrium is distinct from signaling and biochemical flux."
++    ]
++  },
++  "receptor_model": {
++    "ligand_concentration_node_ids": [
++      "urn:mse:example:ligand-concentration"
++    ],
++    "surface_receptor_node_ids": [
++      "urn:mse:example:surface-receptor"
++    ],
++    "occupancy_node_ids": [
++      "urn:mse:example:occupancy-fraction"
++    ],
++    "signaling_node_ids": [
++      "urn:mse:example:downstream-signal"
++    ],
++    "internalized_receptor_node_ids": [
++      "urn:mse:example:internalized-receptors"
++    ],
++    "parameters": [
++      {
++        "name": "Kd",
++        "value": null,
++        "unit": "mol/L",
++        "status": "unknown",
++        "interval": null,
++        "assumptions": [
++          "Must be affinity measured in the relevant assay; EC50 is not substituted."
++        ]
++      }
++    ],
++    "binding_model": "Competitive single-site equilibrium; no cooperativity or allostery.",
++    "transduction_model": null,
++    "assumptions": [
++      "Ligand availability in the receptor compartment is known in a simulation.",
++      "Downstream signaling is not established from occupancy alone."
++    ]
++  },
++  "evidence": [],
++  "uncertainty": {
++    "status": "unknown",
++    "description": "Illustrative hypothesis, not a fitted biological mechanism.",
++    "sources": [
++      "model",
++      "parameter"
++    ]
++  },
++  "supersedes": null,
++  "contradicted_claim_refs": []
++}
+diff --git a/mse-design/contracts/examples/mechanism-snapshot.json b/mse-design/contracts/examples/mechanism-snapshot.json
+new file mode 100644
+index 0000000..6b02d5c166c67dc67d557b1d2ac257ec117e97b7
+--- /dev/null
++++ b/mse-design/contracts/examples/mechanism-snapshot.json
+@@ -0,0 +1,19 @@
++{
++  "id": "urn:mse:example:snapshot",
++  "revision": 1,
++  "content": "Synthetic immutable mechanism catalog fixture, not a published evidence map.",
++  "claim_refs": [
++    {
++      "id": "urn:mse:example:receptor-availability",
++      "revision": 1
++    },
++    {
++      "id": "urn:mse:example:respiratory-context",
++      "revision": 1
++    },
++    {
++      "id": "urn:mse:example:general-activation",
++      "revision": 1
++    }
++  ]
++}
+diff --git a/mse-design/contracts/intervention-hypothesis.schema.json b/mse-design/contracts/intervention-hypothesis.schema.json
+new file mode 100644
+index 0000000..c1c4eecc937071d2c75c6622de8eff7db96c4051
+--- /dev/null
++++ b/mse-design/contracts/intervention-hypothesis.schema.json
+@@ -0,0 +1,300 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/intervention-hypothesis.schema.json",
++  "title": "intervention-hypothesis",
++  "description": "Proposed data-only intervention hypothesis. Has no dosing, treatment or actuator command fields. Recorded outcomes are not efficacy claims.",
++  "type": "object",
++  "properties": {
++    "contract_version": {
++      "const": "0.1.0"
++    },
++    "contract_status": {
++      "const": "proposal"
++    },
++    "id": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
++    },
++    "revision": {
++      "type": "integer",
++      "minimum": 1
++    },
++    "created_at": {
++      "type": "string",
++      "format": "date-time"
++    },
++    "record_origin": {
++      "enum": [
++        "synthetic_example",
++        "curated_research",
++        "runtime",
++        "manual"
++      ]
++    },
++    "provenance": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
++    },
++    "extensions": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
++    },
++    "title": {
++      "type": "string",
++      "minLength": 1
++    },
++    "mode": {
++      "enum": [
++        "observation",
++        "simulation",
++        "hypothesis_test"
++      ]
++    },
++    "target_state_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 1
++    },
++    "mechanism_claim_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 1
++    },
++    "mechanism_snapshot": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/snapshot_ref"
++    },
++    "proposed_mechanism": {
++      "type": "string",
++      "minLength": 1
++    },
++    "preconditions": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
++    },
++    "exclusions": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
++    },
++    "unknown_condition_policy": {
++      "const": "do_not_recommend"
++    },
++    "expected_effects": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "properties": {
++          "state_or_outcome_id": {
++            "type": "string",
++            "minLength": 1
++          },
++          "direction": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/direction"
++          },
++          "delay": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
++          },
++          "uncertainty": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/uncertainty"
++          }
++        },
++        "required": [
++          "state_or_outcome_id",
++          "direction",
++          "delay",
++          "uncertainty"
++        ],
++        "additionalProperties": false
++      },
++      "minItems": 1
++    },
++    "measurable_outcomes": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/outcome_spec"
++      },
++      "minItems": 1
++    },
++    "adverse_response_outcome_ids": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
++      },
++      "minItems": 0
++    },
++    "confounders": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "properties": {
++          "name": {
++            "type": "string",
++            "minLength": 1
++          },
++          "temporal_role": {
++            "enum": [
++              "pre_exposure",
++              "time_varying",
++              "possible_mediator"
++            ]
++          },
++          "measurement_status": {
++            "enum": [
++              "available",
++              "planned",
++              "unknown"
++            ]
++          },
++          "handling_plan": {
++            "type": "string",
++            "minLength": 1
++          }
++        },
++        "required": [
++          "name",
++          "temporal_role",
++          "measurement_status",
++          "handling_plan"
++        ],
++        "additionalProperties": false
++      },
++      "minItems": 0
++    },
++    "competing_explanations": {
++      "type": "array",
++      "items": {
++        "type": "string",
++        "minLength": 1
++      },
++      "minItems": 0
++    },
++    "evidence": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/evidence"
++      },
++      "minItems": 0
++    },
++    "individual_history": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "properties": {
++          "analysis_ref": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++          },
++          "context_applicability": {
++            "enum": [
++              "matched",
++              "partial",
++              "not_matched",
++              "unknown"
++            ]
++          },
++          "summary": {
++            "type": "string",
++            "minLength": 1
++          },
++          "uncertainty": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/uncertainty"
++          }
++        },
++        "required": [
++          "analysis_ref",
++          "context_applicability",
++          "summary",
++          "uncertainty"
++        ],
++        "additionalProperties": false
++      },
++      "minItems": 0
++    },
++    "n_of_1_protocol_ref": {
++      "anyOf": [
++        {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++        },
++        {
++          "type": "null"
++        }
++      ]
++    },
++    "recorded_exposure_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    },
++    "observed_outcome_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    },
++    "causal_analysis_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    },
++    "status": {
++      "enum": [
++        "draft",
++        "eligible_for_review",
++        "observation_only",
++        "withheld",
++        "retired"
++      ]
++    },
++    "withholding_reasons": {
++      "type": "array",
++      "items": {
++        "type": "string",
++        "minLength": 1
++      },
++      "minItems": 0
++    },
++    "requires_human_review": {
++      "const": true
++    },
++    "execution_authority": {
++      "const": "none"
++    }
++  },
++  "required": [
++    "contract_version",
++    "contract_status",
++    "id",
++    "revision",
++    "created_at",
++    "record_origin",
++    "provenance",
++    "extensions",
++    "title",
++    "mode",
++    "target_state_refs",
++    "mechanism_claim_refs",
++    "mechanism_snapshot",
++    "proposed_mechanism",
++    "preconditions",
++    "exclusions",
++    "unknown_condition_policy",
++    "expected_effects",
++    "measurable_outcomes",
++    "adverse_response_outcome_ids",
++    "confounders",
++    "competing_explanations",
++    "evidence",
++    "individual_history",
++    "n_of_1_protocol_ref",
++    "recorded_exposure_refs",
++    "observed_outcome_refs",
++    "causal_analysis_refs",
++    "status",
++    "withholding_reasons",
++    "requires_human_review",
++    "execution_authority"
++  ],
++  "additionalProperties": false
++}
+diff --git a/mse-design/contracts/measurement-request.schema.json b/mse-design/contracts/measurement-request.schema.json
+new file mode 100644
+index 0000000..fcacf9daedab3c86a85244e51c03e4e642e7f7a1
+--- /dev/null
++++ b/mse-design/contracts/measurement-request.schema.json
+@@ -0,0 +1,296 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/measurement-request.schema.json",
++  "title": "measurement-request",
++  "description": "Proposed observation request for discrimination among mechanisms. Qualitative ranking is not calibrated EIG; no autonomous execution.",
++  "type": "object",
++  "properties": {
++    "contract_version": {
++      "const": "0.1.0"
++    },
++    "contract_status": {
++      "const": "proposal"
++    },
++    "id": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
++    },
++    "revision": {
++      "type": "integer",
++      "minimum": 1
++    },
++    "created_at": {
++      "type": "string",
++      "format": "date-time"
++    },
++    "record_origin": {
++      "enum": [
++        "synthetic_example",
++        "curated_research",
++        "runtime",
++        "manual"
++      ]
++    },
++    "provenance": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
++    },
++    "extensions": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
++    },
++    "input_state_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 1
++    },
++    "mechanism_snapshot": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/snapshot_ref"
++    },
++    "unresolved_question": {
++      "type": "string",
++      "minLength": 1
++    },
++    "hypotheses": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/hypothesis_prediction"
++      },
++      "minItems": 2
++    },
++    "unmodeled_alternative": {
++      "type": "string",
++      "minLength": 1
++    },
++    "proposed_observation": {
++      "type": "object",
++      "properties": {
++        "quantity_id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "method": {
++          "type": "string",
++          "minLength": 1
++        },
++        "unit": {
++          "type": "string",
++          "minLength": 1
++        },
++        "acquisition_conditions": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
++        },
++        "timing": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
++        },
++        "relative_to_event_id": {
++          "type": [
++            "string",
++            "null"
++          ]
++        },
++        "burden": {
++          "type": "object",
++          "properties": {
++            "description": {
++              "type": "string",
++              "minLength": 1
++            },
++            "minutes": {
++              "type": [
++                "number",
++                "null"
++              ],
++              "minimum": 0
++            },
++            "cost_amount": {
++              "type": [
++                "number",
++                "null"
++              ],
++              "minimum": 0
++            },
++            "currency": {
++              "type": [
++                "string",
++                "null"
++              ]
++            }
++          },
++          "required": [
++            "description",
++            "minutes",
++            "cost_amount",
++            "currency"
++          ],
++          "additionalProperties": false
++        },
++        "feasibility": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/truth_value"
++        },
++        "feasibility_reasons": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "quantity_id",
++        "method",
++        "unit",
++        "acquisition_conditions",
++        "timing",
++        "relative_to_event_id",
++        "burden",
++        "feasibility",
++        "feasibility_reasons"
++      ],
++      "additionalProperties": false
++    },
++    "selection_score": {
++      "oneOf": [
++        {
++          "type": "object",
++          "properties": {
++            "kind": {
++              "const": "qualitative"
++            },
++            "priority": {
++              "enum": [
++                "low",
++                "medium",
++                "high"
++              ]
++            },
++            "rationale": {
++              "type": "string",
++              "minLength": 1
++            }
++          },
++          "required": [
++            "kind",
++            "priority",
++            "rationale"
++          ],
++          "additionalProperties": false
++        },
++        {
++          "type": "object",
++          "properties": {
++            "kind": {
++              "const": "calibrated_expected_information_gain"
++            },
++            "value_bits": {
++              "type": "number",
++              "minimum": 0
++            },
++            "interval": {
++              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/interval"
++            },
++            "candidate_model_version": {
++              "type": "string",
++              "minLength": 1
++            },
++            "calibration_record_ref": {
++              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++            },
++            "estimation_method": {
++              "type": "string",
++              "minLength": 1
++            },
++            "assumptions": {
++              "type": "array",
++              "items": {
++                "type": "string",
++                "minLength": 1
++              },
++              "minItems": 1
++            }
++          },
++          "required": [
++            "kind",
++            "value_bits",
++            "interval",
++            "candidate_model_version",
++            "calibration_record_ref",
++            "estimation_method",
++            "assumptions"
++          ],
++          "additionalProperties": false
++        }
++      ]
++    },
++    "unknown_rules": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "properties": {
++          "condition": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
++          },
++          "disposition": {
++            "enum": [
++              "report_unknown",
++              "defer",
++              "request_alternative"
++            ]
++          },
++          "reason": {
++            "type": "string",
++            "minLength": 1
++          }
++        },
++        "required": [
++          "condition",
++          "disposition",
++          "reason"
++        ],
++        "additionalProperties": false
++      },
++      "minItems": 1
++    },
++    "completion_outcome_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    },
++    "status": {
++      "enum": [
++        "proposed",
++        "reviewed",
++        "declined",
++        "completed",
++        "unavailable"
++      ]
++    },
++    "execution_authority": {
++      "const": "none"
++    }
++  },
++  "required": [
++    "contract_version",
++    "contract_status",
++    "id",
++    "revision",
++    "created_at",
++    "record_origin",
++    "provenance",
++    "extensions",
++    "input_state_refs",
++    "mechanism_snapshot",
++    "unresolved_question",
++    "hypotheses",
++    "unmodeled_alternative",
++    "proposed_observation",
++    "selection_score",
++    "unknown_rules",
++    "completion_outcome_refs",
++    "status",
++    "execution_authority"
++  ],
++  "additionalProperties": false
++}
+diff --git a/mse-design/contracts/mechanism-claim.schema.json b/mse-design/contracts/mechanism-claim.schema.json
+new file mode 100644
+index 0000000..31df7411ba6ad439f61a694599c48a4de0be446d
+--- /dev/null
++++ b/mse-design/contracts/mechanism-claim.schema.json
+@@ -0,0 +1,405 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/mechanism-claim.schema.json",
++  "title": "mechanism-claim",
++  "description": "Proposed revisioned conditional mechanistic hyperedge; scoped evidence is distinct from E1 premise and simulation.",
++  "type": "object",
++  "properties": {
++    "contract_version": {
++      "const": "0.1.0"
++    },
++    "contract_status": {
++      "const": "proposal"
++    },
++    "id": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
++    },
++    "revision": {
++      "type": "integer",
++      "minimum": 1
++    },
++    "created_at": {
++      "type": "string",
++      "format": "date-time"
++    },
++    "record_origin": {
++      "enum": [
++        "synthetic_example",
++        "curated_research",
++        "runtime",
++        "manual"
++      ]
++    },
++    "provenance": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
++    },
++    "extensions": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
++    },
++    "snapshot": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/snapshot_ref"
++    },
++    "claim_text": {
++      "type": "string",
++      "minLength": 1
++    },
++    "claim_type": {
++      "enum": [
++        "reaction",
++        "transport",
++        "regulatory",
++        "ecological",
++        "receptor_binding",
++        "receptor_signaling",
++        "premise"
++      ]
++    },
++    "assertion_status": {
++      "enum": [
++        "established_in_scope",
++        "hypothesis",
++        "project_premise"
++      ]
++    },
++    "participants": {
++      "type": "array",
++      "items": {
++        "type": "object",
++        "properties": {
++          "entity": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/entity_ref"
++          },
++          "role": {
++            "enum": [
++              "substrate",
++              "product",
++              "catalyst",
++              "cofactor",
++              "modifier",
++              "ligand",
++              "receptor",
++              "organism",
++              "host_response",
++              "transport_source",
++              "transport_destination",
++              "state"
++            ]
++          },
++          "stoichiometric_coefficient": {
++            "type": [
++              "number",
++              "null"
++            ]
++          },
++          "compartment_id": {
++            "type": [
++              "string",
++              "null"
++            ]
++          }
++        },
++        "required": [
++          "entity",
++          "role",
++          "stoichiometric_coefficient",
++          "compartment_id"
++        ],
++        "additionalProperties": false
++      },
++      "minItems": 1
++    },
++    "scope": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/scope"
++    },
++    "conditions": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
++    },
++    "effect": {
++      "type": "object",
++      "properties": {
++        "target_entity_id": {
++          "type": "string",
++          "minLength": 1
++        },
++        "direction": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/direction"
++        },
++        "delay": {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
++        },
++        "functional_form": {
++          "type": [
++            "string",
++            "null"
++          ]
++        }
++      },
++      "required": [
++        "target_entity_id",
++        "direction",
++        "delay",
++        "functional_form"
++      ],
++      "additionalProperties": false
++    },
++    "physical_constraints": {
++      "type": "object",
++      "properties": {
++        "element_balance": {
++          "enum": [
++            "verified",
++            "not_checked",
++            "not_applicable"
++          ]
++        },
++        "charge_balance": {
++          "enum": [
++            "verified",
++            "not_checked",
++            "not_applicable"
++          ]
++        },
++        "electron_balance": {
++          "enum": [
++            "verified",
++            "not_checked",
++            "not_applicable"
++          ]
++        },
++        "thermodynamic_status": {
++          "enum": [
++            "feasible_in_scope",
++            "infeasible_in_scope",
++            "unknown",
++            "not_applicable"
++          ]
++        },
++        "parameters": {
++          "type": "array",
++          "items": {
++            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/parameter"
++          },
++          "minItems": 0
++        },
++        "notes": {
++          "type": "array",
++          "items": {
++            "type": "string",
++            "minLength": 1
++          },
++          "minItems": 0
++        }
++      },
++      "required": [
++        "element_balance",
++        "charge_balance",
++        "electron_balance",
++        "thermodynamic_status",
++        "parameters",
++        "notes"
++      ],
++      "additionalProperties": false
++    },
++    "receptor_model": {
++      "anyOf": [
++        {
++          "type": "object",
++          "properties": {
++            "ligand_concentration_node_ids": {
++              "type": "array",
++              "items": {
++                "type": "string",
++                "minLength": 1
++              },
++              "minItems": 1
++            },
++            "surface_receptor_node_ids": {
++              "type": "array",
++              "items": {
++                "type": "string",
++                "minLength": 1
++              },
++              "minItems": 1
++            },
++            "occupancy_node_ids": {
++              "type": "array",
++              "items": {
++                "type": "string",
++                "minLength": 1
++              },
++              "minItems": 1
++            },
++            "signaling_node_ids": {
++              "type": "array",
++              "items": {
++                "type": "string",
++                "minLength": 1
++              },
++              "minItems": 1
++            },
++            "internalized_receptor_node_ids": {
++              "type": "array",
++              "items": {
++                "type": "string",
++                "minLength": 1
++              },
++              "minItems": 0
++            },
++            "parameters": {
++              "type": "array",
++              "items": {
++                "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/parameter"
++              },
++              "minItems": 0
++            },
++            "binding_model": {
++              "type": "string",
++              "minLength": 1
++            },
++            "transduction_model": {
++              "type": [
++                "string",
++                "null"
++              ]
++            },
++            "assumptions": {
++              "type": "array",
++              "items": {
++                "type": "string",
++                "minLength": 1
++              },
++              "minItems": 1
++            }
++          },
++          "required": [
++            "ligand_concentration_node_ids",
++            "surface_receptor_node_ids",
++            "occupancy_node_ids",
++            "signaling_node_ids",
++            "internalized_receptor_node_ids",
++            "parameters",
++            "binding_model",
++            "transduction_model",
++            "assumptions"
++          ],
++          "additionalProperties": false
++        },
++        {
++          "type": "null"
++        }
++      ]
++    },
++    "evidence": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/evidence"
++      },
++      "minItems": 0
++    },
++    "uncertainty": {
++      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/uncertainty"
++    },
++    "supersedes": {
++      "anyOf": [
++        {
++          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++        },
++        {
++          "type": "null"
++        }
++      ]
++    },
++    "contradicted_claim_refs": {
++      "type": "array",
++      "items": {
++        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
++      },
++      "minItems": 0
++    }
++  },
++  "required": [
++    "contract_version",
++    "contract_status",
++    "id",
++    "revision",
++    "created_at",
++    "record_origin",
++    "provenance",
++    "extensions",
++    "snapshot",
++    "claim_text",
++    "claim_type",
++    "assertion_status",
++    "participants",
++    "scope",
++    "conditions",
++    "effect",
++    "physical_constraints",
++    "receptor_model",
++    "evidence",
++    "uncertainty",
++    "supersedes",
++    "contradicted_claim_refs"
++  ],
++  "additionalProperties": false,
++  "allOf": [
++    {
++      "if": {
++        "properties": {
++          "assertion_status": {
++            "const": "established_in_scope"
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "evidence": {
++            "minItems": 1,
++            "contains": {
++              "properties": {
++                "relationship": {
++                  "const": "supports"
++                }
++              }
++            }
++          }
++        }
++      }
++    },
++    {
++      "if": {
++        "properties": {
++          "assertion_status": {
++            "const": "project_premise"
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "claim_type": {
++            "const": "premise"
++          }
++        }
++      }
++    },
++    {
++      "if": {
++        "properties": {
++          "claim_type": {
++            "enum": [
++              "receptor_binding",
++              "receptor_signaling"
++            ]
++          }
++        }
++      },
++      "then": {
++        "properties": {
++          "receptor_model": {
++            "type": "object"
++          }
++        }
++      }
++    }
++  ]
++}
+diff --git a/mse-design/contracts/validate_contracts.py b/mse-design/contracts/validate_contracts.py
+new file mode 100644
+index 0000000..1f51fdca13ed5c659bf35c41e31cbbe169a6e6ec
+--- /dev/null
++++ b/mse-design/contracts/validate_contracts.py
+@@ -0,0 +1,183 @@
++#!/usr/bin/env python3
++"""Offline reference validation for proposed MSE contracts v0.1.0.
++
++Requires jsonschema >= 4.18 and referencing. No network operations, ingestion,
++clinical actions, or execution of extension/condition strings are implemented.
++"""
++from __future__ import annotations
++
++import copy
++import hashlib
++import json
++import math
++from pathlib import Path
++
++from jsonschema import Draft202012Validator, FormatChecker
++from referencing import Registry, Resource
++
++ROOT = Path(__file__).resolve().parent
++KINDS = ("mechanism-claim", "intervention-hypothesis", "causal-analysis", "measurement-request")
++
++
++def reject_nonfinite(value):
++    raise ValueError(f"Non-finite JSON number is invalid: {value}")
++
++
++def load(path):
++    return json.loads(path.read_text(), parse_constant=reject_nonfinite)
++
++
++def typed_equal(left, right):
++    # Python's True == 1 is not permitted as a typed contract comparison.
++    if isinstance(left, bool) != isinstance(right, bool):
++        return False
++    return type(left) is type(right) and left == right or (
++        isinstance(left, (int, float)) and not isinstance(left, bool)
++        and isinstance(right, (int, float)) and not isinstance(right, bool)
++        and left == right
++    )
++
++
++def evaluate_predicate(node, context):
++    """Strong Kleene semantics; unknown input is never coerced to false.
++
++    Context is a mapping from literal variable IDs to scalars or
++    {"value": scalar, "unit": string|null}. No eval(), implicit unit conversion,
++    inferred variable existence, or interpretation of arbitrary expressions.
++    """
++    op = node["op"]
++    if op == "constant":
++        return node["value"]
++    if op in ("all_of", "any_of"):
++        vals = [evaluate_predicate(item, context) for item in node["terms"]]
++        if op == "all_of":
++            return "false" if "false" in vals else "unknown" if "unknown" in vals else "true"
++        return "true" if "true" in vals else "unknown" if "unknown" in vals else "false"
++    if op == "not":
++        return {"true": "false", "false": "true", "unknown": "unknown"}[evaluate_predicate(node["term"], context)]
++    if op != "compare":
++        return "unknown"
++    value = context.get(node["variable"])
++    unit = None
++    if isinstance(value, dict):
++        unit, value = value.get("unit"), value.get("value")
++    if value is None or node["unit"] != unit:
++        return "unknown"
++    comparator, expected = node["comparator"], node["expected"]
++    if comparator == "eq":
++        answer = typed_equal(value, expected)
++    elif comparator == "ne":
++        answer = not typed_equal(value, expected)
++    elif comparator == "in":
++        answer = any(typed_equal(value, item) for item in expected)
++    else:
++        if not all(isinstance(item, (int, float)) and not isinstance(item, bool) and math.isfinite(item)
++                   for item in (value, expected)):
++            return "unknown"
++        answer = {"lt": value < expected, "le": value <= expected,
++                  "gt": value > expected, "ge": value >= expected}.get(comparator)
++        if answer is None:
++            return "unknown"
++    return "true" if answer else "false"
++
++
++def eligible_for_review(record, context):
++    """Review gate only; this function never grants execution authority."""
++    return (evaluate_predicate(record["preconditions"], context) == "true"
++            and evaluate_predicate(record["exclusions"], context) == "false")
++
++
++def semantic_errors(value, location="$"):
++    errors = []
++    if isinstance(value, float) and not math.isfinite(value):
++        errors.append(f"{location}: non-finite number")
++    elif isinstance(value, dict):
++        if "lower" in value and "upper" in value and value["lower"] > value["upper"]:
++            errors.append(f"{location}: interval lower exceeds upper")
++        if "earliest_seconds" in value and "latest_seconds" in value:
++            lo, hi = value["earliest_seconds"], value["latest_seconds"]
++            if lo is not None and hi is not None and lo > hi:
++                errors.append(f"{location}: delay earliest exceeds latest")
++        for key, item in value.items():
++            errors.extend(semantic_errors(item, f"{location}.{key}"))
++    elif isinstance(value, list):
++        for index, item in enumerate(value):
++            errors.extend(semantic_errors(item, f"{location}[{index}]"))
++    return errors
++
++
++def main():
++    schemas = [load(path) for path in sorted(ROOT.glob("*.schema.json"))]
++    for item in schemas:
++        Draft202012Validator.check_schema(item)
++    registry = Registry().with_resources((item["$id"], Resource.from_contents(item)) for item in schemas)
++    validators = {
++        kind: Draft202012Validator(load(ROOT / f"{kind}.schema.json"),
++                                   registry=registry, format_checker=FormatChecker())
++        for kind in KINDS
++    }
++    examples = {kind: load(ROOT / "examples" / f"{kind}.json") for kind in KINDS}
++    results = []
++    for kind, value in examples.items():
++        errors = [item.message for item in validators[kind].iter_errors(value)] + semantic_errors(value)
++        results.append({"check": f"schema_and_semantics:{kind}", "passed": not errors, "errors": errors})
++
++    snapshot_digest = hashlib.sha256((ROOT / "examples/mechanism-snapshot.json").read_bytes()).hexdigest()
++    for kind in ("mechanism-claim", "intervention-hypothesis", "measurement-request"):
++        snapshot = examples[kind]["snapshot" if kind == "mechanism-claim" else "mechanism_snapshot"]
++        results.append({"check": f"snapshot_digest:{kind}", "passed": snapshot["sha256"] == snapshot_digest})
++
++    def rejected(name, kind, mutate):
++        value = copy.deepcopy(examples[kind])
++        mutate(value)
++        errors = list(validators[kind].iter_errors(value)) + semantic_errors(value)
++        results.append({"check": name, "passed": bool(errors)})
++
++    rejected("reject_autonomous_mode", "intervention-hypothesis", lambda x: x.update(mode="autonomous_dosing"))
++    rejected("reject_executable_dose_field", "intervention-hypothesis", lambda x: x.update(dose_mg=10))
++    rejected("reject_unreviewed_execution_authority", "measurement-request", lambda x: x.update(execution_authority="execute"))
++    rejected("reject_unbacked_established_claim", "mechanism-claim", lambda x: x.update(assertion_status="established_in_scope"))
++    rejected("reject_false_default_for_missing", "intervention-hypothesis",
++             lambda x: x["preconditions"]["terms"][0].update(missing_result="false"))
++    rejected("reject_unestimated_individual_effect", "causal-analysis", lambda x: x.update(validity_status="individual_effect_supported"))
++    rejected("reject_simulation_as_observed_association", "causal-analysis", lambda x: x["design"].update(type="simulation"))
++    rejected("reject_unverified_numeric_eig", "measurement-request",
++             lambda x: x.update(selection_score={"kind": "calibrated_expected_information_gain", "value_bits": 1.0}))
++    rejected("reject_reversed_delay", "measurement-request",
++             lambda x: x["proposed_observation"]["timing"].update(earliest_seconds=500, latest_seconds=100))
++
++    def const(value):
++        return {"op": "constant", "value": value}
++
++    truth_tests = [
++        ({"op": "all_of", "terms": [const("true"), const("unknown")]}, "unknown"),
++        ({"op": "all_of", "terms": [const("false"), const("unknown")]}, "false"),
++        ({"op": "any_of", "terms": [const("false"), const("unknown")]}, "unknown"),
++        ({"op": "any_of", "terms": [const("true"), const("unknown")]}, "true"),
++        ({"op": "not", "term": const("unknown")}, "unknown"),
++    ]
++    for index, (node, expected) in enumerate(truth_tests):
++        results.append({"check": f"kleene_truth_table:{index}", "passed": evaluate_predicate(node, {}) == expected})
++    comparison = {"op": "compare", "variable": "x", "comparator": "eq", "expected": True,
++                  "unit": None, "missing_result": "unknown"}
++    results.extend([
++        {"check": "missing_leaf_is_unknown", "passed": evaluate_predicate(comparison, {}) == "unknown"},
++        {"check": "no_bool_numeric_coercion", "passed": evaluate_predicate(comparison, {"x": 1}) == "false"},
++        {"check": "no_implicit_unit_conversion", "passed": evaluate_predicate({**comparison, "expected": 1, "unit": "s"},
++                                                                            {"x": {"value": 1, "unit": "ms"}}) == "unknown"},
++        {"check": "unknown_conditions_withhold_review", "passed": not eligible_for_review(examples["intervention-hypothesis"], {})},
++    ])
++    passed = sum(item["passed"] for item in results)
++    report = {"contract_version": "0.1.0", "status": "passed" if passed == len(results) else "failed",
++              "checks_passed": passed, "checks_total": len(results), "checks": results,
++              "scope": "Schema/fixture/logic software verification only; not biological, causal, clinical or device validation."}
++    (ROOT / "validation-report.json").write_text(json.dumps(report, indent=2) + "\n")
++    print(json.dumps({key: value for key, value in report.items() if key != "checks"}, indent=2))
++    for item in results:
++        if not item["passed"]:
++            print(json.dumps(item, indent=2))
++    return 0 if passed == len(results) else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/mse-design/contracts/validation-report.json b/mse-design/contracts/validation-report.json
+new file mode 100644
+index 0000000..d6b8338cbc0a37100e67ed72ff22b0561b4f15c5
+--- /dev/null
++++ b/mse-design/contracts/validation-report.json
+@@ -0,0 +1,113 @@
++{
++  "contract_version": "0.1.0",
++  "status": "passed",
++  "checks_passed": 25,
++  "checks_total": 25,
++  "checks": [
++    {
++      "check": "schema_and_semantics:mechanism-claim",
++      "passed": true,
++      "errors": []
++    },
++    {
++      "check": "schema_and_semantics:intervention-hypothesis",
++      "passed": true,
++      "errors": []
++    },
++    {
++      "check": "schema_and_semantics:causal-analysis",
++      "passed": true,
++      "errors": []
++    },
++    {
++      "check": "schema_and_semantics:measurement-request",
++      "passed": true,
++      "errors": []
++    },
++    {
++      "check": "snapshot_digest:mechanism-claim",
++      "passed": true
++    },
++    {
++      "check": "snapshot_digest:intervention-hypothesis",
++      "passed": true
++    },
++    {
++      "check": "snapshot_digest:measurement-request",
++      "passed": true
++    },
++    {
++      "check": "reject_autonomous_mode",
++      "passed": true
++    },
++    {
++      "check": "reject_executable_dose_field",
++      "passed": true
++    },
++    {
++      "check": "reject_unreviewed_execution_authority",
++      "passed": true
++    },
++    {
++      "check": "reject_unbacked_established_claim",
++      "passed": true
++    },
++    {
++      "check": "reject_false_default_for_missing",
++      "passed": true
++    },
++    {
++      "check": "reject_unestimated_individual_effect",
++      "passed": true
++    },
++    {
++      "check": "reject_simulation_as_observed_association",
++      "passed": true
++    },
++    {
++      "check": "reject_unverified_numeric_eig",
++      "passed": true
++    },
++    {
++      "check": "reject_reversed_delay",
++      "passed": true
++    },
++    {
++      "check": "kleene_truth_table:0",
++      "passed": true
++    },
++    {
++      "check": "kleene_truth_table:1",
++      "passed": true
++    },
++    {
++      "check": "kleene_truth_table:2",
++      "passed": true
++    },
++    {
++      "check": "kleene_truth_table:3",
++      "passed": true
++    },
++    {
++      "check": "kleene_truth_table:4",
++      "passed": true
++    },
++    {
++      "check": "missing_leaf_is_unknown",
++      "passed": true
++    },
++    {
++      "check": "no_bool_numeric_coercion",
++      "passed": true
++    },
++    {
++      "check": "no_implicit_unit_conversion",
++      "passed": true
++    },
++    {
++      "check": "unknown_conditions_withhold_review",
++      "passed": true
++    }
++  ],
++  "scope": "Schema/fixture/logic software verification only; not biological, causal, clinical or device validation."
++}

@@ -1,0 +1,10 @@
+{
+  "safe_paths": true,
+  "regular_files_only": true,
+  "bundle_files": 64,
+  "manifest_entries_verified": 63,
+  "prototype_payload_files_verified": 22,
+  "prototype_manifest_sha256": "9db2c87fcc940701c437e1e075eec568073ab860eaafb347a12530f24f3f5888",
+  "temporary_extraction_exact": true,
+  "scope": "delivery integrity only; no production or biological validation"
+}

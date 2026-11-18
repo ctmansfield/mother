@@ -1,0 +1,29 @@
+{
+  "record_kind": "immutable_review_release_import",
+  "release_version": "0.1.0",
+  "release_status": "offline_research_reference_pre_release",
+  "source_date": "2026-11-13",
+  "source_date_basis": "Original release README.md: Prepared 13 November 2026.",
+  "source_archive": {
+    "filename": "mother-coach-mse-0.1.0.tgz",
+    "sha256": "e6f2a0c1d5fea4eb6fc27c93d0261dac7729e180164cac7faf863cb3acbd2fee",
+    "bytes": 189977
+  },
+  "source_manifest": {
+    "filename": "MANIFEST.sha256",
+    "sha256": "112ccb8df17d6afc6d8b7f932fbdeac31b1663ccd04c5538b9bd9a32e94a25f1",
+    "payload_file_count": 63
+  },
+  "destination": "research/mse/reference-v0.1.0",
+  "imported_tree": {
+    "file_count": 64,
+    "payload_bytes": 889221,
+    "bytes_including_manifest": 895441,
+    "sha256": "1e19a152e76fe506d4366d5c2b6addd5e113498e8378ae02c244af8b61741c04",
+    "digest_method": "SHA-256 of UTF-8 compact JSON (sort_keys=True, separators=comma/colon) for a path-sorted array of objects with path, sha256, bytes, mode_octal; MANIFEST.sha256 included.",
+    "bytes_preserved": true,
+    "file_modes_preserved": true,
+    "unlisted_files_imported": false
+  },
+  "scope": "Archival import only. Source text and historical verification remain unchanged. This does not apply the included patches, migrate any database, integrate the runtime, deploy a service, or establish physiological validation."
+}

@@ -1,0 +1,30 @@
+{
+  "patches": [
+    {
+      "patch": "P001-offline-reference.patch",
+      "sha256": "918ea9c3890d37884c512b7c21ee095c73de1732e5a480f38f5a747693a9f8da",
+      "added_files": 23,
+      "git_apply_check": "passed",
+      "exact_reconstruction": true,
+      "scope": "empty temporary review directory only"
+    },
+    {
+      "patch": "P002-research-contracts.patch",
+      "sha256": "5d887656550bffa9e3964538bb75409863b9cf936691f7d38fe4ea5ccb6fae88",
+      "added_files": 13,
+      "git_apply_check": "passed",
+      "exact_reconstruction": true,
+      "scope": "empty temporary review directory only"
+    },
+    {
+      "patch": "P003-proposed-state-schema.patch",
+      "sha256": "677d91d37422cdc429ed6d45ec7d02e7dd24bbc49e221ae4c5850739541189d1",
+      "added_files": 1,
+      "git_apply_check": "passed",
+      "exact_reconstruction": true,
+      "scope": "empty temporary review directory only"
+    }
+  ],
+  "upstream_repository_changed": false,
+  "biological_validation": false
+}

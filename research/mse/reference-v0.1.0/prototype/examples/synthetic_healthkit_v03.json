@@ -1,0 +1,296 @@
+{
+  "anchors": {
+    "heartRate": "AQID",
+    "hrvSDNN": "BAUG"
+  },
+  "backfillStart": 788940000.0,
+  "readings": [
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788940060.0,
+      "id": "00000000-0000-0000-0000-000000000001",
+      "kind": "Heart rate",
+      "receivedAt": 788940090.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788940000.0,
+      "unit": "bpm",
+      "value": 60
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788940060.0,
+      "id": "00000000-0000-0000-0000-000000000065",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788940090.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788940000.0,
+      "unit": "ms",
+      "value": 50
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788940960.0,
+      "id": "00000000-0000-0000-0000-000000000002",
+      "kind": "Heart rate",
+      "receivedAt": 788940990.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788940900.0,
+      "unit": "bpm",
+      "value": 61
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788940960.0,
+      "id": "00000000-0000-0000-0000-000000000066",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788940990.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788940900.0,
+      "unit": "ms",
+      "value": 51
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788941860.0,
+      "id": "00000000-0000-0000-0000-000000000003",
+      "kind": "Heart rate",
+      "receivedAt": 788941890.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788941800.0,
+      "unit": "bpm",
+      "value": 59
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788941860.0,
+      "id": "00000000-0000-0000-0000-000000000067",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788941890.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788941800.0,
+      "unit": "ms",
+      "value": 49
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788942760.0,
+      "id": "00000000-0000-0000-0000-000000000004",
+      "kind": "Heart rate",
+      "receivedAt": 788942790.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788942700.0,
+      "unit": "bpm",
+      "value": 60
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788942760.0,
+      "id": "00000000-0000-0000-0000-000000000068",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788942790.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788942700.0,
+      "unit": "ms",
+      "value": 50
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788943660.0,
+      "id": "00000000-0000-0000-0000-000000000005",
+      "kind": "Heart rate",
+      "receivedAt": 788943690.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788943600.0,
+      "unit": "bpm",
+      "value": 60
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788943660.0,
+      "id": "00000000-0000-0000-0000-000000000069",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788943690.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788943600.0,
+      "unit": "ms",
+      "value": 50
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788944560.0,
+      "id": "00000000-0000-0000-0000-000000000006",
+      "kind": "Heart rate",
+      "receivedAt": 788944590.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788944500.0,
+      "unit": "bpm",
+      "value": 61
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788944560.0,
+      "id": "00000000-0000-0000-0000-00000000006a",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788944590.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788944500.0,
+      "unit": "ms",
+      "value": 51
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788945460.0,
+      "id": "00000000-0000-0000-0000-000000000007",
+      "kind": "Heart rate",
+      "receivedAt": 788945490.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788945400.0,
+      "unit": "bpm",
+      "value": 59
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788945460.0,
+      "id": "00000000-0000-0000-0000-00000000006b",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788945490.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788945400.0,
+      "unit": "ms",
+      "value": 49
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788946360.0,
+      "id": "00000000-0000-0000-0000-000000000008",
+      "kind": "Heart rate",
+      "receivedAt": 788946390.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788946300.0,
+      "unit": "bpm",
+      "value": 60
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788946360.0,
+      "id": "00000000-0000-0000-0000-00000000006c",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788946390.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788946300.0,
+      "unit": "ms",
+      "value": 50
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788947260.0,
+      "id": "00000000-0000-0000-0000-000000000009",
+      "kind": "Heart rate",
+      "receivedAt": 788947290.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788947200.0,
+      "unit": "bpm",
+      "value": 90
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788947260.0,
+      "id": "00000000-0000-0000-0000-00000000006d",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788947290.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788947200.0,
+      "unit": "ms",
+      "value": 25
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788948160.0,
+      "id": "00000000-0000-0000-0000-00000000000a",
+      "kind": "Heart rate",
+      "receivedAt": 788948190.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788948100.0,
+      "unit": "bpm",
+      "value": 80
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788948160.0,
+      "id": "00000000-0000-0000-0000-00000000006e",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788948190.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788948100.0,
+      "unit": "ms",
+      "value": 30
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788949060.0,
+      "id": "00000000-0000-0000-0000-00000000000b",
+      "kind": "Heart rate",
+      "receivedAt": 788949090.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788949000.0,
+      "unit": "bpm",
+      "value": 72
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788949060.0,
+      "id": "00000000-0000-0000-0000-00000000006f",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788949090.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788949000.0,
+      "unit": "ms",
+      "value": 35
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788949960.0,
+      "id": "00000000-0000-0000-0000-00000000000c",
+      "kind": "Heart rate",
+      "receivedAt": 788949990.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788949900.0,
+      "unit": "bpm",
+      "value": 64
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788949960.0,
+      "id": "00000000-0000-0000-0000-000000000070",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788949990.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788949900.0,
+      "unit": "ms",
+      "value": 43
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788950860.0,
+      "id": "00000000-0000-0000-0000-00000000000d",
+      "kind": "Heart rate",
+      "receivedAt": 788950890.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788950800.0,
+      "unit": "bpm",
+      "value": 61
+    },
+    {
+      "bundleID": "example.synthetic.watch",
+      "end": 788950860.0,
+      "id": "00000000-0000-0000-0000-000000000071",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 788950890.0,
+      "source": "SYNTHETIC WATCH \u2014 NO HUMAN DATA",
+      "start": 788950800.0,
+      "unit": "ms",
+      "value": 48
+    }
+  ],
+  "tombstones": {}
+}

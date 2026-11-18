@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/measurement-request.schema.json",
+  "title": "measurement-request",
+  "description": "Proposed observation request for discrimination among mechanisms. Qualitative ranking is not calibrated EIG; no autonomous execution.",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "0.1.0"
+    },
+    "contract_status": {
+      "const": "proposal"
+    },
+    "id": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_origin": {
+      "enum": [
+        "synthetic_example",
+        "curated_research",
+        "runtime",
+        "manual"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
+    },
+    "extensions": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
+    },
+    "input_state_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 1
+    },
+    "mechanism_snapshot": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/snapshot_ref"
+    },
+    "unresolved_question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/hypothesis_prediction"
+      },
+      "minItems": 2
+    },
+    "unmodeled_alternative": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposed_observation": {
+      "type": "object",
+      "properties": {
+        "quantity_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "acquisition_conditions": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
+        },
+        "timing": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
+        },
+        "relative_to_event_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "burden": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minutes": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "cost_amount": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "currency": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "description",
+            "minutes",
+            "cost_amount",
+            "currency"
+          ],
+          "additionalProperties": false
+        },
+        "feasibility": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/truth_value"
+        },
+        "feasibility_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "quantity_id",
+        "method",
+        "unit",
+        "acquisition_conditions",
+        "timing",
+        "relative_to_event_id",
+        "burden",
+        "feasibility",
+        "feasibility_reasons"
+      ],
+      "additionalProperties": false
+    },
+    "selection_score": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "qualitative"
+            },
+            "priority": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "priority",
+            "rationale"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "calibrated_expected_information_gain"
+            },
+            "value_bits": {
+              "type": "number",
+              "minimum": 0
+            },
+            "interval": {
+              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/interval"
+            },
+            "candidate_model_version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "calibration_record_ref": {
+              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+            },
+            "estimation_method": {
+              "type": "string",
+              "minLength": 1
+            },
+            "assumptions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "kind",
+            "value_bits",
+            "interval",
+            "candidate_model_version",
+            "calibration_record_ref",
+            "estimation_method",
+            "assumptions"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "unknown_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "condition": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
+          },
+          "disposition": {
+            "enum": [
+              "report_unknown",
+              "defer",
+              "request_alternative"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "condition",
+          "disposition",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "completion_outcome_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "reviewed",
+        "declined",
+        "completed",
+        "unavailable"
+      ]
+    },
+    "execution_authority": {
+      "const": "none"
+    }
+  },
+  "required": [
+    "contract_version",
+    "contract_status",
+    "id",
+    "revision",
+    "created_at",
+    "record_origin",
+    "provenance",
+    "extensions",
+    "input_state_refs",
+    "mechanism_snapshot",
+    "unresolved_question",
+    "hypotheses",
+    "unmodeled_alternative",
+    "proposed_observation",
+    "selection_score",
+    "unknown_rules",
+    "completion_outcome_refs",
+    "status",
+    "execution_authority"
+  ],
+  "additionalProperties": false
+}
