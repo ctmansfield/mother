@@ -1,37 +1,38 @@
 # E1 — Consolidated Mechanistic Literature Reference Register
 
-**Version:** E1-REFS-2026-11-19-R1 · **Assembled:** 19 November 2026 (Guam)
+**Release:** E1-REFS-2026-11-19-R1 · **Assembled:** 19 November 2026 (Guam)
 
-## Canonical index
+## Canonical E1 bibliography in MOTHER
 
-- [REFERENCE_REGISTER.json](REFERENCE_REGISTER.json) — canonical merged bibliography with provenance, stable source identifiers, scope/verification flags, links, and research-mechanism notes.
-- [REFERENCE_REGISTER.csv](REFERENCE_REGISTER.csv) — filterable flat export of the same records.
-- [RELEASE_NOTES.md](RELEASE_NOTES.md) — source inventory, deduplication and verification limits.
+- [REFERENCE_REGISTER.json](REFERENCE_REGISTER.json) — master reference list with DOI, PMID, source provenance, original identifiers and mechanism notes.
+- [REFERENCE_REGISTER.csv](REFERENCE_REGISTER.csv) — flat, filterable reference table.
+- [verify_register.py](verify_register.py) — validates source counts, keys, cross-references and CSV/JSON parity.
+- [RELEASE_NOTES.md](RELEASE_NOTES.md) — patch notes, verification status and limitations.
 
-****Imported:** 72 evidence-network references (D:S01–S72), 70 workbook references (W:R01–R70), 73 DOI-linked Scout citations, 27 Draft 0.2 references (DRAFT02:1–27), 17 MSE scientific source entries (MSE:S1–S17), and seven MSE mechanism-seed citations (MSE-SEED:1–7). These reconcile to **250 distinct reference records**, with **228 DOI-keyed**. This is an accessible-material reconciliation, not a claim of exhaustive lifetime research coverage.
+**Consolidated result:** **248 distinct source records** (229 DOI-keyed, 19 PMID/URL-keyed). These were reconciled from **72 original evidence-network citations**, **70 workbook citations**, **73 DOI-linked Scout-digest entries**, **27 Draft 0.2 references**, **17 MSE scientific-foundations entries**, and **7 MSE mechanism-seed references**. All numbers refer to source *entries* before deduplication except the distinct count.
 
-DOI is the authoritative bibliographic join key when present. Historic reference IDs remain namespaced aliases. Published-version links collapse duplicate preprint predecessors without treating them as independent replication. Entries without DOIs (e.g., data accessions) use source URLs.
+Legacy IDs are preserved as namespaced aliases: `D:S01–S72`, `W:R01–R70`, `DRAFT02:1–27`, `MSE:S1–S17`, `MSE-SEED:1–7`. DOI and PMID are preferred join keys; source URLs are retained for unkeyed datasets or official documentation. Two published-version/preprint links are recorded explicitly, without counting predecessors as independent replication.
 
-**E1 is the project's fixed working premise**, not a claim independently established by every cited paper. Studies may support an individual reaction, compete with a proposed mechanism, provide necessary methodological controls, or report negative results. Store causal evidence grades **on particular model-specific edges**, not as a general endorsement of E1.
+## Scientific interpretation and verification boundary
 
-## Evidence handling and verification
+**E1 is the fixed research premise, not an independently proven conclusion of this bibliography.** The included records encompass positive experimental evidence, contrary and negative outcomes, observational associations, historical foundational work, methodological controls, preprints and datasets. Each paper supports only specific edges in its tested organism, model, cell or assay. Grade A–D refers to an edge/model claim, not blanket proof of E1 or clinical efficacy.
 
-- `primary_source_status` distinguishes original historical bibliographies, Scout-attributed references requiring primary recheck, and selected primary landing pages checked in this session.
-- `peer_review_status` keeps preprints, inherited journal status, and uncertain entries distinct. Preprint versions and publication-status claims require refreshed source verification before mechanistic promotion.
-- `edge_grades_as_discussed` are **unvalidated labels from prior Scout narrative**, not fresh quality appraisals. Evidence grade A applies only to causal tests in their exact experimental model.
-- `scout_dates` are *discovery/discussion* dates. They are not release dates.
-- `proposed_map_ids` are uncommitted candidate identifiers. Nothing in this import creates an approved graph edge, updates interventions, or confirms in vivo metabolic flux.
+`primary_source_status` identifies which original DOI pages were checked during this consolidation and which records were inherited from prior summaries or library source documents. Many entries still need manual original-source full-text verification, corrections/retraction checks, model-specific perturbation/rescue appraisal and publication-version reconciliation. Scout summary text is a **candidate lead**, not an independently verified biological fact. `scout_dates` are discussion dates, **not publication dates**.
 
-## Relationship to repository MSE and weekly reports
+Do not use this bibliography to infer individual clinical mechanisms or recommend treatments. Keep measured metabolites, flux, enzyme capacity, receptor engagement, signaling, host outcomes and ecological feedback as distinct claims. Promote hypotheses to causal map edges only after independent source verification.
 
-This import is additive and does not rewrite the immutable MSE-001 reference under PR #12, or change MOTHER/COACH services, Research Scout automation, or weekly Meta-Research schedules.
+## Provenance and relationship to MSE
 
-Future research passes should reconcile DOI, PMID, preprint version, corrections, and mapped claims against this registry. Promote a claim only after independent source verification; contradictory and negative findings should remain visible. Do not reuse an established edge ID for a different mechanism.
+Inputs were the accessible library `Host_Microbial_Equilibrium_Network.json` (research cutoff 12 Oct 2026), `microbiome_ecological_evidence_map_v1.0.xlsx` References sheet, `Host_Microbial_Equilibrium_Draft_0_2.md`, and the November 6–19 Scout digests in this conversation. The two MSE reference documents were read from the unmerged MOTHER draft [PR #12](https://github.com/ctmansfield/mother/pull/12). None of these originals was overwritten; the MSE reference stays immutable.
 
-## Source artifacts used
+This versioned import is additive and changes **neither** MOTHER/COACH runtime, Research Scout automation, **nor** the weekly Meta-Research report/schedule.
 
-The underlying pre-existing `Host_Microbial_Equilibrium_Network.json` (evidence cutoff 12 October 2026) and `microbiome_ecological_evidence_map_v1.0.xlsx` (References sheet) were accessible in the user's library. The original materials were not edited or replaced; records were imported into this repository with their S and R identifiers retained. The November 6–19 Research Scout digests supplied additional candidate references and source links.
+## Check
 
-This catalog is suitable for review and downstream deduplication, but source-level verification and scientific appraisal remain outstanding for numerous imported records.
+From repository root:
 
-Additional source streams: the original Draft 0.2 bibliography (27 numbered items, including two PMID-only records) and current unmerged MSE-001 PR #12 (17 scientific-foundations entries plus seven seed sources). These have their own namespaced legacy IDs, preserving the immutable original MSE reference.
+```bash
+python3 research/e1/verify_register.py
+```
+
+This verifies structural integrity, **not** scientific validity. Future Scouts should query the canonical DOI/PMID and candidate map IDs before proposing new bibliography entries.
