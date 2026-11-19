@@ -1,0 +1,19 @@
+{
+  "schema": "fw00413.behavior-round-verification.v1",
+  "checked_at_utc": "2026-11-19T14:29:07.996203+00:00",
+  "commands": [
+    "python3 -B -m unittest discover -s behavior/tests -v",
+    "python3 -B behavior/benchmark.py validate"
+  ],
+  "status": "SOURCE_TESTS_PASS_HOST_GPU_UNRUN",
+  "tests_passed": 24,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "real_model_requests": 0,
+  "gpu_inference_requests": 0,
+  "pack_sha256": "803d7c62e0574974ceb729b238f92e02c27d90af787ddc522b92078685e8319b",
+  "behavior_wrapper_sha256": "5ad41fca86f3811f4d6297df3e6f0a57e577a19023b726c3f62be035bb093ad4",
+  "scientific_wrapper_sha256": "2e52c5ddd438276b3808b7c66db765b3de82796fa39f64d8041ae246dc69c8b3",
+  "independent_review": "Source/predecessor/full-digest gates, raw-response telemetry linkage, shared lock, 120 serial mock calls, identical 24 prompts and seeds, truncation fairness, and retained partial failure counts reviewed.",
+  "limitations": "Offline synthetic cases and fake APIs verify harness behavior only. No host GPU inference, clinical validity, role assignment or automatic rationale verification claimed."
+}
