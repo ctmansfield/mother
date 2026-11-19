@@ -8,7 +8,7 @@
 - [REFERENCE_REGISTER.csv](REFERENCE_REGISTER.csv) — filterable flat export of the same records.
 - [RELEASE_NOTES.md](RELEASE_NOTES.md) — source inventory, deduplication and verification limits.
 
-**Imported:** 72 pre-existing evidence-network references (D:S01–S72), 70 evidence-map workbook references (W:R01–R70), and 73 DOI-linked citations discussed in November 6–19 Research Scout digests. These yield **211 distinct reference records**, of which 194 have DOI keys. This is an accessible-material reconciliation, **not** an assertion that all works ever discussed in all chats have been accessed.
+****Imported:** 72 evidence-network references (D:S01–S72), 70 workbook references (W:R01–R70), 73 DOI-linked Scout citations, 27 Draft 0.2 references (DRAFT02:1–27), 17 MSE scientific source entries (MSE:S1–S17), and seven MSE mechanism-seed citations (MSE-SEED:1–7). These reconcile to **250 distinct reference records**, with **228 DOI-keyed**. This is an accessible-material reconciliation, not a claim of exhaustive lifetime research coverage.
 
 DOI is the authoritative bibliographic join key when present. Historic reference IDs remain namespaced aliases. Published-version links collapse duplicate preprint predecessors without treating them as independent replication. Entries without DOIs (e.g., data accessions) use source URLs.
 
@@ -33,3 +33,5 @@ Future research passes should reconcile DOI, PMID, preprint version, corrections
 The underlying pre-existing `Host_Microbial_Equilibrium_Network.json` (evidence cutoff 12 October 2026) and `microbiome_ecological_evidence_map_v1.0.xlsx` (References sheet) were accessible in the user's library. The original materials were not edited or replaced; records were imported into this repository with their S and R identifiers retained. The November 6–19 Research Scout digests supplied additional candidate references and source links.
 
 This catalog is suitable for review and downstream deduplication, but source-level verification and scientific appraisal remain outstanding for numerous imported records.
+
+Additional source streams: the original Draft 0.2 bibliography (27 numbered items, including two PMID-only records) and current unmerged MSE-001 PR #12 (17 scientific-foundations entries plus seven seed sources). These have their own namespaced legacy IDs, preserving the immutable original MSE reference.
