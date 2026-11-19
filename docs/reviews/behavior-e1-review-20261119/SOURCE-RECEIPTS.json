@@ -1,0 +1,53 @@
+{
+  "reviewed_on": "2026-11-19",
+  "classification": "READ_ONLY_GITHUB_EVIDENCE_REVIEW",
+  "fw00411_original": {
+    "source_pin": "419ca7739409199fc4a61b954cf30e7e72af9f5c",
+    "observed_user_exit": 2,
+    "result": "REFUSED_BEFORE_TESTS",
+    "expected_wrong_git_blob": "222a70a72c3eba6a8af6ce5c90ced7eb32182cd7fb",
+    "actual_git_blob": "521261fe0a8f9ba09f152f95319d705283d9aba7",
+    "file": "packages/fw00410/scientific.py"
+  },
+  "fw00411_fix": {
+    "source_pin": "8f9907e7f6b5c4f639123ff1e8b8fe629b8d0308",
+    "issue": 146,
+    "pull_request": 150,
+    "branch": "feature/fw-004111-scout-blob-pin-correction",
+    "host_qualification": "NOT_OBSERVED_AT_REVIEW",
+    "source_url": "https://github.com/ctmansfield/production-framework/commit/8f9907e7f6b5c4f639123ff1e8b8fe629b8d0308"
+  },
+  "fw00412": {
+    "source_pin": "ba6fbb90c031f122b7db61d2f67f2b22ef1cf130",
+    "host_receipt_url": "https://github.com/ctmansfield/production-framework/issues/139#issuecomment-7009907399",
+    "receipt": "## FW-004.12 — scientific specialist broker offline qualification\n\n**SOURCE-ONLY / SYNTHETIC / NO SCIENTIFIC TRUTH PROMOTION**\n\n- Exact source SHA: `ba6fbb90c031f122b7db61d2f67f2b22ef1cf130`\n- Protected suites: FW-004.10, FW-004.11, FW-004.12 PASS\n- Experimental scientific roles: 5\n- Protected candidate/abstain cases: 15\n- Live model/GPU calls: 0\n- Synthetic graph SHA-256: `08aa8eb1956aeef44dd9aac1a28a410a653993fcb87143ac7c50e7d73361b6b2`\n- Candidate source metadata SHA-256: `b05698b00ea40217e7a683be113a33b671b7d632c04410e9052464395dee7529`\n- Summary SHA-256: `08dbef588a51aba1640038628a832a4d646cdefec7fd964072d6fd71c26d694f`\n- E1: PROJECT_WORKING_PREMISE_NOT_ESTABLISHED\n- Scientific truth / independent reviewer: NOT_ESTABLISHED / NOT_PERFORMED\n- Shared memory / publication / deployment / routing: NOT_APPROVED / NOT_PUBLISHED / NOT_DEPLOYED / NOT_ASSIGNED\n- Raw model responses, source text, test fixtures and keys: HOST LOCAL ONLY\n",
+    "source_report_test_counts": {
+      "fw00410": 59,
+      "fw00411": 50,
+      "fw00412": 70
+    },
+    "live_calls": 0,
+    "github_policy": {
+      "run_id": 44528620651,
+      "result": "success",
+      "scope": "Check tracked repository content"
+    }
+  },
+  "fw00567": {
+    "source_pin": "d18ee0350cbfecd3bda3984f8deeb8a9cfa194b0",
+    "host_receipt_url": "https://github.com/ctmansfield/production-framework/issues/133#issuecomment-7008931692",
+    "receipt": "## FW-005.6.7 integrated coding role/protocol comparison\n\n**EXPERIMENT ONLY / NO MODEL-ROLE ASSIGNMENT / NOT DEPLOYED**\n\n- Exact source SHA: `d18ee0350cbfecd3bda3984f8deeb8a9cfa194b0`\n- Comparisons: 5 rosters × 8 fresh tasks × 2 protocol treatments\n- Model calls: 400 sequential\n- Raw local output SHA-256: `fb24c7c6374b82ccf64eb3997b646b922eeb3172a41659080111d6b02fe7444e`\n- Experimental roster SHA-256: `d88c36d45f85c8f87173deb8a83f876fbd5b3280c9fbf9d3390a3d5926013128`\n- Summary SHA-256: `6a1b3282cfcb65577a06863c4e0092401df2fbb6ba7e1a88ef636f7a09c0ec89`\n\n| Experimental roster | Protocol | Protected code PASS | Human review eligible | Planner shape PASS | Reviewer false approvals | Recovered formats | Mean workflow seconds |\n|---|---|---:|---:|---:|---:|---:|---:|\n| baseline | strict | 7/8 | 0/8 | 8/8 | 0 | 0 | 45.42 |\n| baseline | guided | 8/8 | 0/8 | 8/8 | 0 | 8 | 48.27 |\n| coder-q8 | strict | 0/8 | 0/8 | 8/8 | 0 | 0 | 41.7 |\n| coder-q8 | guided | 5/8 | 1/8 | 8/8 | 0 | 6 | 45.05 |\n| coder-devstral | strict | 0/8 | 0/8 | 8/8 | 0 | 0 | 40.1 |\n| coder-devstral | guided | 4/8 | 0/8 | 8/8 | 0 | 6 | 45.91 |\n| coder-qwen30 | strict | 0/8 | 0/8 | 8/8 | 0 | 0 | 40.17 |\n| coder-qwen30 | guided | 7/8 | 2/8 | 8/8 | 0 | 8 | 43.65 |\n| planning-qa-control | strict | 7/8 | 0/8 | 8/8 | 0 | 0 | 48.73 |\n| planning-qa-control | guided | 8/8 | 0/8 | 8/8 | 0 | 8 | 50.74 |\n\n- Every roster is an experimental contrast, **not a role assignment**.\n- Reviewer verdicts are unauthenticated model statements; a PASS is only eligible for human review.\n- Eight tasks per arm are exploratory, not a production reliability estimate.\n- Real multi-file repair, external attestation and global GPU broker remain pending.\n- Protected generated source and raw role responses remain local on llm.\n- No code promotion, GitHub publish, merge, deployment, weights, credentials, cron or model routing changes.\n",
+    "total_workflows": 80,
+    "total_calls": 400,
+    "derived_protected_pass": 46,
+    "derived_human_review_eligible": 3,
+    "expected_raw_sha256": "fb24c7c6374b82ccf64eb3997b646b922eeb3172a41659080111d6b02fe7444e",
+    "expected_summary_sha256": "6a1b3282cfcb65577a06863c4e0092401df2fbb6ba7e1a88ef636f7a09c0ec89"
+  },
+  "limits": [
+    "Host-local raw coding responses were not accessed in this review",
+    "GitHub policy workflow is separate from host domain tests",
+    "Scientific offline evidence has zero real model inference",
+    "No model roles assigned or production systems changed"
+  ]
+}

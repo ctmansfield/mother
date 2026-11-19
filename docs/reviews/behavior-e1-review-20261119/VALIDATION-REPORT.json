@@ -1,0 +1,37 @@
+{
+  "capsule_sha256": "a3eff08a026d0174c1f49df93f578589613d9d32ee0595a37a78d6a588c136cc",
+  "checks": [
+    {
+      "check": "pinned-resume",
+      "exit_code": 0,
+      "log": "validation/pinned-resume.log",
+      "log_sha256": "06940e56db23c0188447aed4ec41036ba1986322a65a0a9fed7bec948ea64f65",
+      "stdout_bytes": 6558
+    },
+    {
+      "check": "instruction-evidence",
+      "exit_code": 0,
+      "log": "validation/instruction-evidence.log",
+      "log_sha256": "9ff0e217080f6fcfa9df37497e74e21bd4c1f6467923b3950483d63605a2ffc4",
+      "stdout_bytes": 2495
+    }
+  ],
+  "index_sha256": "f883c242edc410c9c683fb1a03ca4f3594268bf9fa651f20da392f241d4a3c6d",
+  "initial_index_sha256": "af0ae726e1507c514398339502258ca42296ea8e0d1b145323e4c43c30ae7427",
+  "initial_resume": "UNSEEDED",
+  "limitations": [
+    "Report still contains root-fill fields; updating it requires reference/capsule/index refresh.",
+    "Local ACK acknowledges this actual task intake; it is not an externally accepted issue assignment.",
+    "Reader verifies bytes/schema; it does not grant authority or certify scientific claims."
+  ],
+  "mother_base_pin": "818426fe90fab1bfd9583640363d4001b30e633f",
+  "reader_git_blobs": {
+    "tools/context_project.py": "88a0ef4e68da4121c13f8f916ad59c6d428d0a77",
+    "tools/context_projection.py": "dd4b7ea8e7b756624b11647671df8351cd860bc7"
+  },
+  "registered_reference_count": 5,
+  "registration": "INDEXED",
+  "remote_mutations_by_worker": 0,
+  "scope": "LOCAL_SOURCE_PROJECTION_VALIDATION",
+  "task": "behavior-e1-review-20261119"
+}
