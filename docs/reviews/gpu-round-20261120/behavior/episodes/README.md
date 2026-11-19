@@ -29,7 +29,10 @@ These commands make zero network/GPU/model calls and do not alter running servic
 - Added prediction target/availability binding and explicit outcome-error verification.
 - Added two independently linked gates for lessons: historical prediction and measured discrepancy.
 - Added successor-model version lineage without erasing failed predictions.
-- Added seventeen offline regression cases, all self-contained and fictional.
+- Added eighteen offline regression cases, all self-contained and fictional.
 - Next: four scripted complete episode fixtures, process-restart/recovery and independent reviewer adjudication, then role-based GPU evaluation **only after** the ongoing scientific Protocol B work has finished and been reviewed.
 
 GitHub drafts are source-only. Do not merge or deploy from a passing synthetic test alone.
+
+## Host test correction, 2026-11-20
+The host observed 16 passes and one fixture failure: `test_lesson_never_verified` used ID `l`, which violates the minimum event ID length and short-circuited the intended invalid lesson-status gate. The fixture now uses `lesson-valid-id`; a separate regression verifies the short ID remains rejected. No validation or runtime episode code was modified. Original failed evidence remains preserved.

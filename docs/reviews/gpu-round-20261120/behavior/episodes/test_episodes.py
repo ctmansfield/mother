@@ -83,7 +83,11 @@ class EpisodeTests(unittest.TestCase):
 
     def test_lesson_never_verified(self):
         with self.assertRaisesRegex(ValueError,"lessons cannot"):
-            validate_event(event("LESSON","l",1,{"text":"true","status":"PROVEN"}))
+            validate_event(event("LESSON","lesson-valid-id",1,{"text":"true","status":"PROVEN"}))
+
+    def test_short_event_identifier_still_refused(self):
+        with self.assertRaisesRegex(ValueError,"invalid event_id"):
+            validate_event(event("LESSON","l",1,{"text":"test","status":"PROVEN"}))
 
     def test_duplicate_event_id_refused(self):
         self.add("RECOMMENDATION","offer",1,{"offer":"trial"})
