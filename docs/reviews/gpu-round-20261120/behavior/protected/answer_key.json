@@ -1,0 +1,644 @@
+{
+  "schema": "fw00413.behavioral-answer-key.v1",
+  "answers": {
+    "beh-001": {
+      "variant": "supported",
+      "decision": "SELECT",
+      "conclusion_id": "c-b",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "score-change": {
+          "value": 4,
+          "atol": 0
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-c"
+      ],
+      "rationale": "The repeated item identifies reported score change; it does not directly measure endocrine state, a diagnosis or a trait.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2"
+      ]
+    },
+    "beh-002": {
+      "variant": "context_change",
+      "decision": "HOLD",
+      "conclusion_id": "c-c",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b"
+      ],
+      "rationale": "Different constructs, ranges and directions cannot be made equivalent by raw subtraction or percent-of-maximum normalization alone.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-003": {
+      "variant": "conflicting",
+      "decision": "HOLD",
+      "conclusion_id": "c-a",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "The data conflict; a numeric average could be reported as arithmetic but would not establish a resolved latent state.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-004": {
+      "variant": "insufficient",
+      "decision": "ABSTAIN",
+      "conclusion_id": null,
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "A bare total with no construct or instrument mapping identifies none of the supplied interpretations.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2"
+      ]
+    },
+    "beh-005": {
+      "variant": "supported",
+      "decision": "SELECT",
+      "conclusion_id": "c-b",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-c"
+      ],
+      "rationale": "Reversibility is inconsistent with declaring a stable deficit from one low session; observational timing leaves causal alternatives open.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-006": {
+      "variant": "context_change",
+      "decision": "HOLD",
+      "conclusion_id": "c-c",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b"
+      ],
+      "rationale": "The regime change co-occurs with score change and prevents isolating an enduring individual characteristic.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-007": {
+      "variant": "conflicting",
+      "decision": "HOLD",
+      "conclusion_id": "c-a",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "Different observables can diverge; neither erasing the report nor inventing physiological or behavioral change is supported.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-008": {
+      "variant": "insufficient",
+      "decision": "ABSTAIN",
+      "conclusion_id": null,
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "A single context-poor event cannot identify any of the supplied stable traits.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2"
+      ]
+    },
+    "beh-009": {
+      "variant": "supported",
+      "decision": "SELECT",
+      "conclusion_id": "c-c",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "a-choice-change": {
+          "value": -0.6,
+          "atol": 1e-06
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b"
+      ],
+      "rationale": "Choices shifted toward the newly more rewarding alternative; this descriptive pattern does not uniquely identify a mechanism.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-010": {
+      "variant": "context_change",
+      "decision": "SELECT",
+      "conclusion_id": "c-a",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "A closed venue constrains the observed action; attendance alone cannot establish a persistent motivation change.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-011": {
+      "variant": "conflicting",
+      "decision": "HOLD",
+      "conclusion_id": "c-b",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-c"
+      ],
+      "rationale": "Equivalent fit does not discriminate the models; their prospective divergence supplies a controlled next comparison.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-012": {
+      "variant": "insufficient",
+      "decision": "ABSTAIN",
+      "conclusion_id": null,
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "The same isolated choice is compatible with many mechanisms and does not identify one.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2"
+      ]
+    },
+    "beh-013": {
+      "variant": "supported",
+      "decision": "SELECT",
+      "conclusion_id": "c-c",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "r-p1": {
+          "value": -1,
+          "atol": 1e-06
+        },
+        "r-p2": {
+          "value": -1,
+          "atol": 1e-06
+        },
+        "r-pooled": {
+          "value": 0.9047619047619048,
+          "atol": 1e-06
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b"
+      ],
+      "rationale": "Between-person mean differences reverse the sign of the pooled correlation; neither correlation proves a causal effect.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-014": {
+      "variant": "context_change",
+      "decision": "SELECT",
+      "conclusion_id": "c-a",
+      "required_evidence_sets": [
+        [
+          "f-1"
+        ]
+      ],
+      "excluded_evidence_ids": [
+        "f-2",
+        "f-3"
+      ],
+      "numeric": {
+        "eligible-feature-count": {
+          "value": 1,
+          "atol": 0
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "First availability, not only event time, governs whether a forecast could have used a value; target leakage is excluded.",
+      "allowed_evidence_ids": [
+        "f-1"
+      ]
+    },
+    "beh-015": {
+      "variant": "conflicting",
+      "decision": "HOLD",
+      "conclusion_id": "c-b",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "r-context-a": {
+          "value": 1,
+          "atol": 1e-06
+        },
+        "r-context-b": {
+          "value": -1,
+          "atol": 1e-06
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-c"
+      ],
+      "rationale": "Opposite associations must remain context-indexed rather than being collapsed into a single directional claim.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-016": {
+      "variant": "insufficient",
+      "decision": "ABSTAIN",
+      "conclusion_id": null,
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "eligible-participants": {
+          "value": 0,
+          "atol": 0
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-c"
+      ],
+      "rationale": "Neither individual meets the fictional reporting rule; pooled rows are not additional within-person observations.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-017": {
+      "variant": "supported",
+      "decision": "SELECT",
+      "conclusion_id": "c-a",
+      "required_evidence_sets": [
+        [
+          "f-2",
+          "f-3",
+          "f-4"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "behavior-change": {
+          "value": 2,
+          "atol": 0
+        },
+        "physiology-change": {
+          "value": 0,
+          "atol": 0
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "Action and two outcome channels have distinct records; observed before/after differences alone do not establish causation.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3",
+        "f-4"
+      ]
+    },
+    "beh-018": {
+      "variant": "context_change",
+      "decision": "SELECT",
+      "conclusion_id": "c-b",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-c"
+      ],
+      "rationale": "Acknowledgement is itself an identifiable status, but it supplies no action or benefit evidence.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-019": {
+      "variant": "conflicting",
+      "decision": "HOLD",
+      "conclusion_id": "c-c",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "behavior-difference": {
+          "value": 5,
+          "atol": 0
+        },
+        "physiology-difference": {
+          "value": 3,
+          "atol": 0
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b"
+      ],
+      "rationale": "The positive physiological difference is adverse under its endpoint direction; no utility rule warrants collapsing the tradeoff.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-020": {
+      "variant": "insufficient",
+      "decision": "ABSTAIN",
+      "conclusion_id": null,
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "A forecast is neither an observed effect nor evidence of effectiveness or ineffectiveness.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2"
+      ]
+    },
+    "beh-021": {
+      "variant": "supported",
+      "decision": "SELECT",
+      "conclusion_id": "c-b",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-c"
+      ],
+      "rationale": "Temporal ordering supports a candidate predictive direction, not a causal mechanism; reverse and common-cause alternatives remain.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-022": {
+      "variant": "context_change",
+      "decision": "SELECT",
+      "conclusion_id": "c-a",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "Competing changes and an unspecified mapping prevent deriving engagement or function from ligand amount.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-023": {
+      "variant": "conflicting",
+      "decision": "HOLD",
+      "conclusion_id": "c-c",
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {
+        "effect-context-a": {
+          "value": 5,
+          "atol": 0
+        },
+        "effect-context-b": {
+          "value": -4,
+          "atol": 0
+        }
+      },
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b"
+      ],
+      "rationale": "Valid opposite responses challenge a universal sign; they do not by themselves identify the mechanism of heterogeneity.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    },
+    "beh-024": {
+      "variant": "insufficient",
+      "decision": "ABSTAIN",
+      "conclusion_id": null,
+      "required_evidence_sets": [
+        [
+          "f-1",
+          "f-2",
+          "f-3"
+        ]
+      ],
+      "excluded_evidence_ids": [],
+      "numeric": {},
+      "critical_conclusion_ids": [
+        "c-a",
+        "c-b",
+        "c-c"
+      ],
+      "rationale": "Taxon abundance and a report do not identify unmeasured enzyme, metabolite, flux or receptor-level mechanism.",
+      "allowed_evidence_ids": [
+        "f-1",
+        "f-2",
+        "f-3"
+      ]
+    }
+  }
+}

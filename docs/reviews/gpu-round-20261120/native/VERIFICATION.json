@@ -1,0 +1,20 @@
+{
+  "actual_gpu_calls": 0,
+  "actual_model_calls": 0,
+  "coverage": [
+    "cached asset identity and symlink refusal",
+    "source pin and dirty checkout refusal",
+    "protected retrieval labels excluded",
+    "finite retrieval ranking and ties",
+    "CUDA placement rejects CPU",
+    "inspection without model or GPU calls",
+    "owned worker exit race",
+    "fixed loopback idle-check redirect refusal"
+  ],
+  "native_runtimes_exercised": false,
+  "offline_tests_passed": 19,
+  "offline_tests_skipped": 0,
+  "source_correction": "Renamed retrieval aggregate to positive_over_hard_negative_count; verified strict positive wins and tie exclusion.",
+  "source_pin": "ba6fbb90c031f122b7db61d2f67f2b22ef1cf130",
+  "status": "SOURCE_ONLY_NO_HOST_INFERENCE"
+}

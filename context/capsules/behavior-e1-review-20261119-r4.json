@@ -1,0 +1,229 @@
+{
+  "acceptance": [
+    "Keep literature issue #145 open and skip acquisition work.",
+    "Identical scientific tasks across candidates, full model digests and per-call GPU observations.",
+    "Preserve request failures and partial attempts; separate harness completion, GPU evidence and correctness.",
+    "Scientific GPU workload precedes behavioral; no concurrent GPU experiments.",
+    "Validate current instruction-bound capsule with the pinned context reader."
+  ],
+  "authorization": {
+    "allowed": [
+      "Current user authorized scientific GPU tests, behavioral preparation and subsequent behavioral GPU tests.",
+      "Source updates to existing draft PR with exact dependency pins and offline verification."
+    ],
+    "not_authorized": [
+      "Merge or runtime deployment, credentials changes, taking over another GPU workload, or inventing inference results."
+    ],
+    "source": "user-task",
+    "state": "current-user-scientific-gpu-first"
+  },
+  "blockers": [
+    "No working remote execution route to llm from this session; SSH client failed before connection. Operator launch command required."
+  ],
+  "conflicts": [
+    "FW00413/FW00414 numbers are reused in other framework issues; identify #144/#145 by issue and exact pin."
+  ],
+  "constraints": [
+    "No terminal-closing shell option changes; preserve previous attempts.",
+    "Literature issue #145 remains open and deferred.",
+    "One GPU experiment at a time; scientific precedes behavioral.",
+    "No permanent role assignment or scientific promotion from exploratory scores."
+  ],
+  "decisions": [
+    {
+      "id": "defer-literature",
+      "reason": "Explicit newer user steering.",
+      "source": "user-task",
+      "supersedes": [
+        "separate-acquisition-state"
+      ],
+      "value": "Leave issue #145 open; do not run the old E1 acquisition handoff."
+    },
+    {
+      "id": "science-first-matched-comparison",
+      "reason": "Current task asks for scientific GPU results before behavior.",
+      "source": "user-task",
+      "supersedes": [],
+      "value": "First run five candidates on the same fifteen unchanged scientific cases; record GPU observations separately from task scores."
+    },
+    {
+      "id": "native-separate-capability-tests",
+      "reason": "Ollama generation does not exercise native retrieval or CUDA model runtimes.",
+      "source": "current-report",
+      "supersedes": [],
+      "value": "Prepare MedCPT retrieval and TxGemma native adapters, preserving protocol/runtime differences."
+    }
+  ],
+  "dependencies": [
+    "Initial qualified FW00412 source and offline receipt; all five installed full model digests.",
+    "Scientific predecessor: 75 actual completed calls and 75 matching GPU-residency observations before native helper or behavioral launch.",
+    "Existing MedCPT/TxGemma environments and complete cached assets for native CUDA screens.",
+    "One GPU stage at a time; review held or ambiguous attempts before any retry."
+  ],
+  "goal": "Run the scientific models on the GPU first; prepare behavioral model evaluation while waiting; run behavioral subsequently. Leave literature issue #145 open and deferred.",
+  "instruction_binding": {
+    "id": "behavior-e1-review-20261119",
+    "ref": "user-task",
+    "revision": "scientific-gpu-first-20261120",
+    "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391",
+    "source": "Current ChatGPT user steering, captured directly"
+  },
+  "next_action": {
+    "action": "Run the pinned scientific comparison on llm and inspect retained results; then run cached MedCPT/TxGemma screens serially and the prepared behavioral comparison. Return actual per-case/GPU evidence for review.",
+    "role": "operator-and-root"
+  },
+  "observed_at": "2026-11-19T14:30:55Z",
+  "receipt": {
+    "instruction_binding": {
+      "id": "behavior-e1-review-20261119",
+      "revision": "scientific-gpu-first-20261120",
+      "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391",
+      "source": "Current ChatGPT user steering, captured directly"
+    },
+    "source": "local-intake",
+    "state": "ACKNOWLEDGED"
+  },
+  "record_kind": "source_projection",
+  "refs": {
+    "current-report": {
+      "observation": {
+        "environment": "isolated source workspace and GitHub source connector",
+        "kind": "report_prepublication",
+        "limitations": [
+          "Host model/CUDA execution remains unobserved in this session."
+        ],
+        "method": "Independent source review, measured local tests, manifests and prior source read-back",
+        "observed_at": "2026-11-19T14:30:55Z",
+        "result": "Scientific, native and behavioral source prepared; host results pending"
+      },
+      "path": "evidence/gpu-round-report-r4.md",
+      "sha256": "15dfe0be9266b9f6ff15dc791f81fb2552a0da7128a0eb394eff8ea501ae6373"
+    },
+    "local-intake": {
+      "observation": {
+        "environment": "isolated source workspace and GitHub source connector",
+        "kind": "worker_intake_receipt",
+        "limitations": [
+          "Host model/CUDA execution remains unobserved in this session."
+        ],
+        "method": "Independent source review, measured local tests, manifests and prior source read-back",
+        "observed_at": "2026-11-19T14:30:55Z",
+        "result": "Latest user instruction retained; initial launch published and read back"
+      },
+      "path": "evidence/gpu-round-intake-r4.md",
+      "sha256": "c139c15706977eaf21ebff9eb9b740ed0de578b4bafd7f05f8fa064e0e932cc3"
+    },
+    "local-tests": {
+      "observation": {
+        "environment": "isolated source workspace and GitHub source connector",
+        "kind": "offline_test_evidence",
+        "limitations": [
+          "Host model/CUDA execution remains unobserved in this session."
+        ],
+        "method": "Independent source review, measured local tests, manifests and prior source read-back",
+        "observed_at": "2026-11-19T14:30:55Z",
+        "result": "59 focused tests PASS; zero actual model/GPU calls from preparation"
+      },
+      "path": "evidence/gpu-round-verification-r4.json",
+      "sha256": "da70f84d2568d6c6aac0774da8b62c0a806cd069f7de7337597a60575287d9ef"
+    },
+    "source-receipts": {
+      "observation": {
+        "environment": "GitHub connector",
+        "kind": "source_receipt_capture",
+        "limitations": [
+          "Host-local raw campaign outputs were not inspected."
+        ],
+        "method": "Fetch exact issue comments and pinned source metadata",
+        "observed_at": "2026-11-19T13:50:46Z",
+        "result": "Observed FW00412 offline receipt and FW00567 live campaign receipt"
+      },
+      "path": "evidence/behavior-e1-source-receipts.json",
+      "sha256": "db0dcef3b36918e8d6d76fb3415863d627333a2498f5035ab37662f06141c5dd"
+    },
+    "user-task": {
+      "observation": {
+        "environment": "current ChatGPT turn",
+        "kind": "user_instruction_capture",
+        "limitations": [
+          "No host GPU run is implied by this source record."
+        ],
+        "method": "Read current user steering",
+        "observed_at": "2026-11-19T14:20:25Z",
+        "result": "Scientific GPU first; literature deferred"
+      },
+      "path": "evidence/gpu-round-task-request-r3.md",
+      "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391"
+    }
+  },
+  "report": {
+    "instruction_ref": {
+      "id": "behavior-e1-review-20261119",
+      "revision": "scientific-gpu-first-20261120",
+      "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391",
+      "source": "Current ChatGPT user steering, captured directly"
+    },
+    "limitations": [
+      "No host/GPU result has been observed in this session; the operator launch is required.",
+      "Native loader compatibility, memory fit and runtime results are unverified.",
+      "Behavioral rationale review and later multistep episodes remain separate."
+    ],
+    "next_action": "#next_action",
+    "report_id": "behavior-e1-review-20261119-r4",
+    "requested_decision": "No approval request. The next required evidence is actual llm scientific run output; subsequent scripts are prepared and gated.",
+    "source": "current-report",
+    "status": "IN_PROGRESS",
+    "tests_performed": [
+      "59 distinct focused tests PASS: 16 scientific, 24 behavioral, 19 native; no skips.",
+      "75 scientific and 120 behavioral fake-call integrations preserve identical per-model prompts and seeds.",
+      "All scientific/behavioral/native manifest entries matched; three launchers pass Bash syntax.",
+      "Initial scientific release: 16 changed files individually fetched and byte-matched."
+    ]
+  },
+  "schema": "context-projection-task",
+  "scope": [
+    "Pinned scientific comparative GPU launcher and retained host execution evidence.",
+    "Behavioral 24-case benchmark and separate native scientific adapters.",
+    "Source-only draft PR and updated instruction-bound context; literature acquisition deferred."
+  ],
+  "source_freshness": {
+    "detail": "Current user instruction retained; first scientific launch pin 8711a81b15880bdca7a7e050839073138556d442 read back; behavioral/native extension prepared and independently verified.",
+    "state": "latest-visible-user-steering-and-pinned-source-read",
+    "sync_state": "GPU_PACKS_SOURCE_VERIFIED_HOST_RESULTS_PENDING"
+  },
+  "state": {
+    "code": {
+      "detail": "Scientific launch released at 8711a81b15880bdca7a7e050839073138556d442. Native and behavioral extension prepared with immutable 24-case pack and retained source hashes.",
+      "source": "current-report",
+      "status": "SOURCE_PREPARED_AND_OFFLINE_VERIFIED"
+    },
+    "deploy": {
+      "detail": "No runtime service changed.",
+      "source": "current-report",
+      "status": "NOT_DEPLOYED"
+    },
+    "merge": {
+      "detail": "MOTHER PR #14 stays draft; no merge.",
+      "source": "local-intake",
+      "status": "NOT_MERGED"
+    },
+    "runtime": {
+      "detail": "SSH client failed before connection; pinned operator launch supplied; no actual host output observed here.",
+      "source": "current-report",
+      "status": "HOST_RESULTS_PENDING"
+    },
+    "test": {
+      "detail": "59 distinct focused offline checks passed; all three package manifests and three Bash launchers verified; no actual inference.",
+      "source": "local-tests",
+      "status": "PASS_OFFLINE_ONLY"
+    }
+  },
+  "task_id": "behavior-e1-review-20261119",
+  "task_revision": "r4-gpu-packs-source-ready",
+  "unknowns": [
+    "Current installed full model digests, GPU availability and actual scientific per-case outcomes.",
+    "Native cached asset completeness and CUDA load success.",
+    "Behavioral model results remain unobserved."
+  ],
+  "version": 2
+}

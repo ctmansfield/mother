@@ -1,0 +1,20 @@
+{
+  "schema": "mother.native-medcpt.synthetic-retrieval.v1",
+  "scope": "SYNTHETIC_SCREEN_NOT_SCIENTIFIC_VALIDATION",
+  "articles": [
+    {"id": "A1", "title": "Culture experiment on microbial indole production", "abstract": "In this fictional experiment, isolated bacteria were cultured with labeled tryptophan. Investigators measured labeled indole appearing in the culture medium and compared an enzyme deletion strain with a restored strain."},
+    {"id": "A2", "title": "Indole exposure and bacterial survival", "abstract": "This fictional study added manufactured indole to bacterial cultures and counted surviving bacteria. It did not measure bacterial conversion of tryptophan or production of indole."},
+    {"id": "A3", "title": "Direct binding of a ligand to a purified receptor", "abstract": "This fictional cell-free experiment measured concentration-dependent binding of a labeled ligand to purified receptor protein. Unlabeled competitor displaced the ligand, and a saturation curve was recorded."},
+    {"id": "A4", "title": "Receptor gene expression after ligand treatment", "abstract": "This fictional cell experiment measured receptor messenger RNA after ligand exposure. Receptor abundance changed. No purified protein, displacement assay, or direct ligand binding measurement was used."},
+    {"id": "A5", "title": "Stable isotope tracing of metabolic pathway flux", "abstract": "This fictional study supplied labeled carbon substrate, collected a time series of downstream isotope enrichment, and estimated the rate of material passing through a metabolic pathway with a specified kinetic model."},
+    {"id": "A6", "title": "Metabolite concentrations in a single blood sample", "abstract": "This fictional study measured unlabeled metabolite pool sizes once in each sample. The authors discussed pathway flux but collected no isotope tracing, time series, or rate measurements."},
+    {"id": "A7", "title": "Randomized stress challenge with autonomic measurements", "abstract": "This fictional within-person experiment randomly ordered a stress task and a neutral control task. Heart rate and skin conductance were measured repeatedly before and after each task."},
+    {"id": "A8", "title": "Cross-sectional questionnaire about stress and heart rate", "abstract": "This fictional survey recorded self-reported stress and resting heart rate once. Participants were not assigned to a stress challenge or control condition, and no repeated autonomic measurements were collected."}
+  ],
+  "queries": [
+    {"id": "Q1", "text": "Which experiment tests bacterial conversion of tryptophan into indole?", "relevant_article": "A1", "hard_negative": "A2"},
+    {"id": "Q2", "text": "Find a cell-free direct ligand receptor binding experiment with saturation and competition measurements.", "relevant_article": "A3", "hard_negative": "A4"},
+    {"id": "Q3", "text": "Find metabolic pathway flux estimated from stable isotope tracing over time.", "relevant_article": "A5", "hard_negative": "A6"},
+    {"id": "Q4", "text": "Find an experiment that randomly assigns stress and control tasks and repeatedly measures autonomic responses.", "relevant_article": "A7", "hard_negative": "A8"}
+  ]
+}

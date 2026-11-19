@@ -1,0 +1,61 @@
+{
+  "actual_gpu_inference_calls_from_preparation": 0,
+  "actual_model_calls_from_preparation": 0,
+  "behavioral_pack_sha256": "803d7c62e0574974ceb729b238f92e02c27d90af787ddc522b92078685e8319b",
+  "initial_scientific_release": {
+    "all_matched": true,
+    "mother_pin": "8711a81b15880bdca7a7e050839073138556d442",
+    "remote_changed_files_read_back": 16,
+    "wrapper_unchanged_in_extension": true
+  },
+  "integration_evidence": [
+    "75 fake calls through unchanged FW00412 broker; identical15 prompt hashes/order/seeds per five candidates",
+    "120 fake calls through behavioral adapter and published scientific observer; identical24 prompts/order/seeds per five candidates",
+    "Held/incomplete scientific predecessor and CPU/missing GPU observations refused; raw-answer/telemetry inconsistency refused",
+    "Completed response failures retained without skipping remaining independent cases; ambiguous requests hold later calls"
+  ],
+  "literature": {
+    "current_task_state": "DEFERRED",
+    "issue": "https://github.com/ctmansfield/production-framework/issues/145",
+    "observed_state": "open"
+  },
+  "manifests": {
+    "all_matched": true,
+    "behavioral_files": 14,
+    "native_files": 5,
+    "scientific_files": 6
+  },
+  "observed_at_utc": "2026-11-19T14:30:55Z",
+  "offline_tests": {
+    "behavioral_orchestrator": 5,
+    "behavioral_pack_and_adapter": 19,
+    "failed": 0,
+    "native_adapters": 19,
+    "scientific_wrapper": 16,
+    "skipped": 0,
+    "total_distinct": 59
+  },
+  "runtime_limits": [
+    "No remote command or real inference executed by this preparation; SSH client failed before connection.",
+    "Native loaders, memory fit and model performance require llm execution.",
+    "Positive Ollama VRAM is observed residency/offload, not all-GPU computation.",
+    "Independent narrative rationale review and later multistep episodes remain outside automated scoring.",
+    "Boltz2 checkpoint and TimesFM environment checks are readiness-only."
+  ],
+  "schema": "mother.gpu-round-source-verification.v1",
+  "scientific_framework_pin": "ba6fbb90c031f122b7db61d2f67f2b22ef1cf130",
+  "shell_syntax": {
+    "RUN-BEHAVIORAL.sh": "PASS",
+    "RUN-NATIVE-SCIENTIFIC.sh": "PASS",
+    "RUN-SCIENTIFIC.sh": "PASS"
+  },
+  "source_sha256": {
+    "behavior/behavior_compare.py": "5ad41fca86f3811f4d6297df3e6f0a57e577a19023b726c3f62be035bb093ad4",
+    "behavior/benchmark.py": "d12a217b5e95bd7c5a430b531f66846e3314520bd3493fd560686980bc9c850b",
+    "native/native_science.py": "c0f909c1512f4c7c0d8d39e4e159e736a290c463e2f549cbff72c9c34eb4843d",
+    "scientific/scientific_compare.py": "2e52c5ddd438276b3808b7c66db765b3de82796fa39f64d8041ae246dc69c8b3"
+  },
+  "status": "SOURCE_VERIFIED_HOST_RESULTS_PENDING",
+  "user_date": "2026-11-20",
+  "user_timezone": "Pacific/Guam"
+}

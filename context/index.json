@@ -1,5 +1,10 @@
 {
   "schema": "context-projection-index",
-  "tasks": {},
+  "tasks": {
+    "behavior-e1-review-20261119": {
+      "path": "capsules/behavior-e1-review-20261119-r4.json",
+      "sha256": "07d40057b2c4e24f5d4bf52ba50ee48d3e3b36a5908d41d5c1c390fb66122c93"
+    }
+  },
   "version": 1
 }

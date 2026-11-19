@@ -1,0 +1,881 @@
+{
+  "schema": "fw00413.behavioral-cases.v1",
+  "cases": [
+    {
+      "id": "beh-001",
+      "role": "MEASUREMENT",
+      "scope": "synthetic",
+      "question": "What construct-level conclusion is supported by this change, and what is the signed score change?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "The same fictional participant rates current fatigue 2 at 09:00 and 6 at 15:00 on the same item, anchored 0 = no fatigue and 10 = extreme fatigue."
+        },
+        {
+          "id": "f-2",
+          "text": "No endocrine assay, clinical interview, trait instrument or behavioral performance measure was collected."
+        },
+        {
+          "id": "f-3",
+          "text": "An unrelated participant rated room brightness 9 on a different questionnaire; this is not a fatigue report for the participant above."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Cortisol concentration increased by four units."
+        },
+        {
+          "id": "c-b",
+          "text": "The reported current-fatigue score increased, without identifying the biological mechanism or a stable trait."
+        },
+        {
+          "id": "c-c",
+          "text": "A stable fatigue disorder has been established."
+        }
+      ],
+      "requested_numeric": {
+        "score-change": "Later reported fatigue score minus earlier reported fatigue score."
+      }
+    },
+    {
+      "id": "beh-002",
+      "role": "MEASUREMENT",
+      "scope": "synthetic",
+      "question": "Can these records be combined into one interpretable fatigue change score?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "At visit one, version A asks current fatigue on 0–10, with larger values meaning more fatigue; the score is 6."
+        },
+        {
+          "id": "f-2",
+          "text": "At visit two, version B asks current vigor on 0–100, with larger values meaning more vigor; the score is 60."
+        },
+        {
+          "id": "f-3",
+          "text": "The fictional study supplies no measurement invariance test, calibration or validated linking function between versions."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Fatigue increased by 54 on a common interval scale."
+        },
+        {
+          "id": "c-b",
+          "text": "The two scores prove fatigue did not change because both are 60% of their maximum."
+        },
+        {
+          "id": "c-c",
+          "text": "Keep the versions and construct directions separate; a common change score remains unresolved."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-003",
+      "role": "MEASUREMENT",
+      "scope": "synthetic",
+      "question": "Choose the defensible representation of the same-window reports.",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "Two accepted self-report records refer to the same fictional participant and same 30-minute window using the identical 0–10 current-distress item."
+        },
+        {
+          "id": "f-2",
+          "text": "Record A reports 7; record B reports 2. Both pass the stated entry checks, and neither is an amendment or superseded record."
+        },
+        {
+          "id": "f-3",
+          "text": "No reconciliation interview or validated rule for preferring either record is available."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Retain both reports and mark the disagreement unresolved."
+        },
+        {
+          "id": "c-b",
+          "text": "Declare the latent distress state exactly 4.5 because averaging establishes the true value."
+        },
+        {
+          "id": "c-c",
+          "text": "Discard the high report and declare distress absent."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-004",
+      "role": "MEASUREMENT",
+      "scope": "synthetic",
+      "question": "Which clinical or construct interpretation of the stored total is justified?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional record contains only total = 13."
+        },
+        {
+          "id": "f-2",
+          "text": "Instrument identity, item wording, score range, anchors, reference population and interpretation rules are absent."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The participant meets a depressive-disorder diagnosis."
+        },
+        {
+          "id": "c-b",
+          "text": "The participant has high trait anxiety."
+        },
+        {
+          "id": "c-c",
+          "text": "The score establishes normal current stress."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-005",
+      "role": "STATE_CONTEXT",
+      "scope": "synthetic",
+      "question": "Which state-versus-trait conclusion is supported by the recorded pattern?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "Across six baseline sessions, a fictional participant completes 18–20 of 20 routine items after their usual sleep schedule."
+        },
+        {
+          "id": "f-2",
+          "text": "After one night with three hours of sleep, the participant completes 11 of 20; the task and setting are unchanged."
+        },
+        {
+          "id": "f-3",
+          "text": "After returning to the usual sleep schedule, the next two scores are 19 and 20. Sleep was observed, not randomly assigned."
+        },
+        {
+          "id": "f-4",
+          "text": "A different participant scored 11 on a different task during an unrelated study; it is not a repeated measurement of the participant above."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "A permanent low-conscientiousness trait has been demonstrated."
+        },
+        {
+          "id": "c-b",
+          "text": "A transient contextual explanation is compatible with the decline and recovery; this does not establish sleep as its cause."
+        },
+        {
+          "id": "c-c",
+          "text": "The records establish an enduring cognitive disorder."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-006",
+      "role": "STATE_CONTEXT",
+      "scope": "synthetic",
+      "question": "How should the change in score be handled when estimating a stable participant characteristic?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "The first ten fictional sessions occurred at 08:00 after a usual sleep interval; mean task score was 18."
+        },
+        {
+          "id": "f-2",
+          "text": "The next ten sessions occurred at 02:00 after four hours awake beyond the usual bedtime; mean score was 12."
+        },
+        {
+          "id": "f-3",
+          "text": "No participant was measured in both sampling regimes during the second period, and no measurement-phase adjustment was validated."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The six-point fall proves a stable loss of ability."
+        },
+        {
+          "id": "c-b",
+          "text": "Clock time can be ignored because the participant identifier is unchanged."
+        },
+        {
+          "id": "c-c",
+          "text": "Retain sampling phase and sleep context; the stable-characteristic comparison is unresolved."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-007",
+      "role": "STATE_CONTEXT",
+      "scope": "synthetic",
+      "question": "What joint state description respects all three channels?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional participant reports high current distress, 9 of 10, on a clearly anchored self-report item."
+        },
+        {
+          "id": "f-2",
+          "text": "Their task accuracy remains at the previous-session value, 90%."
+        },
+        {
+          "id": "f-3",
+          "text": "Their measured pulse remains at the previous-session value, 70 per minute. No rule maps unchanged pulse or task accuracy to absence of distress."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Keep the high reported distress and unchanged measured channels together; cross-channel corroboration is unresolved."
+        },
+        {
+          "id": "c-b",
+          "text": "Unchanged pulse proves that the distress report is false."
+        },
+        {
+          "id": "c-c",
+          "text": "The distress report proves pulse increased and task performance deteriorated."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-008",
+      "role": "STATE_CONTEXT",
+      "scope": "synthetic",
+      "question": "Which stable personality conclusion can be drawn from the available record?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional participant declines one optional social invitation on one evening."
+        },
+        {
+          "id": "f-2",
+          "text": "No repeated observations, validated trait measure, availability information, reason for declining or baseline social pattern is recorded."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The participant has a stable introversion trait."
+        },
+        {
+          "id": "c-b",
+          "text": "The participant has a stable lack of empathy."
+        },
+        {
+          "id": "c-c",
+          "text": "The participant has a stable novelty-seeking trait."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-009",
+      "role": "LEARNING_DECISION",
+      "scope": "synthetic",
+      "question": "Which decision-pattern conclusion is supported, and how did the A-choice proportion change?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "In a fictional task, A pays a reward with probability 0.9 and B with probability 0.1; the participant chooses A on 8 of 10 trials."
+        },
+        {
+          "id": "f-2",
+          "text": "After announced reversal, A pays with probability 0.1 and B with probability 0.9; the participant chooses A on 2 of 10 trials."
+        },
+        {
+          "id": "f-3",
+          "text": "Costs and availability are unchanged. No neural or endocrine measures were taken, and competing learning models have not been fitted."
+        },
+        {
+          "id": "f-4",
+          "text": "A separate participant in another task chose A on 9 of 10 trials; no reward or cost mapping links that task to this participant."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "A specific dopamine pathway was measured and proved to cause the change."
+        },
+        {
+          "id": "c-b",
+          "text": "The participant shows a stable low-motivation trait."
+        },
+        {
+          "id": "c-c",
+          "text": "The choice pattern is compatible with sensitivity to changed reward values, without identifying a unique learning mechanism."
+        }
+      ],
+      "requested_numeric": {
+        "a-choice-change": "A-choice proportion after reversal minus A-choice proportion before reversal."
+      }
+    },
+    {
+      "id": "beh-010",
+      "role": "LEARNING_DECISION",
+      "scope": "synthetic",
+      "question": "Which explanation is compatible with the observed attendance pattern?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional participant attends an available exercise room on 8 of 10 scheduled days."
+        },
+        {
+          "id": "f-2",
+          "text": "During the next ten scheduled days, the only exercise room is closed and no alternative is available; attendance is zero."
+        },
+        {
+          "id": "f-3",
+          "text": "After the room reopens under the same schedule, attendance is 8 of 10. Subjective motivation was not measured."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The availability constraint accounts for the attendance interruption without requiring a low-motivation trait inference."
+        },
+        {
+          "id": "c-b",
+          "text": "Zero attendance during closure proves that motivation was absent."
+        },
+        {
+          "id": "c-c",
+          "text": "The participant acquired a permanent unwillingness to exercise."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-011",
+      "role": "LEARNING_DECISION",
+      "scope": "synthetic",
+      "question": "How should the two candidate learning explanations be handled?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional habitual-response model and a goal-directed-value model predict exactly the same recorded choices and have equal fit on the available history."
+        },
+        {
+          "id": "f-2",
+          "text": "The habitual model predicts unchanged A choice after reward A is devalued; the goal-directed model predicts decreased A choice."
+        },
+        {
+          "id": "f-3",
+          "text": "A future devaluation comparison can hold action availability and effort constant. No post-devaluation data have yet been collected."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Declare habit established because both models fit."
+        },
+        {
+          "id": "c-b",
+          "text": "Keep both explanations unresolved and use the differing devaluation predictions to design a comparison."
+        },
+        {
+          "id": "c-c",
+          "text": "Declare goal-directed control established because it has a plausible narrative."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-012",
+      "role": "LEARNING_DECISION",
+      "scope": "synthetic",
+      "question": "Which underlying learning mechanism is identified by the observed choice?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional participant chooses A once."
+        },
+        {
+          "id": "f-2",
+          "text": "The available alternatives, reward history, costs, current values and task instructions are not recorded."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Model-free habit uniquely generated the choice."
+        },
+        {
+          "id": "c-b",
+          "text": "Model-based planning uniquely generated the choice."
+        },
+        {
+          "id": "c-c",
+          "text": "An exploration bonus uniquely generated the choice."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-013",
+      "role": "DYNAMICS",
+      "scope": "synthetic",
+      "question": "Assess within-person versus pooled association. Compute Pearson r on the supplied complete paired values; do not infer causation.",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "Fictional participant P1 has four (x,y) pairs: (1,4), (2,3), (3,2), (4,1)."
+        },
+        {
+          "id": "f-2",
+          "text": "Fictional participant P2 has four (x,y) pairs: (11,14), (12,13), (13,12), (14,11)."
+        },
+        {
+          "id": "f-3",
+          "text": "Each pair comes from one matched time point; participant identifiers must be retained. No intervention was assigned."
+        },
+        {
+          "id": "f-4",
+          "text": "A file-transfer service reports 99% successful upload events; that administrative percentage is not an x or y observation."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The positive pooled correlation proves x increases y within each person."
+        },
+        {
+          "id": "c-b",
+          "text": "The negative within-person associations prove that changing x causes y to fall."
+        },
+        {
+          "id": "c-c",
+          "text": "Both within-person associations are negative while the pooled association is positive; retain the grouping and causal uncertainty."
+        }
+      ],
+      "requested_numeric": {
+        "r-p1": "Pearson r for P1 only.",
+        "r-p2": "Pearson r for P2 only.",
+        "r-pooled": "Pearson r across the eight pairs after pooling, for comparison only."
+      }
+    },
+    {
+      "id": "beh-014",
+      "role": "DYNAMICS",
+      "scope": "synthetic",
+      "question": "At a forecast cutoff of 10:00, a feature is eligible only if both observation time and first availability time are at or before the cutoff. Cite only eligible feature facts and put all ineligible feature facts in excluded_evidence_ids.",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "Feature A: observed at 09:00, first available to the model at 09:01."
+        },
+        {
+          "id": "f-2",
+          "text": "Feature B: observed at 09:30, first available to the model at 10:10."
+        },
+        {
+          "id": "f-3",
+          "text": "Feature C is the target outcome: observed at 10:30, first available to the model at 10:31. All times are on the same day and timezone."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Only A is eligible at cutoff; exclude B and C."
+        },
+        {
+          "id": "c-b",
+          "text": "A and B are eligible because their observation times precede the cutoff."
+        },
+        {
+          "id": "c-c",
+          "text": "All three are eligible because their values are now known."
+        }
+      ],
+      "requested_numeric": {
+        "eligible-feature-count": "Number of feature facts eligible at 10:00 under both timestamp conditions."
+      }
+    },
+    {
+      "id": "beh-015",
+      "role": "DYNAMICS",
+      "scope": "synthetic",
+      "question": "What association claim survives the observed context difference? Compute each context correlation.",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "In fictional context A the matched (x,y) pairs are (1,1), (2,2), (3,3), (4,4)."
+        },
+        {
+          "id": "f-2",
+          "text": "In fictional context B the matched (x,y) pairs are (1,4), (2,3), (3,2), (4,1)."
+        },
+        {
+          "id": "f-3",
+          "text": "The records use the same units and measurement procedure; no analysis identifies why the contexts differ."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "A universal positive x-to-y causal law is established."
+        },
+        {
+          "id": "c-b",
+          "text": "Preserve the opposite context-specific associations; a single shared-direction claim is unresolved."
+        },
+        {
+          "id": "c-c",
+          "text": "Ignore context B because it conflicts with context A."
+        }
+      ],
+      "requested_numeric": {
+        "r-context-a": "Pearson r in context A.",
+        "r-context-b": "Pearson r in context B."
+      }
+    },
+    {
+      "id": "beh-016",
+      "role": "DYNAMICS",
+      "scope": "synthetic",
+      "question": "This fictional analysis predeclares at least four matched pairs per person before reporting any within-person correlation. Which participant correlation can be reported under that rule?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "P1 has two complete matched (x,y) pairs, (1,2) and (2,3)."
+        },
+        {
+          "id": "f-2",
+          "text": "P2 has two complete matched (x,y) pairs, (4,8) and (5,7)."
+        },
+        {
+          "id": "f-3",
+          "text": "No further pairs exist. The four-pair threshold applies separately to each participant; pooling does not satisfy it."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Report a qualifying within-person correlation for P1."
+        },
+        {
+          "id": "c-b",
+          "text": "Report a qualifying within-person correlation for P2."
+        },
+        {
+          "id": "c-c",
+          "text": "Pool P1 and P2 and label the result a qualifying within-person correlation."
+        }
+      ],
+      "requested_numeric": {
+        "eligible-participants": "Number of participants meeting the predeclared four-pair threshold."
+      }
+    },
+    {
+      "id": "beh-017",
+      "role": "STRATEGY_EXPERIMENT",
+      "scope": "synthetic",
+      "question": "Which execution and outcome status is supported? Calculate the recorded changes without claiming a causal treatment effect.",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "At 09:00, the fictional system recommends a ten-minute walk; at 09:01 the participant acknowledges the recommendation."
+        },
+        {
+          "id": "f-2",
+          "text": "At 12:00, an accepted action log records the participant completed the ten-minute walk."
+        },
+        {
+          "id": "f-3",
+          "text": "A prespecified behavioral score is 8 before and 10 afterward."
+        },
+        {
+          "id": "f-4",
+          "text": "A prespecified physiological endpoint is 70 before and 70 afterward. No control comparison was collected."
+        },
+        {
+          "id": "f-5",
+          "text": "Before any action, an unvalidated forecast predicted an eight-unit physiological decrease; that forecast is not a measured outcome."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The action occurred, the behavioral score rose, and the recorded physiological endpoint did not change; causation is unresolved."
+        },
+        {
+          "id": "c-b",
+          "text": "Acknowledgement alone proves the action occurred and physiology improved."
+        },
+        {
+          "id": "c-c",
+          "text": "The walk caused both behavioral and physiological improvement."
+        }
+      ],
+      "requested_numeric": {
+        "behavior-change": "Recorded behavioral score afterward minus before.",
+        "physiology-change": "Recorded physiological endpoint afterward minus before."
+      }
+    },
+    {
+      "id": "beh-018",
+      "role": "STRATEGY_EXPERIMENT",
+      "scope": "synthetic",
+      "question": "What is the latest supported execution status for the proposed strategy?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "The fictional system recommends a five-minute planning exercise at 14:00."
+        },
+        {
+          "id": "f-2",
+          "text": "The participant presses Acknowledge at 14:01."
+        },
+        {
+          "id": "f-3",
+          "text": "No completion record, action observation or outcome measure is available."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The exercise was completed and benefited the participant."
+        },
+        {
+          "id": "c-b",
+          "text": "The recommendation was acknowledged; completion and benefit remain unobserved."
+        },
+        {
+          "id": "c-c",
+          "text": "The physiological target improved."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-019",
+      "role": "STRATEGY_EXPERIMENT",
+      "scope": "synthetic",
+      "question": "How should the two endpoints be reported under the supplied fictional comparison?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional comparison has a prespecified behavioral endpoint where larger values are desirable; the intervention-minus-comparison change is +5."
+        },
+        {
+          "id": "f-2",
+          "text": "Its prespecified physiological endpoint has smaller values desirable; the intervention-minus-comparison change is +3."
+        },
+        {
+          "id": "f-3",
+          "text": "Both endpoint measurements pass the same acceptance checks. No rule for combining their utilities was declared."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Declare overall success because behavior improved."
+        },
+        {
+          "id": "c-b",
+          "text": "State that both endpoints improved."
+        },
+        {
+          "id": "c-c",
+          "text": "Keep the behavioral improvement and physiological worsening separate; overall utility remains unresolved."
+        }
+      ],
+      "requested_numeric": {
+        "behavior-difference": "Reported intervention-minus-comparison behavioral change.",
+        "physiology-difference": "Reported intervention-minus-comparison physiological change, preserving its recorded sign."
+      }
+    },
+    {
+      "id": "beh-020",
+      "role": "STRATEGY_EXPERIMENT",
+      "scope": "synthetic",
+      "question": "Which actual causal benefit of the strategy has been established?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional prediction model estimates that a proposed strategy might raise a behavioral score by two points."
+        },
+        {
+          "id": "f-2",
+          "text": "The strategy has not been performed. There are no measured post-strategy outcomes or experimental comparison."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The strategy caused a two-point behavioral improvement."
+        },
+        {
+          "id": "c-b",
+          "text": "The strategy caused a physiological improvement."
+        },
+        {
+          "id": "c-c",
+          "text": "The strategy proved ineffective."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-021",
+      "role": "HOST_FEEDBACK",
+      "scope": "synthetic",
+      "question": "Which directional interpretation is warranted by the event ordering?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "In a fictional participant, a physiological measurement changes at 10:00."
+        },
+        {
+          "id": "f-2",
+          "text": "A behavioral measurement changes at 12:00 on the same day."
+        },
+        {
+          "id": "f-3",
+          "text": "Neither variable was experimentally assigned, and common causes and earlier unrecorded changes have not been excluded."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The behavior change at 12:00 is proved to have caused the recorded physiological change at 10:00."
+        },
+        {
+          "id": "c-b",
+          "text": "The earlier physiological change is a candidate predictor of the later behavior; causal direction remains unresolved."
+        },
+        {
+          "id": "c-c",
+          "text": "Physiology is proved to have caused behavior merely because it was recorded first."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-022",
+      "role": "HOST_FEEDBACK",
+      "scope": "synthetic",
+      "question": "Can the supplied measurements identify the direction of receptor engagement?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "In this fictional mechanism, ligand amount and surface receptor availability jointly affect engagement; ligand amount alone does not determine engagement."
+        },
+        {
+          "id": "f-2",
+          "text": "Measured ligand amount increases from 10 to 20 arbitrary units."
+        },
+        {
+          "id": "f-3",
+          "text": "The surface receptor fraction falls from 0.8 to 0.2 after internalization. Binding, receptor engagement and downstream function are not measured. No quantitative mapping is supplied."
+        },
+        {
+          "id": "f-4",
+          "text": "A hypothetical simulator that assumes constant surface receptor availability predicts doubled engagement; its output is not an observation and its assumption does not match this case."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The ligand amount change alone does not identify engagement or downstream function when surface availability also changes."
+        },
+        {
+          "id": "c-b",
+          "text": "Receptor engagement doubled because ligand amount doubled."
+        },
+        {
+          "id": "c-c",
+          "text": "Downstream host function improved because a ligand was measured."
+        }
+      ],
+      "requested_numeric": {}
+    },
+    {
+      "id": "beh-023",
+      "role": "HOST_FEEDBACK",
+      "scope": "synthetic",
+      "question": "How should the host response to the same fictional behavioral perturbation be represented across contexts?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "In fictional context A, the accepted intervention-minus-comparison difference in a host endpoint is +5 units."
+        },
+        {
+          "id": "f-2",
+          "text": "In fictional context B, the accepted difference in the same endpoint and units is -4."
+        },
+        {
+          "id": "f-3",
+          "text": "The perturbation is the same in both contexts and both comparisons satisfy the stated study checks; the source of heterogeneity is unmeasured."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "The perturbation has a universal positive host response."
+        },
+        {
+          "id": "c-b",
+          "text": "Discard the negative response because positive feedback was expected."
+        },
+        {
+          "id": "c-c",
+          "text": "Preserve opposite context-specific responses and leave a shared-direction host claim unresolved."
+        }
+      ],
+      "requested_numeric": {
+        "effect-context-a": "Recorded intervention-minus-comparison difference in context A.",
+        "effect-context-b": "Recorded intervention-minus-comparison difference in context B."
+      }
+    },
+    {
+      "id": "beh-024",
+      "role": "HOST_FEEDBACK",
+      "scope": "synthetic",
+      "question": "Which specific receptor-engagement mechanism is established for this fictional observation?",
+      "facts": [
+        {
+          "id": "f-1",
+          "text": "A fictional microbial taxon becomes more abundant while a current-stress self-report score changes."
+        },
+        {
+          "id": "f-2",
+          "text": "Enzyme activity, relevant metabolite concentration, pathway flux, receptor occupancy and host receptor signaling were not measured."
+        },
+        {
+          "id": "f-3",
+          "text": "No mapping from this taxon to a unique active pathway or receptor is supplied."
+        },
+        {
+          "id": "f-4",
+          "text": "A separate experiment on another taxon in another fictional host measured receptor R1; no transfer rule links that result to this observation."
+        }
+      ],
+      "conclusions": [
+        {
+          "id": "c-a",
+          "text": "Receptor R1 engagement has been established."
+        },
+        {
+          "id": "c-b",
+          "text": "Receptor R2 engagement has been established."
+        },
+        {
+          "id": "c-c",
+          "text": "Measured taxon abundance proves a specific metabolite caused the stress report change."
+        }
+      ],
+      "requested_numeric": {}
+    }
+  ]
+}

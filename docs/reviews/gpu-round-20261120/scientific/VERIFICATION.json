@@ -1,0 +1,15 @@
+{
+  "checked_at_utc": "2026-11-19T14:21:41.132412+00:00",
+  "command": "FW00412_TEST_CHECKOUT=/workspace/scratch/59f0fdbd0913/source_snapshot python3 -B -m unittest -v test_scientific_compare.py",
+  "gpu_inference_requests": 0,
+  "integration": "75 fake API requests through unchanged pinned FW00412 broker; identical15 prompt hashes and seeds for each of5 candidates",
+  "limits": "Source tests only; no actual host access or GPU result claimed",
+  "real_model_requests": 0,
+  "schema": "fw00412.comparison-launcher-verification.v1",
+  "source_pin": "ba6fbb90c031f122b7db61d2f67f2b22ef1cf130",
+  "status": "SOURCE_TESTS_PASS_HOST_GPU_UNRUN",
+  "tests_failed": 0,
+  "tests_passed": 16,
+  "tests_skipped": 0,
+  "transport_checks": "ProxyHandler({}) disables proxy environment; redirects and unapproved endpoints refused; capped duplicate-key-safe JSON"
+}

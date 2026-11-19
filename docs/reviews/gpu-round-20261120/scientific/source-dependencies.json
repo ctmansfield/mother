@@ -1,0 +1,20 @@
+{
+  "source_repo": "ctmansfield/production-framework",
+  "source_pin": "ba6fbb90c031f122b7db61d2f67f2b22ef1cf130",
+  "source_sha256": {
+    "packages/fw00412/broker.py": "0d91d9ab3fba4b3516caf8497c798f95a5eaa55d570f2b2e7f13123dbe2caa1e",
+    "packages/fw00412/fixtures.py": "5b81dc0bd373fff1851bcb928b4bc603c36d3892e86a601cb6f47816b4655b6c",
+    "packages/fw00412/specialists.py": "9d48f52fd92f9575e438fc825d9c465f9940eb17b0b197c45f1c76d6c80115cb"
+  },
+  "inherited_git_blobs": {
+    "packages/fw00410/scientific.py": "521261fe0a8f9ba09f152f95319d705283d9aba7",
+    "packages/fw00411/scout.py": "302aea4628397450257322c466ead74454d0ceb1",
+    "packages/fw0048/evidence.py": "dd850a871954ada337ccd73af6dc0b04ee16f049"
+  },
+  "offline_receipt": "https://github.com/ctmansfield/production-framework/issues/139#issuecomment-7009907399",
+  "offline_summary_sha256": "08dbef588a51aba1640038628a832a4d646cdefec7fd964072d6fd71c26d694f",
+  "protected_graph_sha256": "08aa8eb1956aeef44dd9aac1a28a410a653993fcb87143ac7c50e7d73361b6b2",
+  "source_record_sha256": "b05698b00ea40217e7a683be113a33b671b7d632c04410e9052464395dee7529",
+  "source_scope": "Unchanged FW00412 broker and all three package SHA256SUMS; thin comparative runner only",
+  "host_inference_performed_during_preparation": false
+}

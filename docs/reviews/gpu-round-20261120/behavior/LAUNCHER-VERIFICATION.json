@@ -1,0 +1,15 @@
+{
+  "checked_at_utc": "2026-11-19T14:28:15.072151+00:00",
+  "command": "python3 -B -m unittest discover -s behavior/tests -p test_comparison.py -v",
+  "gpu_inference_requests": 0,
+  "integration": "120 fake API requests through behavioral adapter and published scientific observer; identical24 prompt hashes/seeds for all5 candidates; completed response failure continues",
+  "limits": "Synthetic predecessor records and fake APIs verify source orchestration only; no actual host or GPU evidence",
+  "published_scientific_commit": "8711a81b15880bdca7a7e050839073138556d442",
+  "real_model_requests": 0,
+  "schema": "fw00413.behavior-launcher-verification.v1",
+  "scientific_wrapper_sha256": "2e52c5ddd438276b3808b7c66db765b3de82796fa39f64d8041ae246dc69c8b3",
+  "status": "SOURCE_TESTS_PASS_HOST_GPU_UNRUN",
+  "tests_failed": 0,
+  "tests_passed": 5,
+  "tests_skipped": 0
+}

@@ -1,0 +1,664 @@
+{
+  "schema": "behavior-e1-review.verification.v1",
+  "recorded_at_utc": "2026-11-19T13:58:44.035543+00:00",
+  "scope": "LOCAL_SOURCE_TESTS_AND_EXACT_REMOTE_SOURCE_READBACK",
+  "total_current_suite_tests": 294,
+  "suite_counts": {
+    "fw00410": 59,
+    "fw00411_original": 50,
+    "fw00412": 70,
+    "fw00413_corrected": 46,
+    "fw00414_corrected": 69
+  },
+  "scientific_core": {
+    "date": "2026-11-19",
+    "git_checkout": false,
+    "github_posts": 0,
+    "gpu_calls": 0,
+    "host_qualifier_run": false,
+    "limits": [
+      "Not an exact Git checkout or replacement for host qualification",
+      "No live model inference or real-paper scientific validation",
+      "Original FW00411 bad-pin qualifier was not invoked; correction source checked separately"
+    ],
+    "manifests": [
+      {
+        "all_match": true,
+        "entries": 11,
+        "package": "fw00410"
+      },
+      {
+        "all_match": true,
+        "entries": 12,
+        "package": "fw00411"
+      },
+      {
+        "all_match": true,
+        "entries": 14,
+        "package": "fw00412"
+      }
+    ],
+    "model_calls": 0,
+    "python": "3.12.14",
+    "scope": "LOCAL_EXTRACTED_SOURCE_SNAPSHOT_OFFLINE_VERIFICATION",
+    "smokes": [
+      {
+        "check": "fw00410-smoke",
+        "exit_code": 0,
+        "log_sha256": "e7dd6a8130e9082f816e3dda72fb775d1015e9ccd13d1204a7e76cbe414380dc",
+        "result": {
+          "balanced_reactions": 1,
+          "ecology_contradictions": 1,
+          "edge_count": 6,
+          "federation_shared_memory": "NOT_ELIGIBLE",
+          "gpu_requests": 0,
+          "graph_sha256": "54fee0494d34ad490bca6652c8c5cabf7ccf1da0eac8a025cc4715d91206aff2",
+          "publication": "NOT_PUBLISHED",
+          "receptor_models": 1,
+          "status": "PASS"
+        }
+      },
+      {
+        "check": "fw00411-smoke",
+        "exit_code": 0,
+        "log_sha256": "e1f5dcf03389341279b6135a0b01fa1936877837fecbd12ea7cb48756721d96d",
+        "result": {
+          "experiments": 2,
+          "gaps": 7,
+          "gpu_calls": 0,
+          "report_sha256": "3daea17ae2f31962d6b1f4e15891f1f938bc64a018cf5c5657b811271c982abe",
+          "source_count": 1,
+          "status": "SCIENTIFIC_RESEARCH_CANDIDATE_NOT_VERIFIED"
+        }
+      },
+      {
+        "check": "fw00412-fixtures",
+        "exit_code": 0,
+        "log_sha256": "c29c50528601ec64cb4e8036fc32ddacbb339e62d4c56502058fc3049d0dd31a",
+        "result": {
+          "annotated": 5,
+          "cases": 15,
+          "discriminating_experiments": 1,
+          "graph_sha256": "08aa8eb1956aeef44dd9aac1a28a410a653993fcb87143ac7c50e7d73361b6b2",
+          "scientific_truth": "NOT_ESTABLISHED",
+          "source_record_sha256": "b05698b00ea40217e7a683be113a33b671b7d632c04410e9052464395dee7529"
+        }
+      },
+      {
+        "check": "fw00412-dry",
+        "exit_code": 0,
+        "log_sha256": "52e64e33f0bf32c995e914660078869ca1e9b902d1fa05aa0f86dfbc1719f270",
+        "result": {
+          "cases": 15,
+          "gpu_calls": 0,
+          "scientific_truth": "NOT_ESTABLISHED",
+          "status": "PASS"
+        }
+      }
+    ],
+    "source": "Saved exact GitHub source publication manifests plus two GitHub-fetched FW0048 dependencies",
+    "total_tests": 179,
+    "unit_suites": [
+      {
+        "count": 59,
+        "log": "fw00410-unittest.log",
+        "log_sha256": "5bded757e5c3a513478fe9020fa7549a1985646dc874db5c3ba6bbe090184904",
+        "result": "PASS",
+        "suite": "fw00410"
+      },
+      {
+        "count": 50,
+        "log": "fw00411-unittest.log",
+        "log_sha256": "2247bc7ee8fe4797a5a913b4dbc1adc1423d6885f5217e1dc8efae67f350b11c",
+        "result": "PASS",
+        "suite": "fw00411"
+      },
+      {
+        "count": 70,
+        "log": "fw00412-unittest.log",
+        "log_sha256": "99f33898b3ff81415128f531cf85f397e0b6253877851ea91ff7b69e3be104d8",
+        "result": "PASS",
+        "suite": "fw00412"
+      }
+    ]
+  },
+  "behavior": {
+    "verification": {
+      "baseline_commit": "8fe26e762f33315d18a167f703688ef13feb9474",
+      "timestamp_utc": "2026-11-19T13:50:24.652903+00:00",
+      "baseline_tests": 38,
+      "corrected_tests": 46,
+      "new_regression_tests": 8,
+      "updated_existing_expectation": "both endpoints of explicit contradiction held",
+      "changed_files": [
+        "packages/fw00413/CHANGELOG.md",
+        "packages/fw00413/NEXT_ROUND_DESIGN.md",
+        "packages/fw00413/README.md",
+        "packages/fw00413/RELEASE_NOTES.md",
+        "packages/fw00413/SHA256SUMS",
+        "packages/fw00413/behavioral.py",
+        "packages/fw00413/tests/test_behavioral.py",
+        "packages/fw00413/tests/test_statistical_regressions.py"
+      ],
+      "checks": [
+        {
+          "check": "baseline_38_tests",
+          "exit_code": 0,
+          "log": "behavior_review/baseline_38_tests.log"
+        },
+        {
+          "check": "patch_apply_check",
+          "exit_code": 0,
+          "log": "behavior_review/patch_apply_check.log"
+        },
+        {
+          "check": "patch_apply",
+          "exit_code": 0,
+          "log": "behavior_review/patch_apply.log"
+        },
+        {
+          "check": "patched_46_tests",
+          "exit_code": 0,
+          "log": "behavior_review/patched_46_tests.log"
+        },
+        {
+          "check": "checksum_verification",
+          "exit_code": 0,
+          "log": "behavior_review/checksum_verification.log"
+        },
+        {
+          "check": "qualifier_syntax",
+          "exit_code": 0,
+          "log": "behavior_review/qualifier_syntax.log"
+        },
+        {
+          "check": "synthetic_cli",
+          "exit_code": 0,
+          "log": "behavior_review/synthetic_cli.log"
+        }
+      ],
+      "identities": [
+        {
+          "path": "packages/fw00413/CHANGELOG.md",
+          "sha256": "6e934ece09687e2dc70218eae60ec4b2d75d4b12d061ad146a6800d7d905555a",
+          "git_blob_sha": "884a165cee231fe4d3166d1814739cc99b1ad5dd",
+          "changed": true
+        },
+        {
+          "path": "packages/fw00413/NEXT_ROUND_DESIGN.md",
+          "sha256": "4c23c880b7a8d84fd5bf8e3661f37817092addd0f64b34205ae07778187601e7",
+          "git_blob_sha": "6e396ed5e38ebe718743b42d0f01f58ad26fd877",
+          "changed": true
+        },
+        {
+          "path": "packages/fw00413/README.md",
+          "sha256": "556618903f7a143d7a7df64a65d90167d31c2b413074ffa65b2d41c7d8fe3a41",
+          "git_blob_sha": "b19eae9ce2a0520d9a48cb9ba8ebf49af3c658f3",
+          "changed": true
+        },
+        {
+          "path": "packages/fw00413/RELEASE_NOTES.md",
+          "sha256": "fac99ba7607acdcc7a55f3f3b5fe54273830bf95f087c0e1313eebbf46c525d0",
+          "git_blob_sha": "4080fcfe8270348f36dcb1ac3d52fabea3ad5fc5",
+          "changed": true
+        },
+        {
+          "path": "packages/fw00413/SHA256SUMS",
+          "sha256": "13783ea62659fc7428198ab0078c14456fb8b93e7766e5ea06e1a9d4b870e6a7",
+          "git_blob_sha": "3ae72a444aa94645d457cfd16529594cc3a37664",
+          "changed": true
+        },
+        {
+          "path": "packages/fw00413/behavioral.py",
+          "sha256": "57987c6669b91ab2eb1d46dbe9a3b4e7c93e6c40b3552aff390e03ac7e334890",
+          "git_blob_sha": "52fa05b62b11f9757b30b0dbc54efce9b5d50c3c",
+          "changed": true
+        },
+        {
+          "path": "packages/fw00413/fixtures/synthetic_behavior.json",
+          "sha256": "ecf5686e30b3285eacbfc16a37aea017a254e498aa0a8d4d0782ebabc65591c3",
+          "git_blob_sha": "1b014128b1fdc28c2a60fabcebed5eeb5b093561",
+          "changed": false
+        },
+        {
+          "path": "packages/fw00413/scripts/qualify.sh",
+          "sha256": "1d84aa319879d4421d13819a372036a2b4d916314d875b95d73e892007ef0479",
+          "git_blob_sha": "12939f6eec487ad782c4775c2c574823975d5988",
+          "changed": false
+        },
+        {
+          "path": "packages/fw00413/tests/test_behavioral.py",
+          "sha256": "c2b1e7aa81426b0c55a0e20532979c06c2d27d2de2ae66049d4b3f3c153e4df3",
+          "git_blob_sha": "c5993f7c8583874fe1152350e2d9803b9493979f",
+          "changed": true
+        },
+        {
+          "path": "packages/fw00413/tests/test_statistical_regressions.py",
+          "sha256": "8d4d059e86208d2d6148751c98f6531a39b3843270241d980924c0352fc28a3a",
+          "git_blob_sha": "1c5ae5a5e22e374545ca586951cc30dae1af7e5c",
+          "changed": true
+        }
+      ],
+      "synthetic_report_sha256": "bb1269eeac3089b9a2ddde9bea7229eb39d191e025556623d2892bf3edf4ae18",
+      "host_qualification": "NOT_RUN",
+      "model_calls": 0,
+      "remote_writes": "NONE"
+    },
+    "remote_readback": {
+      "commit": "7666e95f7d9b761515496141bf5e6fd647b6f82e",
+      "checks": [
+        {
+          "path": "packages/fw00413/CHANGELOG.md",
+          "match": true,
+          "git_blob_sha": "884a165cee231fe4d3166d1814739cc99b1ad5dd"
+        },
+        {
+          "path": "packages/fw00413/NEXT_ROUND_DESIGN.md",
+          "match": true,
+          "git_blob_sha": "6e396ed5e38ebe718743b42d0f01f58ad26fd877"
+        },
+        {
+          "path": "packages/fw00413/README.md",
+          "match": true,
+          "git_blob_sha": "b19eae9ce2a0520d9a48cb9ba8ebf49af3c658f3"
+        },
+        {
+          "path": "packages/fw00413/RELEASE_NOTES.md",
+          "match": true,
+          "git_blob_sha": "4080fcfe8270348f36dcb1ac3d52fabea3ad5fc5"
+        },
+        {
+          "path": "packages/fw00413/SHA256SUMS",
+          "match": true,
+          "git_blob_sha": "3ae72a444aa94645d457cfd16529594cc3a37664"
+        },
+        {
+          "path": "packages/fw00413/behavioral.py",
+          "match": true,
+          "git_blob_sha": "52fa05b62b11f9757b30b0dbc54efce9b5d50c3c"
+        },
+        {
+          "path": "packages/fw00413/tests/test_behavioral.py",
+          "match": true,
+          "git_blob_sha": "c5993f7c8583874fe1152350e2d9803b9493979f"
+        },
+        {
+          "path": "packages/fw00413/tests/test_statistical_regressions.py",
+          "match": true,
+          "git_blob_sha": "1c5ae5a5e22e374545ca586951cc30dae1af7e5c"
+        }
+      ]
+    }
+  },
+  "literature": {
+    "verification": {
+      "baseline_commit": "9a7d38a1786bb5e851da59d4596830563a36e72d",
+      "baseline_original_tests": {
+        "passed": 39,
+        "failed": 0,
+        "tool_chunk_id": "76426c"
+      },
+      "corrected_tests": {
+        "passed": 69,
+        "failed": 0,
+        "tool_chunk_id": "f59b72"
+      },
+      "checksums": "PASS",
+      "bash_syntax": "PASS",
+      "provider_trial": "NOT_RUN_BY_SUBAGENT",
+      "changed_paths": [
+        "CHANGELOG.md",
+        "README.md",
+        "RELEASE_NOTES.md",
+        "SHA256SUMS",
+        "fixtures/e1_draft02_source_identity.json",
+        "library.py",
+        "scripts/qualify.sh",
+        "scripts/verify_local.sh",
+        "tests/test_library.py",
+        "tests/test_trial_integrity.py",
+        "trial.py"
+      ],
+      "package_manifest_sha256": "71095813e431a575be2877906a2798066484f133f69b45314c92cde534650403"
+    },
+    "installation": {
+      "checks": [
+        {
+          "check": "patch_apply_check",
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "check": "patch_apply",
+          "exit_code": 0,
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "check": "installed_verify",
+          "exit_code": 0,
+          "log_sha256": "fe5471dbb3eb2fa21414a4f02594a3f1883f5dd327db0ad4a4ae4ab8adbafc73"
+        }
+      ],
+      "installed_bytes_match": true,
+      "baseline": "9a7d38a1786bb5e851da59d4596830563a36e72d",
+      "corrected_tests": {
+        "passed": 69,
+        "failed": 0,
+        "tool_chunk_id": "f59b72"
+      },
+      "model_calls": 0,
+      "provider_requests": 0
+    },
+    "remote_readback": {
+      "commit": "a5c946c858081470aa59dfb9e00f1cf88559b524",
+      "checks": [
+        {
+          "path": "packages/fw00414/CHANGELOG.md",
+          "match": true,
+          "git_blob_sha": "afd1c2389d93ff3abdbe883d69b62f710f03f0de"
+        },
+        {
+          "path": "packages/fw00414/README.md",
+          "match": true,
+          "git_blob_sha": "f467a01c12d5c9070ecd666fef0b72d872a23311"
+        },
+        {
+          "path": "packages/fw00414/RELEASE_NOTES.md",
+          "match": true,
+          "git_blob_sha": "699aca7829d7a18ed17c12a6e488662267e867f9"
+        },
+        {
+          "path": "packages/fw00414/SHA256SUMS",
+          "match": true,
+          "git_blob_sha": "977238b527eb6d64b32752a7f707cf86e323c024"
+        },
+        {
+          "path": "packages/fw00414/fixtures/e1_draft02_source_identity.json",
+          "match": true,
+          "git_blob_sha": "c90a9c6a77ec5a9007e60797c84ddb00890482c4"
+        },
+        {
+          "path": "packages/fw00414/library.py",
+          "match": true,
+          "git_blob_sha": "ba644b5ff6fe9cb76b954de8ed47066e8afab1f2"
+        },
+        {
+          "path": "packages/fw00414/scripts/qualify.sh",
+          "match": true,
+          "git_blob_sha": "91a7f8b649024b84d38eaccb191c41372d5c02e4"
+        },
+        {
+          "path": "packages/fw00414/scripts/verify_local.sh",
+          "match": true,
+          "git_blob_sha": "02faf2b599a52e0f14506df3ec425b42adb665f2"
+        },
+        {
+          "path": "packages/fw00414/tests/test_library.py",
+          "match": true,
+          "git_blob_sha": "dc15fce3cbbe2a93edae4ec798c91bc7be3c061c"
+        },
+        {
+          "path": "packages/fw00414/tests/test_trial_integrity.py",
+          "match": true,
+          "git_blob_sha": "e9c30c4a3965a8b2bd7cd04171c48c2749c7432f"
+        },
+        {
+          "path": "packages/fw00414/trial.py",
+          "match": true,
+          "git_blob_sha": "81c4a001c2ecd216615b85a360c9774a1192ece2"
+        }
+      ]
+    },
+    "bibliography_comparison": {
+      "reference_count": 27,
+      "journals": 25,
+      "preprints": 1,
+      "datasets": 1,
+      "doi_count": 25,
+      "pmid_count": 23,
+      "source_docx_sha256": "4ab9d95e44a728b995d63d9c270d83fab44bcf5018b795e40cec25c9db4192a8",
+      "seed_sha256": "d68091a219060ebff6a0ad7d99d6a647e5566469e5897dc76853ee325b8fd14c",
+      "comparisons": [
+        {
+          "ref_id": "E1-001",
+          "reference_number": 1,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-002",
+          "reference_number": 2,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-003",
+          "reference_number": 3,
+          "doi_matches_source": true,
+          "pmid_matches_source": null,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-004",
+          "reference_number": 4,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-005",
+          "reference_number": 5,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-006",
+          "reference_number": 6,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-007",
+          "reference_number": 7,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-008",
+          "reference_number": 8,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-009",
+          "reference_number": 9,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-010",
+          "reference_number": 10,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-011",
+          "reference_number": 11,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-012",
+          "reference_number": 12,
+          "doi_matches_source": true,
+          "pmid_matches_source": null,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-013",
+          "reference_number": 13,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-014",
+          "reference_number": 14,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-015",
+          "reference_number": 15,
+          "doi_matches_source": null,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": "PMC3063582"
+        },
+        {
+          "ref_id": "E1-016",
+          "reference_number": 16,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-017",
+          "reference_number": 17,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-018",
+          "reference_number": 18,
+          "doi_matches_source": null,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": "PMC1479766"
+        },
+        {
+          "ref_id": "E1-019",
+          "reference_number": 19,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-020",
+          "reference_number": 20,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-021",
+          "reference_number": 21,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-022",
+          "reference_number": 22,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-023",
+          "reference_number": 23,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-024",
+          "reference_number": 24,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-025",
+          "reference_number": 25,
+          "doi_matches_source": true,
+          "pmid_matches_source": null,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-026",
+          "reference_number": 26,
+          "doi_matches_source": true,
+          "pmid_matches_source": true,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        },
+        {
+          "ref_id": "E1-027",
+          "reference_number": 27,
+          "doi_matches_source": true,
+          "pmid_matches_source": null,
+          "normalized_title_matches_source": true,
+          "source_pmcid": null
+        }
+      ]
+    }
+  },
+  "provider_probe": {
+    "recorded_at_utc": "2026-11-19T13:55:15.873014+00:00",
+    "request": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID%3A6339387+AND+SRC%3AMED&format=json&resultType=core&pageSize=5",
+    "result": "ACCESS_FAILED",
+    "exception": "TimeoutError",
+    "message": "The read operation timed out",
+    "client_timeout_seconds": 20,
+    "response_bytes_saved": 0,
+    "article_bytes_saved": 0,
+    "archive_attempts_written": 0,
+    "university_access_determined": false
+  },
+  "host_handoff_bash_syntax": "PASS",
+  "host_handoff_execution": "NOT_RUN_HERE",
+  "host_model_calls": 0,
+  "fulltext_downloads": 0,
+  "university_queue_status": "PENDING_ACTUAL_PROVIDER_OR_HOST_EVIDENCE",
+  "no_claims": [
+    "Host or GPU execution",
+    "Complete local article corpus",
+    "Real psychological model qualification",
+    "Merge or deployment"
+  ]
+}
