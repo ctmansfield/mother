@@ -9,9 +9,12 @@
     "legacy_workbook": 70,
     "scout_doi_entries": 73,
     "related_preprint_successors": 2,
-    "unique_source_records": 211,
-    "unique_dois": 194,
-    "non_doi_qualified": 17
+    "unique_source_records": 250,
+    "unique_dois": 228,
+    "non_doi_qualified": 22,
+    "draft_0_2_entries": 27,
+    "mse_scientific_source_entries": 17,
+    "mse_seed_map_entries": 7
   },
   "caveats": [
     "This is a reconciliation of accessible source lists and visible Nov 6–19 Scout digests; no claim of complete lifetime chat or library coverage.",
@@ -19,7 +22,9 @@
     "Some workbook entries are datasets/archives, not journal articles; DOI absent is permitted and source URL serves as the key.",
     "Bibliographic dates are original publication years where inherited; Scout date is date discussed/discovered, not publication date.",
     "The two listed preprint successors are connected to their journal versions and not counted as independent replications.",
-    "This file is a bibliographic reference registry, NOT a committed set of causal graph edges or intervention recommendations."
+    "This file is a bibliographic reference registry, NOT a committed set of causal graph edges or intervention recommendations.",
+    "MSE-001 scientific-foundations and mechanism-seed sources were imported from an unmerged PR without modifying its preserved snapshot; they include methodological and official documentation, not necessarily E1-causal research.",
+    "Draft 0.2 references include two PMID-only papers; record identifiers use PMID rather than guessing a DOI."
   ],
   "predecessor_doi_to_published_doi": {
     "10.64898/2026.03.11.711168": "10.1016/j.chom.2026.10.005",
@@ -135,7 +140,8 @@
       "doi": "10.1016/j.cell.2016.10.043",
       "url": "https://doi.org/10.1016/j.cell.2016.10.043",
       "legacy_ids": [
-        "D:S10"
+        "D:S10",
+        "DRAFT02:10"
       ],
       "author": "Desai MS et al.",
       "year": "2016",
@@ -144,10 +150,13 @@
       "pmid": "27863247",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[10] Desai MS et al. A Dietary Fiber-Deprived Gut Microbiota Degrades the Colonic Mucus Barrier and Enhances Pathogen Susceptibility. Cell. 2016. DOI: 10.1016/j.cell.2016.10.043. PMID: 27863247."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -181,6 +190,75 @@
         "Research Scout November 6–19 conversation digests"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1016/j.cell.2022.07.016",
+      "doi": "10.1016/j.cell.2022.07.016",
+      "url": "https://doi.org/10.1016/j.cell.2022.07.016",
+      "legacy_ids": [
+        "DRAFT02:22"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "35987213",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[22] Suez J et al. Personalized microbiome-driven effects of non-nutritive sweeteners on human glucose tolerance. Cell. 2022. DOI: 10.1016/j.cell.2022.07.016. PMID: 35987213."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1016/j.cell.2026.09.036",
+      "doi": "10.1016/j.cell.2026.09.036",
+      "url": "https://doi.org/10.1016/j.cell.2026.09.036",
+      "legacy_ids": [
+        "DRAFT02:26"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "42971201",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[26] Kuehnemann C et al. Fatty acid desaturation controls cellular fate decisions between senescence and ferroptosis. Cell. 2026. DOI: 10.1016/j.cell.2026.09.036. PMID: 42971201. Carry-forward bibliographic record; full article not reappraised."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1016/j.cell.2026.09.061",
+      "doi": "10.1016/j.cell.2026.09.061",
+      "url": "https://doi.org/10.1016/j.cell.2026.09.061",
+      "legacy_ids": [
+        "DRAFT02:23"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "42914977",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[23] Guan C et al. Taurine lowers inflammaging by regulating the NLRP3 inflammasome in macrophages. Cell. 2026. DOI: 10.1016/j.cell.2026.09.061. PMID: 42914977. Primary abstract/indexed record consulted; full text not accessible in this revision."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1016/j.chom.2013.10.009",
@@ -313,7 +391,8 @@
       "doi": "10.1016/j.chom.2019.08.018",
       "url": "https://doi.org/10.1016/j.chom.2019.08.018",
       "legacy_ids": [
-        "D:S57"
+        "D:S57",
+        "DRAFT02:19"
       ],
       "author": "Tett A et al.",
       "year": "2019",
@@ -322,10 +401,13 @@
       "pmid": "31607556",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[19] Tett A et al. The Prevotella copri Complex Comprises Four Distinct Clades Underrepresented in Westernized Populations. Cell Host & Microbe. 2019. DOI: 10.1016/j.chom.2019.08.018. PMID: 31607556."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -733,7 +815,8 @@
       "doi": "10.1038/ismej.2012.4",
       "url": "https://doi.org/10.1038/ismej.2012.4",
       "legacy_ids": [
-        "D:S01"
+        "D:S01",
+        "DRAFT02:3"
       ],
       "author": "Ze X et al.",
       "year": "2012",
@@ -742,12 +825,38 @@
       "pmid": "22343308",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[3] Ze X, Duncan SH, Louis P, Flint HJ. Ruminococcus bromii is a keystone species for the degradation of resistant starch in the human colon. ISME Journal. 2012. DOI: 10.1038/ismej.2012.4."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1038/nature12331",
+      "doi": "10.1038/nature12331",
+      "url": "https://doi.org/10.1038/nature12331",
+      "legacy_ids": [
+        "DRAFT02:12"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[12] Atarashi K et al. Treg induction by a rationally selected mixture of Clostridia strains from the human microbiota. Nature. 2013. DOI: 10.1038/nature12331."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1038/nature13044",
@@ -796,7 +905,8 @@
       "doi": "10.1038/nature13828",
       "url": "https://doi.org/10.1038/nature13828",
       "legacy_ids": [
-        "D:S29"
+        "D:S29",
+        "DRAFT02:8"
       ],
       "author": "Buffie CG et al.",
       "year": "2015",
@@ -805,19 +915,46 @@
       "pmid": "25337874",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[8] Buffie CG et al. Precision microbiome reconstitution restores bile acid mediated resistance to Clostridium difficile. Nature. 2015; first published online 2014. DOI: 10.1038/nature13828. PMID: 25337874."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1038/nature15524",
+      "doi": "10.1038/nature15524",
+      "url": "https://doi.org/10.1038/nature15524",
+      "legacy_ids": [
+        "DRAFT02:9"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "26479034",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[9] Kommineni S et al. Bacteriocin production augments niche competition by enterococci in the mammalian gastrointestinal tract. Nature. 2015. DOI: 10.1038/nature15524. PMID: 26479034."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1038/nature16504",
       "doi": "10.1038/nature16504",
       "url": "https://doi.org/10.1038/nature16504",
       "legacy_ids": [
-        "D:S11"
+        "D:S11",
+        "DRAFT02:14"
       ],
       "author": "Sonnenburg ED et al.",
       "year": "2016",
@@ -826,10 +963,13 @@
       "pmid": "26762459",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[14] Sonnenburg ED et al. Diet-induced extinctions in the gut microbiota compound over generations. Nature. 2016. DOI: 10.1038/nature16504. PMID: 26762459."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -901,7 +1041,8 @@
       "doi": "10.1038/nm.4102",
       "url": "https://doi.org/10.1038/nm.4102",
       "legacy_ids": [
-        "D:S23"
+        "D:S23",
+        "DRAFT02:13"
       ],
       "author": "Lamas B et al.",
       "year": "2016",
@@ -910,10 +1051,13 @@
       "pmid": "27158904",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[13] Lamas B et al. CARD9 impacts colitis by altering gut microbiota metabolism of tryptophan into aryl hydrocarbon receptor ligands. Nature Medicine. 2016. DOI: 10.1038/nm.4102. PMID: 27158904."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -1743,7 +1887,8 @@
       "doi": "10.1038/s41564-024-01737-3",
       "url": "https://doi.org/10.1038/s41564-024-01737-3",
       "legacy_ids": [
-        "D:S20"
+        "D:S20",
+        "DRAFT02:4"
       ],
       "author": "Sinha AK et al.",
       "year": "2024",
@@ -1752,10 +1897,13 @@
       "pmid": "38918470",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[4] Sinha AK, Laursen MF et al. Dietary fibre directs microbial tryptophan metabolism via metabolic interactions in the gut microbiota. Nature Microbiology. 2024. DOI: 10.1038/s41564-024-01737-3. PMID: 38918470."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -2138,6 +2286,29 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.1038/s41586-022-05380-y",
+      "doi": "10.1038/s41586-022-05380-y",
+      "url": "https://doi.org/10.1038/s41586-022-05380-y",
+      "legacy_ids": [
+        "DRAFT02:16"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "36323778",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[16] Inulin fibre promotes microbiota-derived bile acids and type 2 inflammation. Nature. 2022. DOI: 10.1038/s41586-022-05380-y. PMID: 36323778."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.1038/s41586-022-05620-1",
       "doi": "10.1038/s41586-022-05620-1",
       "url": "https://doi.org/10.1038/s41586-022-05620-1",
@@ -2159,6 +2330,29 @@
         "E1 evidence map workbook References R01–R70"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1038/s41586-024-07960-6",
+      "doi": "10.1038/s41586-024-07960-6",
+      "url": "https://doi.org/10.1038/s41586-024-07960-6",
+      "legacy_ids": [
+        "DRAFT02:7"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "39294375",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[7] Commensal consortia decolonize Enterobacteriaceae via ecological control. Nature. 2024. DOI: 10.1038/s41586-024-07960-6. PMID: 39294375."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1038/s41586-024-08185-3",
@@ -2406,6 +2600,29 @@
         "Research Scout November 6–19 conversation digests"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1038/s41591-020-0934-0",
+      "doi": "10.1038/s41591-020-0934-0",
+      "url": "https://doi.org/10.1038/s41591-020-0934-0",
+      "legacy_ids": [
+        "MSE:S11"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S11 | Berry et al., 2020, [DOI 10.1038/s41591-020-0934-0](https://doi.org/10.1038/s41591-020-0934-0); [PMCID PMC8265154](https://pmc.ncbi.nlm.nih.gov/articles/PMC8265154/) | Repeated standardized meals and person/context variation justify individualized context models. Prediction and microbiome associations are not causal mechanism proof. Check linked publisher correction. | `turn2search4`, `turn2search14`, `turn2search19` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1038/s41591-022-01913-0",
@@ -2948,6 +3165,78 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.1074/jbc.271.31.18302",
+      "doi": "10.1074/jbc.271.31.18302",
+      "url": "https://doi.org/10.1074/jbc.271.31.18302",
+      "legacy_ids": [
+        "MSE:S16/2"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "- **S16** Ferguson et al. 1996, [DOI 10.1126/science.271.5247.363](https://doi.org/10.1126/science.271.5247.363), [PMID 8553074](https://pubmed.ncbi.nlm.nih.gov/8553074/), `turn3search1`; Zhang et al. 1996, [DOI 10.1074/jbc.271.31.18302](https://doi.org/10.1074/jbc.271.31.18302), [PMID 8702465](https://pubmed.ncbi.nlm.nih.gov/8702465/), `turn3search8`: experimental beta-arrestin/GPCR internalization and distinct endocytic routes. Do not universalize one receptor's route."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1074/jbc.c300063200",
+      "doi": "10.1074/jbc.c300063200",
+      "url": "https://doi.org/10.1074/jbc.c300063200",
+      "legacy_ids": [
+        "MSE-SEED:1"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in MSE seed",
+      "mechanism_notes": [
+        "1. **New seed source:** [Sano et al., 2003, AS160 phosphorylation and GLUT4 translocation](https://pubmed.ncbi.nlm.nih.gov/12637568/), DOI 10.1074/jbc.C300063200."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MSE-001 mechanism seed map primary/official sources"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1074/jbc.m211609200",
+      "doi": "10.1074/jbc.m211609200",
+      "url": "https://doi.org/10.1074/jbc.m211609200",
+      "legacy_ids": [
+        "MSE:S6",
+        "MSE-SEED:6"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S6 | Brown et al., 2003, [DOI 10.1074/jbc.M211609200](https://doi.org/10.1074/jbc.M211609200); [PMID 12496283](https://pubmed.ncbi.nlm.nih.gov/12496283/) | GPR41/GPR43 activation by SCFA ligands in engineered assay systems, with differing ligand specificity. Preserve tissue/assay limitations. | `turn1search2` |",
+        "6. [Brown et al., receptor ligand assays](https://pubmed.ncbi.nlm.nih.gov/12496283/), DOI 10.1074/jbc.M211609200."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register",
+        "MSE-001 mechanism seed map primary/official sources"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.1074/jbc.ra119.009442",
       "doi": "10.1074/jbc.ra119.009442",
       "url": "https://doi.org/10.1074/jbc.ra119.009442",
@@ -2977,6 +3266,52 @@
         "Research Scout November 6–19 conversation digests"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1080/19490976.2021.1966263",
+      "doi": "10.1080/19490976.2021.1966263",
+      "url": "https://doi.org/10.1080/19490976.2021.1966263",
+      "legacy_ids": [
+        "DRAFT02:11"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "34530674",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[11] Neumann M et al. Deprivation of dietary fiber in specific-pathogen-free mice promotes susceptibility to the intestinal mucosal pathogen Citrobacter rodentium. Gut Microbes. 2021. DOI: 10.1080/19490976.2021.1966263. PMID: 34530674."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1080/19490976.2025.2570425",
+      "doi": "10.1080/19490976.2025.2570425",
+      "url": "https://doi.org/10.1080/19490976.2025.2570425",
+      "legacy_ids": [
+        "DRAFT02:17"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "41133791",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[17] Inulin aggravates colitis through gut microbiota modulation and MyD88/IL-18 signaling. Gut Microbes. 2025. DOI: 10.1080/19490976.2025.2570425. PMID: 41133791."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1080/19490976.2026.2719062",
@@ -3091,6 +3426,29 @@
         "Research Scout November 6–19 conversation digests"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1093/bioinformatics/btp358",
+      "doi": "10.1093/bioinformatics/btp358",
+      "url": "https://doi.org/10.1093/bioinformatics/btp358",
+      "legacy_ids": [
+        "MSE:S4"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S4 | Raue et al., 2009, [DOI 10.1093/bioinformatics/btp358](https://doi.org/10.1093/bioinformatics/btp358); [PMID 19505944](https://pubmed.ncbi.nlm.nih.gov/19505944/) | Profile likelihood distinguishes structural/practical nonidentifiability and supports experiment planning. It is a method, not validation of a particular MSE. | `turn1search1` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1093/ismeco/ycag320",
@@ -3248,6 +3606,29 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.1098/rspb.1983.0093",
+      "doi": "10.1098/rspb.1983.0093",
+      "url": "https://doi.org/10.1098/rspb.1983.0093",
+      "legacy_ids": [
+        "MSE:S7"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S7 | Black & Leff, 1983, [DOI 10.1098/rspb.1983.0093](https://doi.org/10.1098/rspb.1983.0093); [PMID 6141562](https://pubmed.ncbi.nlm.nih.gov/6141562/) | Operational agonism separates binding and transduction, supporting separation of affinity, efficacy and system response. A general model, not fitted receptor parameters here. | `turn2search1` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.1099/ijs.0.016725-0",
       "doi": "10.1099/ijs.0.016725-0",
       "url": "https://doi.org/10.1099/ijs.0.016725-0",
@@ -3290,6 +3671,29 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.1099/mic.0.28412-0",
+      "doi": "10.1099/mic.0.28412-0",
+      "url": "https://doi.org/10.1099/mic.0.28412-0",
+      "legacy_ids": [
+        "MSE-SEED:4"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in MSE seed",
+      "mechanism_notes": [
+        "4. **New seed source:** [Charrier et al., 2006](https://pubmed.ncbi.nlm.nih.gov/16385128/), DOI 10.1099/mic.0.28412-0."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MSE-001 mechanism seed map primary/official sources"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.1101/2025.09.16.25335853",
       "doi": "10.1101/2025.09.16.25335853",
       "url": "https://doi.org/10.1101/2025.09.16.25335853",
@@ -3319,6 +3723,29 @@
         "Research Scout November 6–19 conversation digests"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1111/acel.70795",
+      "doi": "10.1111/acel.70795",
+      "url": "https://doi.org/10.1111/acel.70795",
+      "legacy_ids": [
+        "DRAFT02:25"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[25] Huang et al. The Dietary Polyphenol Epigallocatechin Gallate Delays Biological Aging by Activating Peroxisome Biogenesis and Peroxisomal Fatty Acid β-Oxidation. Aging Cell. 2026. DOI: 10.1111/acel.70795."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1111/bph.12334",
@@ -3383,6 +3810,29 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.1111/j.1469-8986.1991.tb00412.x",
+      "doi": "10.1111/j.1469-8986.1991.tb00412.x",
+      "url": "https://doi.org/10.1111/j.1469-8986.1991.tb00412.x",
+      "legacy_ids": [
+        "MSE:S5"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S5 | Grossman et al., 1991, [DOI 10.1111/j.1469-8986.1991.tb00412.x](https://doi.org/10.1111/j.1469-8986.1991.tb00412.x); [PMID 1946886](https://pubmed.ncbi.nlm.nih.gov/1946886/) | Six men studied after beta blockade; respiratory effects on RSA complicate vagal interpretation. Specific RSA experimental finding, not direct calibration of HealthKit SDNN. | `turn6search3`, `turn1search5` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.1111/mmi.14516",
       "doi": "10.1111/mmi.14516",
       "url": "https://doi.org/10.1111/mmi.14516",
@@ -3412,6 +3862,52 @@
         "Research Scout November 6–19 conversation digests"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1126/science.1232467",
+      "doi": "10.1126/science.1232467",
+      "url": "https://doi.org/10.1126/science.1232467",
+      "legacy_ids": [
+        "DRAFT02:5"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "23393266",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[5] Winter SE et al. Host-derived nitrate boosts growth of E. coli in the inflamed gut. Science. 2013. DOI: 10.1126/science.1232467. PMID: 23393266."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1126/science.271.5247.363",
+      "doi": "10.1126/science.271.5247.363",
+      "url": "https://doi.org/10.1126/science.271.5247.363",
+      "legacy_ids": [
+        "MSE:S16/1"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "- **S16** Ferguson et al. 1996, [DOI 10.1126/science.271.5247.363](https://doi.org/10.1126/science.271.5247.363), [PMID 8553074](https://pubmed.ncbi.nlm.nih.gov/8553074/), `turn3search1`; Zhang et al. 1996, [DOI 10.1074/jbc.271.31.18302](https://doi.org/10.1074/jbc.271.31.18302), [PMID 8702465](https://pubmed.ncbi.nlm.nih.gov/8702465/), `turn3search8`: experimental beta-arrestin/GPCR internalization and distinct endocytic routes. Do not universalize one receptor's route."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1126/science.aad9948",
@@ -3460,7 +3956,10 @@
       "doi": "10.1126/science.aam9949",
       "url": "https://doi.org/10.1126/science.aam9949",
       "legacy_ids": [
-        "D:S06"
+        "D:S06",
+        "DRAFT02:6",
+        "MSE:S10",
+        "MSE-SEED:7"
       ],
       "author": "Byndloss MX et al.",
       "year": "2017",
@@ -3469,10 +3968,17 @@
       "pmid": "28798125",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "[6] Byndloss MX et al. Microbiota-activated PPAR-γ signaling inhibits dysbiotic Enterobacteriaceae expansion. Science. 2017. DOI: 10.1126/science.aam9949. PMID: 28798125.",
+        "| S10 | Byndloss et al., 2017, [DOI 10.1126/science.aam9949](https://doi.org/10.1126/science.aam9949); [PMCID PMC5642957](https://pmc.ncbi.nlm.nih.gov/articles/PMC5642957/) | Experimental mouse host–microbe feedback, including inflammation-dependent oxygen effects of reduced epithelial PPARγ. This is a conditional mechanistic exemplar, not a universal human inference. | `turn6search2` |",
+        "7. [Byndloss et al., 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5642957/), DOI 10.1126/science.aam9949."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "Host–Microbial Equilibrium Draft 0.2 primary references",
+        "MOTHER MSE-001 Scientific Foundations source register",
+        "MSE-001 mechanism seed map primary/official sources"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -3746,7 +4252,9 @@
       "doi": "10.1128/aem.72.5.3593-3599.2006",
       "url": "https://doi.org/10.1128/aem.72.5.3593-3599.2006",
       "legacy_ids": [
-        "D:S03"
+        "D:S03",
+        "MSE:S8",
+        "MSE-SEED:3"
       ],
       "author": "Belenguer A et al.",
       "year": "2006",
@@ -3755,12 +4263,63 @@
       "pmid": "16672507",
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
-      "mechanism_notes": [],
+      "mechanism_notes": [
+        "| S8 | Belenguer et al., 2006, [DOI 10.1128/AEM.72.5.3593-3599.2006](https://doi.org/10.1128/AEM.72.5.3593-3599.2006); [PMCID PMC1472403](https://pmc.ncbi.nlm.nih.gov/articles/PMC1472403/) | In-vitro strain-, substrate- and pH-dependent cross-feeding; isotope work distinguishes routes. Not net human community flux inferred from taxa abundance. | `turn3search2`, `turn3search3`, `turn3search13` |",
+        "3. [Belenguer et al., 2006](https://pmc.ncbi.nlm.nih.gov/articles/PMC1472403/), DOI 10.1128/AEM.72.5.3593-3599.2006."
+      ],
       "discoveries": [],
       "source_inputs": [
-        "E1 network S01–S72 (12 Oct 2026 cutoff)"
+        "E1 network S01–S72 (12 Oct 2026 cutoff)",
+        "MOTHER MSE-001 Scientific Foundations source register",
+        "MSE-001 mechanism seed map primary/official sources"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1128/iai.39.2.666-675.1983",
+      "doi": "10.1128/iai.39.2.666-675.1983",
+      "url": "https://doi.org/10.1128/iai.39.2.666-675.1983",
+      "legacy_ids": [
+        "DRAFT02:1"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "6339387",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[1] Freter R et al. Continuous-flow cultures as in vitro models of the ecology of large intestinal flora. Infection and Immunity. 1983. DOI: 10.1128/iai.39.2.666-675.1983. PMID: 6339387."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1128/iai.39.2.676-685.1983",
+      "doi": "10.1128/iai.39.2.676-685.1983",
+      "url": "https://doi.org/10.1128/iai.39.2.676-685.1983",
+      "legacy_ids": [
+        "DRAFT02:2"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "6339388",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[2] Freter R et al. Mechanisms that control bacterial populations in continuous-flow culture models of mouse large intestinal flora. Infection and Immunity. 1983. DOI: 10.1128/iai.39.2.676-685.1983. PMID: 6339388."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1128/jb.00108-26",
@@ -3877,6 +4436,29 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.1128/msystems.00133-24",
+      "doi": "10.1128/msystems.00133-24",
+      "url": "https://doi.org/10.1128/msystems.00133-24",
+      "legacy_ids": [
+        "DRAFT02:21"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "38742890",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "preprint; published status not rechecked",
+      "mechanism_notes": [
+        "[21] Short-term dietary fiber interventions produce consistent gut microbiome responses across studies. mSystems. 2024. DOI: 10.1128/msystems.00133-24. PMID: 38742890. Peer-reviewed version used instead of the earlier preprint."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.1128/msystems.00325-19",
       "doi": "10.1128/msystems.00325-19",
       "url": "https://doi.org/10.1128/msystems.00325-19",
@@ -3896,6 +4478,29 @@
         "E1 network S01–S72 (12 Oct 2026 cutoff)"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1128/msystems.00606-19",
+      "doi": "10.1128/msystems.00606-19",
+      "url": "https://doi.org/10.1128/msystems.00606-19",
+      "legacy_ids": [
+        "MSE:S9"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S9 | Diener et al., 2020, [DOI 10.1128/mSystems.00606-19](https://doi.org/10.1128/mSystems.00606-19); [PMCID PMC6977071](https://pmc.ncbi.nlm.nih.gov/articles/PMC6977071/) | MICOM constraint-based community modeling; objectives/tradeoffs materially change predictions. Gene/abundance inputs and modeled growth do not measure human metabolite flux. | `turn7search7`, `turn3search12` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1128/msystems.00612-26",
@@ -3929,6 +4534,52 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.1136/bmj.h1738",
+      "doi": "10.1136/bmj.h1738",
+      "url": "https://doi.org/10.1136/bmj.h1738",
+      "legacy_ids": [
+        "MSE:S15/1"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S15 | Vohra et al., 2015, [CENT statement DOI 10.1136/bmj.h1738](https://doi.org/10.1136/bmj.h1738); Shamseer et al., [explanation DOI 10.1136/bmj.h1793](https://www.bmj.com/content/350/bmj.h1793) | Primary reporting guidance for prospective multiple-crossover N-of-1 trials: prespecification, periods, missingness, outcomes and uncertainty. It does not make an observational series causal. | `turn1search3`, `turn1search4` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.1136/bmj.h1793",
+      "doi": "10.1136/bmj.h1793",
+      "url": "https://doi.org/10.1136/bmj.h1793",
+      "legacy_ids": [
+        "MSE:S15/2"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S15 | Vohra et al., 2015, [CENT statement DOI 10.1136/bmj.h1738](https://doi.org/10.1136/bmj.h1738); Shamseer et al., [explanation DOI 10.1136/bmj.h1793](https://www.bmj.com/content/350/bmj.h1793) | Primary reporting guidance for prospective multiple-crossover N-of-1 trials: prespecification, periods, missingness, outcomes and uncertainty. It does not make an observational series causal. | `turn1search3`, `turn1search4` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.1136/gutjnl-2019-319654",
       "doi": "10.1136/gutjnl-2019-319654",
       "url": "https://doi.org/10.1136/gutjnl-2019-319654",
@@ -3948,6 +4599,32 @@
         "E1 network S01–S72 (12 Oct 2026 cutoff)"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1152/ajpendo.1979.236.6.e667",
+      "doi": "10.1152/ajpendo.1979.236.6.e667",
+      "url": "https://doi.org/10.1152/ajpendo.1979.236.6.e667",
+      "legacy_ids": [
+        "MSE:S2",
+        "MSE-SEED:2"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S2 | Bergman et al., 1979, [DOI 10.1152/ajpendo.1979.236.6.E667](https://doi.org/10.1152/ajpendo.1979.236.6.E667); [PMID 443421](https://pubmed.ncbi.nlm.nih.gov/443421/) | Original minimal-model work used measured insulin input and glucose output after controlled glucose injection in dogs. Supports careful measurement requirements, not CGM-only insulin-sensitivity claims. | `turn7search5`, `turn7search6` |",
+        "2. [Bergman et al., 1979](https://pubmed.ncbi.nlm.nih.gov/443421/), DOI 10.1152/ajpendo.1979.236.6.E667."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register",
+        "MSE-001 mechanism seed map primary/official sources"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1186/s12866-024-03433-y",
@@ -3971,6 +4648,29 @@
         "E1 evidence map workbook References R01–R70"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1186/s12964-026-03125-2",
+      "doi": "10.1186/s12964-026-03125-2",
+      "url": "https://doi.org/10.1186/s12964-026-03125-2",
+      "legacy_ids": [
+        "DRAFT02:24"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "42958404",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[24] Duan H et al. Taurine preserves γδ T cell fitness in triple-negative breast cancer. Cell Communication and Signaling. 2026. DOI: 10.1186/s12964-026-03125-2. PMID: 42958404."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.1186/s40168-022-01408-7",
@@ -4101,6 +4801,29 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.17632/s6hy4pp6gw.1",
+      "doi": "10.17632/s6hy4pp6gw.1",
+      "url": "https://doi.org/10.17632/s6hy4pp6gw.1",
+      "legacy_ids": [
+        "DRAFT02:27"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "author-deposited dataset",
+      "mechanism_notes": [
+        "[27] Kuehnemann C, Dolnikowski G, Wiley C. Dataset accompanying Fatty acid desaturation controls cellular fate decisions between senescence and ferroptosis. Mendeley Data. 2026, version 1. DOI: 10.17632/s6hy4pp6gw.1. Author-deposited methods and dataset description inspected."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.21203/rs.3.rs-8856024/v1",
       "doi": "10.21203/rs.3.rs-8856024/v1",
       "url": "https://doi.org/10.21203/rs.3.rs-8856024/v1",
@@ -4130,6 +4853,75 @@
         "Research Scout November 6–19 conversation digests"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.2337/db13-1132",
+      "doi": "10.2337/db13-1132",
+      "url": "https://doi.org/10.2337/db13-1132",
+      "legacy_ids": [
+        "MSE:S3"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S3 | Basu et al., 2013, [DOI 10.2337/db13-1132](https://doi.org/10.2337/db13-1132); [PMCID PMC3837059](https://pmc.ncbi.nlm.nih.gov/articles/PMC3837059/) | Eight healthy overnight-fasted subjects; tracer-measured interstitial lag approximately 5–6 min. Do not generalize to dynamic exercise/meals or whole device delay. | `turn6search0`, `turn6search1` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.2337/dc12-2620",
+      "doi": "10.2337/dc12-2620",
+      "url": "https://doi.org/10.2337/dc12-2620",
+      "legacy_ids": [
+        "MSE:S13"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S13 | van Dijk et al., 2013, [DOI 10.2337/dc12-2620](https://doi.org/10.2337/dc12-2620); [PMCID PMC3816888](https://pmc.ncbi.nlm.nih.gov/articles/PMC3816888/) | N=20 men with T2D; brief ADL reduced cumulative meal iAUC but did not significantly reduce daily duration above specified hyperglycemia threshold. Keep endpoint-specific results. | `turn7search1`, `turn7search2` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "doi:10.2337/dc13-0084",
+      "doi": "10.2337/dc13-0084",
+      "url": "https://doi.org/10.2337/dc13-0084",
+      "legacy_ids": [
+        "MSE:S12"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "| S12 | DiPietro et al., 2013, [DOI 10.2337/dc13-0084](https://doi.org/10.2337/dc13-0084); [PMCID PMC3781561](https://pmc.ncbi.nlm.nih.gov/articles/PMC3781561/) | N=10 inactive older adults, controlled randomized protocol order; postmeal walking improved specified glycemic endpoints. Evidence is population, protocol and endpoint specific. | `turn7search3`, `turn7search4` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "doi:10.3389/fimmu.2026.1878373",
@@ -4786,6 +5578,29 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.64898/2026.09.29.755216",
+      "doi": "10.64898/2026.09.29.755216",
+      "url": "https://doi.org/10.64898/2026.09.29.755216",
+      "legacy_ids": [
+        "DRAFT02:20"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "42856459",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "preprint; published status not rechecked",
+      "mechanism_notes": [
+        "[20] Takeuchi T et al. Functional Divergence in Gut Clostridia from Hadza Hunter-Gatherers Reveals Diet-Adapted Metabolic Machinery That Shapes Gut Ecology. bioRxiv. 2026. DOI: 10.64898/2026.09.29.755216. PMID: 42856459. PREPRINT; peer review not established in this revision."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "doi:10.64898/2026.10.01.756045",
       "doi": "10.64898/2026.10.01.756045",
       "url": "https://doi.org/10.64898/2026.10.01.756045",
@@ -4941,6 +5756,98 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
+      "key": "doi:10.7326/0003-4819-157-8-201210160-00005",
+      "doi": "10.7326/0003-4819-157-8-201210160-00005",
+      "url": "https://doi.org/10.7326/0003-4819-157-8-201210160-00005",
+      "legacy_ids": [
+        "MSE:S17"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "MSE citation; original paper status inherited",
+      "mechanism_notes": [
+        "- **S17** Broussard et al. 2012, [DOI 10.7326/0003-4819-157-8-201210160-00005](https://doi.org/10.7326/0003-4819-157-8-201210160-00005), [PMCID PMC4435718](https://pmc.ncbi.nlm.nih.gov/articles/PMC4435718/), `turn6search4`: seven-person randomized sleep-restriction crossover measured adipocyte insulin-stimulated Akt signaling and systemic insulin sensitivity. Shows what direct tissue-mechanism evidence looks like; wearable sleep/glucose correlations cannot substitute for those assays."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "pmid:16782812",
+      "doi": "",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/16782812/",
+      "legacy_ids": [
+        "DRAFT02:18"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "16782812",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[18] Samuel BS, Gordon JI. A humanized gnotobiotic mouse model of host–archaeal–bacterial mutualism. PNAS. 2006. PMID: 16782812. PMCID: PMC1479766."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "pmid:20847294",
+      "doi": "",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/20847294/",
+      "legacy_ids": [
+        "DRAFT02:15"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "20847294",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "article as cited in original draft",
+      "mechanism_notes": [
+        "[15] Dethlefsen L, Relman DA. Incomplete recovery and individualized responses of the human distal gut microbiota to repeated antibiotic perturbation. PNAS. 2011 issue; online 2010. PMID: 20847294. PMCID: PMC3063582."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "Host–Microbial Equilibrium Draft 0.2 primary references"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
+      "key": "url:https://developer.apple.com/documentation/healthkit/hkquantitytypeidentifier/heartratevariabilitysdnn.md",
+      "doi": "",
+      "url": "https://developer.apple.com/documentation/healthkit/hkquantitytypeidentifier/heartratevariabilitysdnn.md",
+      "legacy_ids": [
+        "MSE:S1"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "official documentation or methodological record",
+      "mechanism_notes": [
+        "| S1 | Apple, [heartRateVariabilitySDNN](https://developer.apple.com/documentation/healthkit/hkquantitytypeidentifier/heartratevariabilitysdnn.md); [WWDC19 heartbeat series](https://developer.apple.com/videos/play/wwdc2019/218/) | HealthKit HRV scalar is SDNN; a heartbeat-series request is a separate capability. Does not establish repository integration or algorithm quality for this individual. | `turn5view5`, `turn0search20` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
+    },
+    {
       "key": "url:https://gut.bmj.com/content/75/8/1505",
       "doi": "",
       "url": "https://gut.bmj.com/content/75/8/1505",
@@ -4962,6 +5869,29 @@
         "E1 evidence map workbook References R01–R70"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "url:https://proceedings.mlr.press/v108/foster20a.html",
+      "doi": "",
+      "url": "https://proceedings.mlr.press/v108/foster20a.html",
+      "legacy_ids": [
+        "MSE:S14"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "official documentation or methodological record",
+      "mechanism_notes": [
+        "| S14 | Foster et al., 2020, [A Unified Stochastic Gradient Approach to Designing Bayesian-Optimal Experiments](https://proceedings.mlr.press/v108/foster20a.html) | Primary computational method for expected-information-gain design. EIG is conditional on supplied probabilistic model; no physiological validation implied. | `turn2search26`, `turn2search50` |"
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MOTHER MSE-001 Scientific Foundations source register"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "url:https://pubmed.ncbi.nlm.nih.gov/30876827/",
@@ -5100,6 +6030,29 @@
         "E1 evidence map workbook References R01–R70"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "url:https://reactome.org/content/schema/instance/browser/uniprot%3AP16219",
+      "doi": "",
+      "url": "https://reactome.org/content/schema/instance/browser/uniprot%3AP16219",
+      "legacy_ids": [
+        "MSE-SEED:5"
+      ],
+      "author": "",
+      "year": "",
+      "title": "",
+      "journal": "",
+      "pmid": "",
+      "primary_source_status": "legacy_document_bibliography_not_reverified",
+      "peer_review_status": "curated database/official reaction record",
+      "mechanism_notes": [
+        "5. **New seed source:** [Reactome's curated UniProt:P16219 reaction/cofactor record](https://reactome.org/content/schema/instance/browser/uniprot%3AP16219)."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "MSE-001 mechanism seed map primary/official sources"
+      ],
+      "support_class": "methodological_or_contextual_not_direct_E1_proof"
     },
     {
       "key": "url:https://www.cell.com/cell-host-microbe/fulltext/S1931-3128(17)30498-5",
