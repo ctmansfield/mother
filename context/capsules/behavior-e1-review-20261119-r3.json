@@ -1,0 +1,225 @@
+{
+  "acceptance": [
+    "Keep literature issue #145 open and skip acquisition work.",
+    "Identical scientific tasks across candidates, full model digests and per-call GPU observations.",
+    "Preserve request failures and partial attempts; separate harness completion, GPU evidence and correctness.",
+    "Scientific GPU workload precedes behavioral; no concurrent GPU experiments.",
+    "Validate current instruction-bound capsule with the pinned context reader."
+  ],
+  "authorization": {
+    "allowed": [
+      "Current user authorized scientific GPU tests, behavioral preparation and subsequent behavioral GPU tests.",
+      "Source updates to existing draft PR with exact dependency pins and offline verification."
+    ],
+    "not_authorized": [
+      "Merge or runtime deployment, credentials changes, taking over another GPU workload, or inventing inference results."
+    ],
+    "source": "user-task",
+    "state": "current-user-scientific-gpu-first"
+  },
+  "blockers": [
+    "No working remote execution route to llm from this session; SSH client failed before connection. Operator launch command required."
+  ],
+  "conflicts": [
+    "FW00413/FW00414 numbers are reused in other framework issues; identify #144/#145 by issue and exact pin."
+  ],
+  "constraints": [
+    "No terminal-closing shell option changes; preserve previous attempts.",
+    "Literature issue #145 remains open and deferred.",
+    "One GPU experiment at a time; scientific precedes behavioral.",
+    "No permanent role assignment or scientific promotion from exploratory scores."
+  ],
+  "decisions": [
+    {
+      "id": "defer-literature",
+      "reason": "Explicit newer user steering.",
+      "source": "user-task",
+      "supersedes": [
+        "separate-acquisition-state"
+      ],
+      "value": "Leave issue #145 open; do not run the old E1 acquisition handoff."
+    },
+    {
+      "id": "science-first-matched-comparison",
+      "reason": "Current task asks for scientific GPU results before behavior.",
+      "source": "user-task",
+      "supersedes": [],
+      "value": "First run five candidates on the same fifteen unchanged scientific cases; record GPU observations separately from task scores."
+    },
+    {
+      "id": "native-separate-capability-tests",
+      "reason": "Ollama generation does not exercise native retrieval or CUDA model runtimes.",
+      "source": "current-report",
+      "supersedes": [],
+      "value": "Prepare MedCPT retrieval and TxGemma native adapters, preserving protocol/runtime differences."
+    }
+  ],
+  "dependencies": [
+    "Exact qualified FW00412 source and offline host receipt.",
+    "All five installed full model digests and idle Ollama/NVIDIA checks at launch.",
+    "A host-run receipt before claiming scientific GPU completion or starting behavioral GPU work."
+  ],
+  "goal": "Run the scientific models on the GPU first; prepare behavioral model evaluation while waiting; run behavioral subsequently. Leave literature issue #145 open and deferred.",
+  "instruction_binding": {
+    "id": "behavior-e1-review-20261119",
+    "ref": "user-task",
+    "revision": "scientific-gpu-first-20261120",
+    "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391",
+    "source": "Current ChatGPT user steering, captured directly"
+  },
+  "next_action": {
+    "action": "Operator runs the pinned scientific GPU command on llm; root continues behavioral/native source work while awaiting actual scientific results.",
+    "role": "operator-and-root"
+  },
+  "observed_at": "2026-11-19T14:22:19Z",
+  "receipt": {
+    "instruction_binding": {
+      "id": "behavior-e1-review-20261119",
+      "revision": "scientific-gpu-first-20261120",
+      "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391",
+      "source": "Current ChatGPT user steering, captured directly"
+    },
+    "source": "local-intake",
+    "state": "ACKNOWLEDGED"
+  },
+  "record_kind": "source_projection",
+  "refs": {
+    "current-report": {
+      "observation": {
+        "environment": "isolated source workspace",
+        "kind": "report_prepublication",
+        "limitations": [
+          "No host GPU run is implied by this source record."
+        ],
+        "method": "Reconcile source and runtime state",
+        "observed_at": "2026-11-19T14:20:25Z",
+        "result": "Scientific launcher verified offline; host inference unobserved"
+      },
+      "path": "evidence/gpu-round-report-r3.md",
+      "sha256": "317280b35e53dbfb6fa12bbbad8392d636ec8bebf2b69282a3e667761b6c9522"
+    },
+    "local-intake": {
+      "observation": {
+        "environment": "current source/workflow intake",
+        "kind": "worker_intake_receipt",
+        "limitations": [
+          "No host GPU run is implied by this source record."
+        ],
+        "method": "Read current request, policies and existing task context",
+        "observed_at": "2026-11-19T14:22:19Z",
+        "result": "ACKNOWLEDGED"
+      },
+      "path": "evidence/gpu-round-intake-r3.md",
+      "sha256": "99243040079f10d58a5fce9ca8e6e7332fbfb4c564a4129152b4f870776cbd30"
+    },
+    "local-tests": {
+      "observation": {
+        "environment": "isolated source workspace",
+        "kind": "offline_test_evidence",
+        "limitations": [
+          "No host GPU run is implied by this source record."
+        ],
+        "method": "Root rerun of focused scientific wrapper tests and manifest verification",
+        "observed_at": "2026-11-19T14:22:19Z",
+        "result": "16 tests PASS; zero real model/GPU calls"
+      },
+      "path": "evidence/gpu-round-scientific-verification-r3.json",
+      "sha256": "072d724b3f162db54f344febcf98ce83d5c1d0b141f200a7d2e1437970ab2169"
+    },
+    "source-receipts": {
+      "observation": {
+        "environment": "GitHub connector",
+        "kind": "source_receipt_capture",
+        "limitations": [
+          "Host-local raw campaign outputs were not inspected."
+        ],
+        "method": "Fetch exact issue comments and pinned source metadata",
+        "observed_at": "2026-11-19T13:50:46Z",
+        "result": "Observed FW00412 offline receipt and FW00567 live campaign receipt"
+      },
+      "path": "evidence/behavior-e1-source-receipts.json",
+      "sha256": "db0dcef3b36918e8d6d76fb3415863d627333a2498f5035ab37662f06141c5dd"
+    },
+    "user-task": {
+      "observation": {
+        "environment": "current ChatGPT turn",
+        "kind": "user_instruction_capture",
+        "limitations": [
+          "No host GPU run is implied by this source record."
+        ],
+        "method": "Read current user steering",
+        "observed_at": "2026-11-19T14:20:25Z",
+        "result": "Scientific GPU first; literature deferred"
+      },
+      "path": "evidence/gpu-round-task-request-r3.md",
+      "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391"
+    }
+  },
+  "report": {
+    "instruction_ref": {
+      "id": "behavior-e1-review-20261119",
+      "revision": "scientific-gpu-first-20261120",
+      "sha256": "29b32dbe3d1276ecbd9e6321c9dd3f951911e435072ac500435c05f8358ca391",
+      "source": "Current ChatGPT user steering, captured directly"
+    },
+    "limitations": [
+      "Scientific GPU execution has not been observed; host launch still required.",
+      "Behavioral and native source work is in progress."
+    ],
+    "next_action": "#next_action",
+    "report_id": "behavior-e1-review-20261119-r3",
+    "requested_decision": "No approval request. Run the pinned host command because remote execution is unavailable here.",
+    "source": "current-report",
+    "status": "IN_PROGRESS",
+    "tests_performed": [
+      "Sixteen scientific wrapper tests PASS, including seventy-five fake API requests across all five candidates.",
+      "Scientific manifests PASS; launch script Bash syntax PASS."
+    ]
+  },
+  "schema": "context-projection-task",
+  "scope": [
+    "Pinned scientific comparative GPU launcher and retained host execution evidence.",
+    "Behavioral 24-case benchmark and separate native scientific adapters.",
+    "Source-only draft PR and updated instruction-bound context; literature acquisition deferred."
+  ],
+  "source_freshness": {
+    "detail": "Latest user instruction supersedes E1 acquisition priority; draft MOTHER head observed at a5575858f3f5c1f6666328ffe9f7de548951ed53 before update.",
+    "state": "latest-visible-user-steering-and-pinned-source-read",
+    "sync_state": "SCIENTIFIC_LAUNCH_SOURCE_VERIFIED_HOST_UNRUN"
+  },
+  "state": {
+    "code": {
+      "detail": "New comparative GPU wrapper verified locally; unchanged FW00412 dependency; native and behavioral pack preparation continuing.",
+      "source": "current-report",
+      "status": "SOURCE_PREPARED"
+    },
+    "deploy": {
+      "detail": "No runtime service changed.",
+      "source": "current-report",
+      "status": "NOT_DEPLOYED"
+    },
+    "merge": {
+      "detail": "MOTHER PR #14 stays draft; no merge.",
+      "source": "local-intake",
+      "status": "NOT_MERGED"
+    },
+    "runtime": {
+      "detail": "No remote command executed; no real model/GPU calls from this session.",
+      "source": "current-report",
+      "status": "HOST_RUN_PENDING"
+    },
+    "test": {
+      "detail": "Sixteen focused tests PASS with fake API; manifest and Bash syntax checked.",
+      "source": "local-tests",
+      "status": "PASS_OFFLINE_ONLY"
+    }
+  },
+  "task_id": "behavior-e1-review-20261119",
+  "task_revision": "r3-scientific-gpu-first",
+  "unknowns": [
+    "Current installed full model digests, GPU availability and actual scientific per-case outcomes.",
+    "Native cached asset completeness and CUDA load success.",
+    "Behavioral model results remain unobserved."
+  ],
+  "version": 2
+}
