@@ -1,24 +1,19 @@
-# E1 reference consolidation — release notes
-Date: 2026-11-19. Release: E1-REFS-2026-11-19-R1.
+# E1 bibliography patch — release notes
+**Version:** E1-REFS-2026-11-19-R1 · **Status:** draft for review
 
 ## Changes
-- Added 250 deduplicated reference entries (228 DOI-keyed; 22 PMID/URL-keyed), cross-linked to legacy namespaced source identifiers.
-- Preserved 72 dossier source entries and 70 evidence-map workbook rows, then reconciled 73 DOI-linked items from visible Research Scout discussions.
-- Linked superseded preprints to published successors without counting them as replications.
-- Retained unreviewed attributions, negative/contrary findings, preprint status, and unresolved causal/clinical dependencies instead of treating E1 as proven.
-- Kept MSE-001 snapshot and existing automations untouched.
+- Added 248 distinct bibliographic records, 229 with DOIs and 19 keyed by PMID/URL.
+- Preserved all 72 legacy E1 network sources, 70 workbook References rows, 27 Draft 0.2 citations, 17 MSE source-table entries and seven MSE seed citations as **namespaced aliases**.
+- Ingested 73 DOI-linked references from the visible November 6–19 Scout digests. Included negative findings, historical works and preprints; **not just supportive studies**.
+- Deduplicated overlapping primary source identifiers and linked the two explicitly identified preprint-to-journal successors without counting them as independent evidence.
+- Kept the pre-existing MSE-001 snapshot, original project files, and Research Scout / weekly Meta-Research automations unchanged.
 
-## Verification
-- Reference input counts verified before export: dossier 72, workbook 70, Scout 73.
-- All canonical record keys unique and all DOI-bearing records linked to a DOI resolver.
-- CSV and JSON were generated from the same in-memory records.
-- Original artifacts and main branch not overwritten; draft PR proposed for review.
-- **Not done:** manual primary-source full-text appraisal, retraction check for every article, exhaustive historical-chat reconciliation, programmatic updating of older Excel/Word library copies, scientific validation of conditional graph edges.
+## Verification and limitations
+- Source counts and exact duplicate keys checked.
+- DOI-linked records resolve via DOI-form URLs; PMID-only and data archive records retain source links.
+- CSV and JSON are derived from the same reconciled records; run `python3 research/e1/verify_register.py` to reproduce structural checks.
+- **Not independently completed:** full-text appraisal of all 248 sources, complete bibliographic metadata enrichment, latest peer-review/correction/retraction confirmation for every record, all-time chat history reconciliation, and causal graph promotion.
+- Prior Scout-generated edge grades remain unvalidated model-specific discussion notes. This import is **not evidence that E1 is independently proven**.
 
-## Review workflow
-Compare `REFERENCE_REGISTER.json` and `REFERENCE_REGISTER.csv`, verify source DOI/PMID and preprint-successor correspondence, fill missing publication dates, and annotate specific reaction/host/organism/model edges with necessity/rescue evidence. Merge only after review.
-
-## Additional reconciliation pass
-- Imported 27 manuscript references from Draft 0.2, 17 MSE scientific-source entries (including papers, guidance and official HealthKit documentation), and seven MSE seed-map references, without rewriting immutable MSE-001 payloads.
-- Newly generated register totals: 250 distinct records; 228 DOI-keyed.
-- All new DOI/PMID citation metadata is inherited from accessible original documents, not freshly appraised for causality or corrections.
+## Rollback
+Unmerged draft changes can be withdrawn without affecting `main`. After a future merge, use an ordinary Git revert of the merge commit; do not delete prior history.
