@@ -176,9 +176,19 @@ def idle_snapshot(api, nvidia=nvidia_snapshot):
     return gpu
 
 
+def trusted_ollama_gpu_process(process):
+    """Permit the observed Ollama runner only; preserve one-PID GPU exclusion."""
+    name = process.get("process_name")
+    pid = process.get("pid")
+    if not isinstance(name, str) or not name or not isinstance(pid, str) or not pid.isdecimal() or int(pid) <= 0:
+        return False
+    if name == "/usr/local/lib/ollama/llama-server":
+        return True
+    return Path(name).name in ("ollama", "ollama_llama_server")
+
+
 def unattributed_processes(processes):
-    return (any(not Path(p["process_name"]).name.lower().startswith("ollama") for p in processes)
-            or len({p["pid"] for p in processes}) > 1)
+    return any(not trusted_ollama_gpu_process(p) for p in processes) or len({p["pid"] for p in processes}) > 1
 
 
 def settle_idle(api, nvidia, previous=None, seconds=12):
