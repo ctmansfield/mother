@@ -9,9 +9,9 @@
     "legacy_workbook": 70,
     "scout_doi_entries": 73,
     "related_preprint_successors": 2,
-    "unique_source_records": 250,
-    "unique_dois": 228,
-    "non_doi_qualified": 22,
+    "unique_source_records": 248,
+    "unique_dois": 229,
+    "non_doi_qualified": 19,
     "draft_0_2_entries": 27,
     "mse_scientific_source_entries": 17,
     "mse_seed_map_entries": 7
@@ -24,7 +24,8 @@
     "The two listed preprint successors are connected to their journal versions and not counted as independent replications.",
     "This file is a bibliographic reference registry, NOT a committed set of causal graph edges or intervention recommendations.",
     "MSE-001 scientific-foundations and mechanism-seed sources were imported from an unmerged PR without modifying its preserved snapshot; they include methodological and official documentation, not necessarily E1-causal research.",
-    "Draft 0.2 references include two PMID-only papers; record identifiers use PMID rather than guessing a DOI."
+    "Draft 0.2 references include two PMID-only papers; record identifiers use PMID rather than guessing a DOI.",
+    "Previously URL-keyed Nature and Cell references were reconciled using DOI identifiers explicitly present in existing draft/primary-source records; workbook legacy aliases are preserved."
   ],
   "predecessor_doi_to_published_doi": {
     "10.64898/2026.03.11.711168": "10.1016/j.chom.2026.10.005",
@@ -141,7 +142,8 @@
       "url": "https://doi.org/10.1016/j.cell.2016.10.043",
       "legacy_ids": [
         "D:S10",
-        "DRAFT02:10"
+        "DRAFT02:10",
+        "W:R05"
       ],
       "author": "Desai MS et al.",
       "year": "2016",
@@ -151,12 +153,14 @@
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
       "mechanism_notes": [
-        "[10] Desai MS et al. A Dietary Fiber-Deprived Gut Microbiota Degrades the Colonic Mucus Barrier and Enhances Pathogen Susceptibility. Cell. 2016. DOI: 10.1016/j.cell.2016.10.043. PMID: 27863247."
+        "[10] Desai MS et al. A Dietary Fiber-Deprived Gut Microbiota Degrades the Colonic Mucus Barrier and Enhances Pathogen Susceptibility. Cell. 2016. DOI: 10.1016/j.cell.2016.10.043. PMID: 27863247.",
+        "Shows dietary substrate withdrawal changes microbial behavior, barrier function and susceptibility."
       ],
       "discoveries": [],
       "source_inputs": [
         "E1 network S01–S72 (12 Oct 2026 cutoff)",
-        "Host–Microbial Equilibrium Draft 0.2 primary references"
+        "Host–Microbial Equilibrium Draft 0.2 primary references",
+        "E1 evidence map workbook References R01–R70"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -906,7 +910,8 @@
       "url": "https://doi.org/10.1038/nature13828",
       "legacy_ids": [
         "D:S29",
-        "DRAFT02:8"
+        "DRAFT02:8",
+        "W:R58"
       ],
       "author": "Buffie CG et al.",
       "year": "2015",
@@ -916,12 +921,14 @@
       "primary_source_status": "historical_E1_bibliography_not_fully_reverified",
       "peer_review_status": "journal_or_report_as_cited_in_dossier",
       "mechanism_notes": [
-        "[8] Buffie CG et al. Precision microbiome reconstitution restores bile acid mediated resistance to Clostridium difficile. Nature. 2015; first published online 2014. DOI: 10.1038/nature13828. PMID: 25337874."
+        "[8] Buffie CG et al. Precision microbiome reconstitution restores bile acid mediated resistance to Clostridium difficile. Nature. 2015; first published online 2014. DOI: 10.1038/nature13828. PMID: 25337874.",
+        "Demonstrates that C. scindens and secondary bile-acid production can protect against C. difficile, showing the same bile-acid function can be protective in one disease context."
       ],
       "discoveries": [],
       "source_inputs": [
         "E1 network S01–S72 (12 Oct 2026 cutoff)",
-        "Host–Microbial Equilibrium Draft 0.2 primary references"
+        "Host–Microbial Equilibrium Draft 0.2 primary references",
+        "E1 evidence map workbook References R01–R70"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -1012,6 +1019,29 @@
       "discoveries": [],
       "source_inputs": [
         "E1 network S01–S72 (12 Oct 2026 cutoff)"
+      ],
+      "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
+    },
+    {
+      "key": "doi:10.1038/ncomms5344",
+      "doi": "10.1038/ncomms5344",
+      "url": "https://doi.org/10.1038/ncomms5344",
+      "legacy_ids": [
+        "W:R31"
+      ],
+      "author": "Lahti et al.",
+      "year": "2014",
+      "title": "Tipping elements in the human intestinal ecosystem",
+      "journal": "Nature Communications",
+      "pmid": "",
+      "primary_source_status": "historical_workbook_bibliography_not_fully_reverified",
+      "peer_review_status": "unknown",
+      "mechanism_notes": [
+        "Identifies abrupt transitions and tipping-element behavior in human gut communities, supporting regime-shift rather than purely gradual-change models."
+      ],
+      "discoveries": [],
+      "source_inputs": [
+        "E1 evidence map workbook References R01–R70"
       ],
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
@@ -6193,29 +6223,6 @@
       "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
     },
     {
-      "key": "url:https://www.cell.com/fulltext/S0092-8674(16)31464-7",
-      "doi": "",
-      "url": "https://www.cell.com/fulltext/S0092-8674(16)31464-7",
-      "legacy_ids": [
-        "W:R05"
-      ],
-      "author": "Desai et al.",
-      "year": "2016",
-      "title": "A Dietary Fiber-Deprived Gut Microbiota Degrades the Colonic Mucus Barrier and Enhances Pathogen Susceptibility",
-      "journal": "Cell",
-      "pmid": "",
-      "primary_source_status": "historical_workbook_bibliography_not_fully_reverified",
-      "peer_review_status": "unknown",
-      "mechanism_notes": [
-        "Shows dietary substrate withdrawal changes microbial behavior, barrier function and susceptibility."
-      ],
-      "discoveries": [],
-      "source_inputs": [
-        "E1 evidence map workbook References R01–R70"
-      ],
-      "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
-    },
-    {
       "key": "url:https://www.ebi.ac.uk/ena/browser/view/PRJEB72775",
       "doi": "",
       "url": "https://www.ebi.ac.uk/ena/browser/view/PRJEB72775",
@@ -6231,52 +6238,6 @@
       "peer_review_status": "unknown",
       "mechanism_notes": [
         "Public project accession for the Antarctic longitudinal gut microbiota dataset."
-      ],
-      "discoveries": [],
-      "source_inputs": [
-        "E1 evidence map workbook References R01–R70"
-      ],
-      "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
-    },
-    {
-      "key": "url:https://www.nature.com/articles/nature13828",
-      "doi": "",
-      "url": "https://www.nature.com/articles/nature13828",
-      "legacy_ids": [
-        "W:R58"
-      ],
-      "author": "Buffie et al.",
-      "year": "2015",
-      "title": "Precision microbiome reconstitution restores bile acid mediated resistance to Clostridium difficile",
-      "journal": "Nature",
-      "pmid": "",
-      "primary_source_status": "historical_workbook_bibliography_not_fully_reverified",
-      "peer_review_status": "unknown",
-      "mechanism_notes": [
-        "Demonstrates that C. scindens and secondary bile-acid production can protect against C. difficile, showing the same bile-acid function can be protective in one disease context."
-      ],
-      "discoveries": [],
-      "source_inputs": [
-        "E1 evidence map workbook References R01–R70"
-      ],
-      "support_class": "contextual_or_mechanistic_not_direct_proof_of_E1"
-    },
-    {
-      "key": "url:https://www.nature.com/articles/ncomms5344",
-      "doi": "",
-      "url": "https://www.nature.com/articles/ncomms5344",
-      "legacy_ids": [
-        "W:R31"
-      ],
-      "author": "Lahti et al.",
-      "year": "2014",
-      "title": "Tipping elements in the human intestinal ecosystem",
-      "journal": "Nature Communications",
-      "pmid": "",
-      "primary_source_status": "historical_workbook_bibliography_not_fully_reverified",
-      "peer_review_status": "unknown",
-      "mechanism_notes": [
-        "Identifies abrupt transitions and tipping-element behavior in human gut communities, supporting regime-shift rather than purely gradual-change models."
       ],
       "discoveries": [],
       "source_inputs": [
