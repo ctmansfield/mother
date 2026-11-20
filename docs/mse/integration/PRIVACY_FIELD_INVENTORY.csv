@@ -1,0 +1,314 @@
+source,field_path,identity_risk,provenance_need,analytical_treatment
+HealthBridge Codable,HealthArchive.anchors,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.anchors{}.key,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+HealthBridge Codable,HealthArchive.anchors{}.opaque_base64_data,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.backfillStart,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.readings,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.readings[].bundleID,source/context quasi-identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.readings[].deletedAt,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.readings[].end,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+HealthBridge Codable,HealthArchive.readings[].id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.readings[].kind,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+HealthBridge Codable,HealthArchive.readings[].receivedAt,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.readings[].source,source/context quasi-identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.readings[].start,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+HealthBridge Codable,HealthArchive.readings[].unit,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+HealthBridge Codable,HealthArchive.readings[].value,sensitive measurements or opaque/mixed contents,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+HealthBridge Codable,HealthArchive.tombstones,unknown/optional metadata; restrict by default,retain semantics/version or explicit absence,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.tombstones{}.deletion_date,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+HealthBridge Codable,HealthArchive.tombstones{}.native_uuid,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,artifact.byte_length,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,artifact.media_type,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,artifact.sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,artifact.source_schema,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,coverage.backfill_start,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,coverage.capture_kind,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,coverage.completeness,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,coverage.observed_end,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,coverage.observed_start,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,coverage.permissions,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,delete.deleted_at,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,delete.locators,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,delete.native_id,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,delete.operation,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,delete.original_deleted_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,delete.revision_sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,export.anchor_sha256,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,export.artifact,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,export.batch_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,export.capture_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,export.coverage,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,export.exporter_version,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,export.losses,unknown/optional metadata; restrict by default,retain semantics/version or explicit absence,omit or replace with purpose-scoped representation
+MSE 0.2 schema,export.revisions,unknown/optional metadata; restrict by default,retain semantics/version or explicit absence,omit or replace with purpose-scoped representation
+MSE 0.2 schema,export.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,export.scope,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,loss.field,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,loss.locator,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,loss.reason,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,observation.bundle_id,source/context quasi-identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.calibration_id,unknown/optional metadata; restrict by default,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.channel,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,observation.classification_basis,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,observation.classification_evidence_sha256,stable linkage or opaque identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.collector_received_at,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,observation.device_id,stable linkage or opaque identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.epistemic_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,observation.event_end,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,observation.event_start,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,observation.original_end,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.original_received_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.original_start,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.original_unit,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,observation.original_value,sensitive measurements or opaque/mixed contents,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,observation.source_available_at,time/sequence linkage,preserve evidence if observed; unknown remains unknown,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,observation.source_name,source/context quasi-identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,observation.unit,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,observation.value,sensitive measurements or opaque/mixed contents,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,receipt.archive_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,receipt.artifact_sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,receipt.batch_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,receipt.byte_length,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,receipt.commit_sequence,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,receipt.committed_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,receipt.export_sha256,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,receipt.mother_received_at,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,receipt.pf001_run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,receipt.reason_code,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,receipt.receipt_id,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,receipt.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,receipt.scope,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,receipt.source_schema,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,receipt.status,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE 0.2 schema,scope.collection,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,scope.source_instance,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,scope.source_system,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,scope.subject_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,snapshot.archive_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,snapshot.coverage,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.knowledge_cutoff_sequence,stable linkage or opaque identifier,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+MSE 0.2 schema,snapshot.losses,unknown/optional metadata; restrict by default,retain semantics/version or explicit absence,omit or replace with purpose-scoped representation
+MSE 0.2 schema,snapshot.measurement_end,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.measurement_start,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.normalizer_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,snapshot.observations,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.observations[].artifact_sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.observations[].commit_sequence,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,snapshot.observations[].committed_at,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.observations[].mother_received_at,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.observations[].pf001_revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,snapshot.observations[].processing_revision_sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.observations[].receipt_id,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.observations[].source_revision,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.purpose,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,snapshot.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,snapshot.scope,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.snapshot_sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.tombstones,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.tombstones[].artifact_sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.tombstones[].commit_sequence,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE 0.2 schema,snapshot.tombstones[].committed_at,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.tombstones[].mother_received_at,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.tombstones[].pf001_revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,snapshot.tombstones[].receipt_id,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,snapshot.tombstones[].source_revision,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,upsert.locators,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE 0.2 schema,upsert.native_id,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,upsert.observation,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE 0.2 schema,upsert.operation,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+MSE 0.2 schema,upsert.revision_sha256,inherited/mixed,retain protected members according to their fields,allowlist members only
+MSE intake SQLite,commits.sequence,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.adapter_version,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE intake SQLite,deliveries.artifact,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.artifact_sha256,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.batch_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.commit_sequence,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.committed_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.export_sha256,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.receipt_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.received_at,unknown/optional metadata; restrict by default,retain semantics/version or explicit absence,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.scope,unknown/optional metadata; restrict by default,retain semantics/version or explicit absence,omit or replace with purpose-scoped representation
+MSE intake SQLite,deliveries.source_schema,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE intake SQLite,stage_receipts.batch_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,stage_receipts.body,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE intake SQLite,stage_receipts.sequence,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,stage_receipts.status,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+MSE intake SQLite,trial_exports.batch_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+MSE intake SQLite,trial_exports.export_json,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE intake SQLite,trial_identity.identity,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+MSE intake SQLite,trial_identity.singleton,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 SQLite,checkpoints.checkpoint_json,sensitive measurements or opaque/mixed contents,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,checkpoints.collection,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,checkpoints.run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,checkpoints.source_instance,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,import_runs.adapter_version,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 SQLite,import_runs.collection,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,import_runs.completed_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,import_runs.contract_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,import_runs.counts_json,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 SQLite,import_runs.error,sensitive measurements or opaque/mixed contents,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,import_runs.request_json,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,import_runs.run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,import_runs.source_instance,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,import_runs.started_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,import_runs.status,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 SQLite,normalized_records.kind,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 SQLite,normalized_records.processing_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,normalized_records.record_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,normalized_records.record_json,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,normalized_records.revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,raw_artifacts.content,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,raw_artifacts.created_at,time/sequence linkage,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,raw_artifacts.media_type,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 SQLite,raw_artifacts.sha256,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,run_revisions.observed_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,run_revisions.revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,run_revisions.run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,schema_versions.applied_at,time/sequence linkage,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,schema_versions.contract_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,schema_versions.version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,source_heads.collection,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,source_heads.observed_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_heads.revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_heads.run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_heads.source_instance,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_heads.source_key,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.artifact_sha256,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.collection,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 SQLite,source_revisions.disposition,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 SQLite,source_revisions.first_seen_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.import_run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.ingested_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.measurement_end,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 SQLite,source_revisions.measurement_start,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 SQLite,source_revisions.native_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.raw_json,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.rejection_reason,sensitive measurements or opaque/mixed contents,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.revision_hash,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.source_available_at,time/sequence linkage,preserve evidence if observed; unknown remains unknown,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 SQLite,source_revisions.source_instance,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.source_key,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 SQLite,source_revisions.source_modified_at,time/sequence linkage,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,event.epistemic_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,event.event_kind,source/context quasi-identifier,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,event.id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.known_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.occurrence_end,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,event.occurrence_start,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,event.payload,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.processing_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,event.quality_flags,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,event.record_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,event.recorded_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.related_ids,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,event.session_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.source,source/context quasi-identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.source_revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,event.subject_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.adapter_version,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 schema,import_run.assumptions,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.checkpoint,sensitive measurements or opaque/mixed contents,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.collection,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,import_run.completed_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.counts,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 schema,import_run.id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.input_artifacts,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.processing_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,import_run.record_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,import_run.rejections,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.request,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,import_run.source_instance,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.started_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,import_run.status,technical or state metadata; linkable in context,operational custody/control; keep restricted,withhold by default; release only documented safe granularity
+PF-001 schema,import_run.subject_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.body_site,source/context quasi-identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,observation.channel,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.clock,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.device_id,stable linkage or opaque identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,observation.epistemic_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.first_seen_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.ingested_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.lineage,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.measurement_end,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.measurement_group_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.measurement_start,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.metadata,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.method,source/context quasi-identifier,preserve evidence if observed; unknown remains unknown,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.native_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.original_unit,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.original_value,sensitive measurements or opaque/mixed contents,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.processing_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,observation.quality_flags,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.record_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,observation.recording_app,source/context quasi-identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,observation.session_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.source_available_at,time/sequence linkage,preserve evidence if observed; unknown remains unknown,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.source_revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.specimen,source/context quasi-identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,observation.subject_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,observation.unit,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.value,sensitive measurements or opaque/mixed contents,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,observation.value_status,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,session.body_site,source/context quasi-identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,session.clock,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,session.configuration,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,session.device_ids,stable linkage or opaque identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,session.end,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,session.firmware,source/context quasi-identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,session.garment,source/context quasi-identifier,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,session.id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,session.processing_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,session.record_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,session.recording_app,source/context quasi-identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,session.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,session.source_revision_ids,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,session.start,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,session.subject_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.artifact_sha256,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.collection,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,source_revision.first_seen_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.identity_basis,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.import_run_id,stable linkage or opaque identifier,operational custody/control; keep restricted,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.ingested_at,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.native_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.original_record,sensitive measurements or opaque/mixed contents,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.processing_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,source_revision.quality_flags,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,source_revision.record_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,source_revision.revision_hash,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,source_revision.source_available_at,time/sequence linkage,preserve evidence if observed; unknown remains unknown,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,source_revision.source_instance,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.source_key,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.source_modified_at,time/sequence linkage,preserve evidence if observed; unknown remains unknown,omit or replace with purpose-scoped representation
+PF-001 schema,source_revision.subject_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.artifact_ref,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.artifact_sha256,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.channel,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.clock,time/sequence linkage,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.end,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.epistemic_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.gaps,inherited/mixed,retain protected members according to their fields,allowlist members only
+PF-001 schema,stream.gaps[].end,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.gaps[].reason,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,stream.gaps[].start,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.processing_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,stream.quality_flags,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.record_type,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,stream.sample_count,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,stream.sample_rate_hz,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.schema_version,technical or state metadata; linkable in context,retain semantics/version or explicit absence,withhold by default; release only documented safe granularity
+PF-001 schema,stream.session_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.source_revision_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.start,time/sequence linkage,retain exact protected provenance,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.subject_id,stable linkage or opaque identifier,retain exact protected provenance,omit or replace with purpose-scoped representation
+PF-001 schema,stream.timing,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
+PF-001 schema,stream.unit,technical or state metadata; linkable in context,retain semantics/version or explicit absence,purpose-dependent protected analysis; assess coarsening/exclusion
