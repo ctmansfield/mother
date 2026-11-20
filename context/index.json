@@ -8,6 +8,10 @@
     "MSE-001-publication": {
       "path": "tasks/MSE-001-publication-r1.json",
       "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
+    },
+    "MSE-INTEGRATION-20261120-01": {
+      "path": "tasks/mse-integration-r1.json",
+      "sha256": "af42722b0bfec957714905a4cc949ef563c05dd9827d6e0953cfb023dc862a4c"
     }
   },
   "version": 1
