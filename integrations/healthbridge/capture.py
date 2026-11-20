@@ -238,8 +238,6 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
         channel, unit, epistemic_type = metric
         number = _number(row["value"])
         value = number.decimal()
-        if value < 0:
-            raise CaptureError("Negative metric is outside draft 0.2 value schema")
         start, exact_start = _date(row["start"], "event_start", path + "/start", losses)
         end, exact_end = _date(row["end"], "event_end", path + "/end", losses)
         if exact_end < exact_start:
@@ -264,13 +262,15 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
             "start": _decimal_text(exact_start), "end": _decimal_text(exact_end),
             "source_name": observation["source_name"], "bundle_id": observation["bundle_id"],
         }
+        # Traversal follows original numeric reading index, so the first
+        # complete observation is the representative, regardless of pointer sort.
         previous = upserts.setdefault(native, (observation, fact, []))
         if previous[1] != fact:
             raise CaptureError("Ambiguous same-UUID upserts")
         if previous[0] != observation:
             _loss(losses, "source_sighting", "alternate_sighting_retained_in_original", path)
         previous[2].append(path)
-        if not value:
+        if value <= 0:
             _loss(losses, "value", "outside_reference_positive_domain", path + "/value")
         if row.get("deletedAt") is not None:
             record_delete(native, row["deletedAt"], path + "/deletedAt")

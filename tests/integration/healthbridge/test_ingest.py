@@ -1,6 +1,5 @@
 """Exercise the adapter against exact external FORGE and fixture checkouts."""
 import hashlib
-import importlib
 import json
 import os
 from pathlib import Path
@@ -12,16 +11,15 @@ from integrations.healthbridge.ingest import ingest_capture
 
 FIXTURES = os.environ.get("MSE_HEALTHBRIDGE_FIXTURES")
 CONTRACT = os.environ.get("MSE_ATLAS_CONTRACT_DIR")
-MAPPER = os.environ.get("MSE_FORGE_MAPPER")
 
 
 @unittest.skipUnless(FIXTURES and CONTRACT, "requires pinned fixtures and ATLAS schema")
 class IngestTests(unittest.TestCase):
     def setUp(self):
         from integrations.mse_ingest import Scope
-        from integrations.mse_ingest.v02 import IngestV02
+        from integrations.mse_ingest.connected import ConnectedIngest
 
-        self.service_class = IngestV02
+        self.service_class = ConnectedIngest
         self.fixtures = Path(FIXTURES)
         self.expected = json.loads((self.fixtures / "expected.json").read_bytes())
         self.schema = json.loads(
@@ -31,7 +29,7 @@ class IngestTests(unittest.TestCase):
                            "healtharchive")
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
-        self.root = Path(temp.name)
+        self.root = Path(temp.name).resolve()
 
     def service(self):
         return self.service_class(
@@ -39,7 +37,7 @@ class IngestTests(unittest.TestCase):
             schema=self.schema,
         )
 
-    def delivery(self, name, mapper, batch=None):
+    def delivery(self, name, batch=None):
         case = self.expected["cases"].get(name) or self.expected["provisional_edges"][name]
         original = (self.fixtures / case["file"]).read_bytes()
         self.assertEqual(hashlib.sha256(original).hexdigest(), case["sha256"])
@@ -47,29 +45,25 @@ class IngestTests(unittest.TestCase):
             self.service(), original, batch_id=batch or case.get("batch_id", name),
             capture_id="fixture-" + name,
             capture_kind="partial" if case.get("coverage") == "partial" else "full_file",
-            map_export=mapper,
         )
 
-    def test_invalid_fixtures_fail_before_ledger_or_mapper(self):
+    def test_invalid_fixtures_fail_before_custody(self):
         for name in ("malformed", "conflicting-uuid", "reversed-interval", "duplicate-json-key"):
             with self.subTest(name=name), self.assertRaises(CaptureError):
-                self.delivery(name, None)
+                self.delivery(name)
         self.assertFalse((self.root / "custody.sqlite3").exists())
         self.assertFalse((self.root / "physiology.sqlite3").exists())
 
-    @unittest.skipUnless(MAPPER, "requires FORGE production-path mapper")
     def test_actual_fixtures_bind_receipts_and_pf001_members(self):
         from integrations.mse_ingest import BatchConflict
         from mother.physiology.archive import Archive
 
-        module, function = MAPPER.split(":", 1)
-        mapper = getattr(importlib.import_module(module), function)
 
         for name in ("baseline", "partial", "empty", "late"):
             with self.subTest(name=name):
-                result = self.delivery(name, mapper)
+                result = self.delivery(name)
                 self.assertEqual(result.receipt["status"], "normalized")
-                self.assertEqual(self.delivery(name, mapper), result)
+                self.assertEqual(self.delivery(name), result)
                 with Archive(self.service().archive) as archive:
                     run = archive.import_run(result.receipt["pf001_run_id"])
                     self.assertEqual(run["status"], "complete")
@@ -88,29 +82,66 @@ class IngestTests(unittest.TestCase):
                     )
                     self.assertEqual(len(manifest["records"]), 1 if name in ("baseline", "partial") else 0)
 
-        original = self.delivery("baseline", mapper)
+        original = self.delivery("baseline")
         with self.assertRaises(BatchConflict):
-            self.delivery("changed-batch", mapper)
+            self.delivery("changed-batch")
         self.assertEqual(self.service().read_receipt(original.receipt["batch_id"]),
                          original.receipt)
-        altered = self.delivery("changed-batch", mapper, batch="new-conflicting-batch")
+        altered = self.delivery("changed-batch", batch="new-conflicting-batch")
         self.assertEqual(altered.receipt["status"], "quarantined")
         self.assertIsNone(altered.receipt["pf001_run_id"])
 
-    @unittest.skipUnless(MAPPER, "requires FORGE production-path mapper")
     def test_actual_numeric_and_delete_edges(self):
-        module, function = MAPPER.split(":", 1)
-        mapper = getattr(importlib.import_module(module), function)
-        numeric = self.delivery("numeric-time", mapper)
+        numeric = self.delivery("numeric-time")
         self.assertEqual(numeric.receipt["status"], "normalized")
         self.assertEqual(
             {loss["field"] for loss in numeric.export["losses"]
              if loss["reason"] == "microsecond_rounding"},
             {"event_start", "event_end"},
         )
-        deletions = self.delivery("repeated-delete", mapper)
+        deletions = self.delivery("repeated-delete")
         self.assertEqual(deletions.receipt["status"], "normalized")
         self.assertEqual(
             len([row for row in deletions.export["revisions"] if row["operation"] == "delete"]),
             3,
         )
+
+
+    def test_actual_nonpositive_sdnn_remains_source_only(self):
+        from integrations.mse_ingest.connected import NORMALIZER_VERSION
+        from mother.physiology.archive import Archive
+
+        goldens = json.loads((Path(CONTRACT) / "golden-vectors.json").read_bytes())
+        for case in goldens["capture_edge_cases"]["nonpositive"]:
+            with self.subTest(name=case["name"]), TemporaryDirectory() as directory:
+                expected = case["expected_export"]
+                scope = type(self.scope)(**expected["scope"])
+                service = self.service_class(
+                    Path(directory).resolve(), archive_id="oracle-source-only",
+                    scope=scope, schema=self.schema,
+                )
+                result = ingest_capture(
+                    service, case["source_utf8"].encode(),
+                    batch_id=expected["batch_id"], capture_id=expected["capture_id"],
+                    capture_kind=expected["coverage"]["capture_kind"],
+                )
+                self.assertEqual(result.receipt["status"], "normalized")
+                actual = result.export.copy()
+                actual["exporter_version"] = expected["exporter_version"]
+                self.assertEqual(actual, expected)
+                with Archive(service.archive) as archive:
+                    run = archive.import_run(result.receipt["pf001_run_id"])
+                    self.assertEqual(len(run["counts"]["revisions"]), 2)
+                    self.assertEqual(run["counts"]["records"], {})
+                snapshot = service.build_snapshot(
+                    measurement_start="2001-01-01T00:00:00.000000Z",
+                    measurement_end="2001-01-01T00:00:02.000000Z",
+                    knowledge_cutoff_sequence=result.receipt["commit_sequence"],
+                    normalizer_version=NORMALIZER_VERSION,
+                )
+                self.assertEqual(snapshot["observations"], [])
+                self.assertEqual(len(snapshot["tombstones"]), 1)
+                self.assertIn(
+                    {"field": "value", "reason": "outside_reference_positive_domain",
+                     "locator": "/readings/0/value"}, snapshot["losses"],
+                )

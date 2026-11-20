@@ -117,6 +117,29 @@ class CaptureTests(unittest.TestCase):
         with self.assertRaisesRegex(CaptureError, "Ambiguous"):
             normalize(capture([reading(), reading(value=71)]))
 
+    def test_repeated_sighting_uses_numeric_index_and_whole_payload(self):
+        rows = [
+            reading(f"a0000000-0000-4000-8000-{index + 10:012d}")
+            for index in range(11)
+        ]
+        rows[2] = reading(value=70, receivedAt=8)
+        rows[10] = reading(value=70.0, receivedAt=2)
+        output = normalize(capture(rows))
+        fact = next(row for row in output["revisions"] if row["native_id"] == HR)
+        self.assertEqual(fact["locators"], ["/readings/10", "/readings/2"])
+        self.assertEqual(fact["observation"]["original_value"], "70")
+        self.assertEqual(fact["observation"]["original_received_at"], "8")
+        self.assertIn(
+            {"field": "source_sighting", "locator": "/readings/10",
+             "reason": "alternate_sighting_retained_in_original"}, output["losses"],
+        )
+        rows[2], rows[10] = rows[10], rows[2]
+        swapped = next(row for row in normalize(capture(rows))["revisions"]
+                       if row["native_id"] == HR)
+        self.assertEqual(swapped["revision_sha256"], fact["revision_sha256"])
+        self.assertEqual(swapped["observation"]["original_value"], "70.0")
+        self.assertEqual(swapped["observation"]["original_received_at"], "2")
+
     def test_bad_input_fails_without_accepting_a_partial_export(self):
         invalid = [
             b'{"readings":[],"readings":[]}', b"\xff", b'{"x":NaN}',
