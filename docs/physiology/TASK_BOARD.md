@@ -39,6 +39,8 @@ passed gate. See VERIFICATION.md for the final evidence level.
 | L01 / M5 live acquisition | Device workstream after replay | R02 + verified device/server capabilities | Freshness, interruption/restart, buffered reconciliation, archive agreement | Blocked: actual integration capability and runtime evidence |
 | I01 / interaction completion | Future Coach worker; new annotation/prompt workflow files, assigned before start | R02, event contract, factual trigger policy | Durable markers, prompt/answer times, separate recommendation/ack/action/outcome, unknown nonresponse | Contract/storage/replay foundation implemented; full entry/trigger workflow queued |
 | V01 / release | Independent worker (no authoring of reviewed Mother fixes); PM integration | C01/A01/D01/U01/R01 | Compatible revisions, adversarial fixtures, clean apply/install, repeatable VERIFY, documented limitations | Independent source/synthetic gate passed; final bundle evidence recorded separately |
+| LW-001 / local worker runtime | PM probe implementation; independent worker owns probe tests | Installed Ollama endpoint and selected artifact | Pin model, observe serving API/residency, validate synthetic structured output and advertised native tool calls; execute no generated tools | Implemented; 26 independent controlled tests passed; local host execution pending |
+| LW-002 / local repository worker | PM orchestration + independent acceptance | LW-001 + current ops context | Isolated task runner; four bounded repository trials; accepted-work and review-effort evidence | Queued; no local worker connection or coding qualification claimed |
 
 ## Next bounded assignments
 

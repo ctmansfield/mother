@@ -52,3 +52,22 @@ Dates use Pacific/Guam for user-facing project records. Test logs retain UTC.
 No deployment, credential change, notification, device capture or personal-data
 evaluation is implied by this log. The optional old MI/bootstrap run was stopped
 with exit 130 and is not a passed acceptance gate.
+
+## 7 November 2026 — LW-001 local worker qualification
+
+1. Defined separate evidence for installed artifacts, resident models and
+   available physical compute. Installation-specific inventory belongs in the
+   private project handoff.
+2. Used `qwen2.5-coder:7b` as the example model and checked native API
+   compatibility against pinned Ollama v0.12.0 source.
+3. Added a bounded standalone probe with synthetic prompts, exact model identity,
+   observed residency/timing, distinct capability outcomes, report preservation
+   and no generated-tool execution. Assigned independent mock-based verification.
+4. Kept runtime smoke evidence separate from the later four-task repository
+   worker qualification. Actual installation execution remains pending the
+   returned report; source inspection and controlled tests do not claim it.
+5. Independent review reproduced an explicitly empty model-pin bypass. Required
+   12–64 hexadecimal characters for supplied pins and a full source digest;
+   mismatches fail before inference. All 26 controlled unittest checks then
+   passed on Linux/Python 3.12.14, including report preservation, redirects,
+   failed advertised tools, missing capabilities, and zero/null handling.
