@@ -1,0 +1,29 @@
+name: R02 source qualification (offline)
+
+on:
+  pull_request:
+    paths:
+      - 'mother/physiology/qualification.py'
+      - 'tests/physiology/test_qualification.py'
+      - '.github/workflows/r02-qualification.yml'
+  push:
+    branches:
+      - 'work/r02-source-qualification-01'
+    paths:
+      - 'mother/physiology/qualification.py'
+      - 'tests/physiology/test_qualification.py'
+      - '.github/workflows/r02-qualification.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run only isolated, no-network qualification tests
+        run: python -m unittest discover -s tests/physiology -p test_qualification.py -v
