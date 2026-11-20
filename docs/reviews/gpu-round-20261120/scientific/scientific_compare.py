@@ -332,6 +332,33 @@ def unattributed_processes(processes):
     )
 
 
+def completion_name_dropout(previous, current, response, model):
+    """Recognize NVIDIA dropping the known runner name as its request ends."""
+    if (
+        previous is None
+        or previous["http_completed_at_sample_end"]
+        or not current["http_completed_at_sample_end"]
+        or not isinstance(response, dict)
+        or response.get("done") is not True
+        or response.get("model") != model
+    ):
+        return False
+    earlier = previous["compute_processes"]
+    later = current["compute_processes"]
+    if len(earlier) != 1 or len(later) != 1:
+        return False
+    known, unnamed = earlier[0], later[0]
+    gpu_uuid = known.get("gpu_uuid")
+    return (
+        trusted_ollama_gpu_process(known)
+        and unnamed.get("process_name") == "[No data]"
+        and unnamed.get("pid") == known["pid"]
+        and isinstance(gpu_uuid, str)
+        and bool(gpu_uuid)
+        and unnamed.get("gpu_uuid") == gpu_uuid
+    )
+
+
 def settle_idle(api, nvidia, previous=None, seconds=12):
     """Allow only our previous known candidate a bounded natural unload interval."""
     end = time.monotonic() + seconds
@@ -529,12 +556,18 @@ class ObservedAPI:
                 try:
                     snap = self.nvidia()
                     snap["elapsed_seconds"] = round(time.monotonic() - started, 3)
-                    # NVIDIA sampling may straddle HTTP completion. Preserve
-                    # timing context without bypassing any process HOLD.
                     snap["http_completed_at_sample_end"] = event.is_set()
+                    previous = (
+                        rec["nvidia_samples"][-1] if rec["nvidia_samples"] else None
+                    )
                     rec["nvidia_samples"].append(snap)
                     if unattributed_processes(snap["compute_processes"]):
-                        self.hold = "unattributed or multiple GPU compute processes observed; future requests held"
+                        if completion_name_dropout(
+                            previous, snap, box.get("response"), self.model
+                        ):
+                            snap["known_runner_name_missing_at_completion"] = True
+                        else:
+                            self.hold = "unattributed or multiple GPU compute processes observed; future requests held"
                 except Exception as ex:
                     rec["monitor_errors"].append(
                         type(ex).__name__ + ": " + str(ex)[:180]
