@@ -157,6 +157,18 @@ class CaptureTests(unittest.TestCase):
                          upsert["revision_sha256"])
         self.assertNotEqual(export_sha256(drifted_output), export_sha256(output))
 
+    def test_unknown_anchor_is_reported_and_left_in_original(self):
+        raw = capture(anchors={"synthetic/custom": "AQI="})
+        output = normalize(raw)
+        self.assertEqual(output["anchor_sha256"], {})
+        self.assertIn(
+            {"field": "anchor_sha256", "reason": "unmapped_anchor_retained_in_original",
+             "locator": "/anchors/synthetic~1custom"}, output["losses"],
+        )
+        self.assertEqual(output["artifact"]["sha256"], hashlib.sha256(raw).hexdigest())
+        with self.assertRaises(CaptureError):
+            normalize(capture(anchors={"heartRate": "AQI=", "Heart rate": "AQI="}))
+
     def test_limits_reject_entire_capture(self):
         raw = capture([reading()], {UNKNOWN: 4}, extension={"string": "[{]"})
         for limits in (

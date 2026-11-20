@@ -37,6 +37,7 @@ capture evidence with a reference exclusion. Negative values are rejected
 under the candidate's unsigned decimal schema; disposition of other otherwise
 valid out-of-domain values awaits contract review. Anchor keys from the
 collector are translated from `heartRate` and `hrvSDNN` to the draft labels.
+Other anchor labels are preserved in the original bytes and reported as a loss.
 This draft establishes neither PF-001 acceptance nor MSE projection.
 
 Run the standalone synthetic checks from the repository root.
@@ -45,4 +46,4 @@ Run the standalone synthetic checks from the repository root.
 python3 -B -m unittest discover -s tests/integration/healthbridge -v
 ```
 
-[atlas]: https://github.com/ctmansfield/mother/blob/928a60b704c342c091eabd25ba41c8eb84d562de/docs/mse/integration/contracts/README.md
+[atlas]: https://github.com/ctmansfield/mother/blob/3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c/docs/mse/integration/contracts/README.md

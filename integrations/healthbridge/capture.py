@@ -207,8 +207,12 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
         except (ValueError, binascii.Error):
             raise CaptureError("Malformed opaque anchor encoding") from None
         label = ANCHOR_KEYS.get(metric)
-        if label is None or label in anchors:
-            raise CaptureError("Unsupported or ambiguous opaque anchor key")
+        if label is None:
+            _loss(losses, "anchor_sha256", "unmapped_anchor_retained_in_original",
+                  _pointer("/anchors", _text(metric)))
+            continue
+        if label in anchors:
+            raise CaptureError("Ambiguous opaque anchor key")
         anchors[label] = hashlib.sha256(opaque).hexdigest()
 
     upserts: dict = {}
