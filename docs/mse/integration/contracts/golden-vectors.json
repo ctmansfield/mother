@@ -351,6 +351,26 @@
     "advanced_snapshot": {
       "canonical_utf8": "[\"mse.snapshot/0.2\",{\"archive_id\":\"synthetic-archive\",\"coverage\":{\"backfill_start\":\"2001-01-01T00:00:00.000000Z\",\"capture_kind\":\"full_file\",\"completeness\":\"unknown\",\"observed_end\":\"2001-01-01T00:00:01.000000Z\",\"observed_start\":\"2001-01-01T00:00:00.000000Z\",\"permissions\":\"unknown\"},\"knowledge_cutoff_sequence\":4,\"losses\":[{\"field\":\"event_start\",\"locator\":\"/readings/0/start\",\"reason\":\"microsecond_rounding\"}],\"measurement_end\":\"2001-01-01T00:00:02.000000Z\",\"measurement_start\":\"2001-01-01T00:00:00.000000Z\",\"normalizer_version\":\"fixture-1\",\"observations\":[{\"artifact_sha256\":\"05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816\",\"commit_sequence\":2,\"committed_at\":\"2001-01-01T00:00:06.000000Z\",\"mother_received_at\":\"2001-01-01T00:00:04.000000Z\",\"pf001_revision_id\":\"synthetic-upsert\",\"processing_revision_sha256\":\"10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104\",\"receipt_id\":\"0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080\",\"source_revision\":{\"locators\":[\"/readings/0\"],\"native_id\":\"00000000-0000-4000-8000-000000000001\",\"observation\":{\"bundle_id\":\"test.synthetic\",\"calibration_id\":null,\"channel\":\"hrv_sdnn\",\"classification_basis\":\"healthkit_sdnn\",\"classification_evidence_sha256\":null,\"collector_received_at\":\"2001-01-01T00:00:02.000000Z\",\"device_id\":null,\"epistemic_type\":\"vendor_derived\",\"event_end\":\"2001-01-01T00:00:01.000000Z\",\"event_start\":\"2001-01-01T00:00:00.000000Z\",\"original_end\":\"1\",\"original_received_at\":\"2\",\"original_start\":\"0.0000005\",\"original_unit\":\"ms\",\"original_value\":\"4.20e1\",\"source_available_at\":null,\"source_name\":\"Synthetic µ\",\"unit\":\"ms\",\"value\":\"42\"},\"operation\":\"upsert\",\"revision_sha256\":\"422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f\"}}],\"purpose\":\"offline_synthetic_replay\",\"schema_version\":\"mse.evidence-snapshot/0.2\",\"scope\":{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"},\"tombstones\":[{\"artifact_sha256\":\"05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816\",\"commit_sequence\":2,\"committed_at\":\"2001-01-01T00:00:06.000000Z\",\"mother_received_at\":\"2001-01-01T00:00:04.000000Z\",\"pf001_revision_id\":\"synthetic-delete\",\"receipt_id\":\"0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080\",\"source_revision\":{\"deleted_at\":\"2001-01-01T00:00:03.000000Z\",\"locators\":[\"/tombstones/00000000-0000-4000-8000-000000000002\"],\"native_id\":\"00000000-0000-4000-8000-000000000002\",\"operation\":\"delete\",\"original_deleted_at\":[\"3\"],\"revision_sha256\":\"1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82\"}}]}]",
       "sha256": "aa8855d1332aa48fdc416ade3b86d30471fe6148f10ab5bb9fd8fdadc6d95961"
+    },
+    "negative_source_revision": {
+      "canonical_utf8": "[\"mse.source-revision/0.2\",{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"},\"00000000-0000-4000-8000-000000000001\",\"upsert\",{\"bundle_id\":\"test.synthetic\",\"channel\":\"hrv_sdnn\",\"end\":\"1\",\"source_name\":\"Synthetic µ\",\"start\":\"0.0000005\",\"unit\":\"ms\",\"value\":\"-42\"}]",
+      "sha256": "a09e16fb5952ab127a3be2bbc5da80882f7f0057ca6ca473a7e5b3c605e137c2"
+    },
+    "negative_export": {
+      "canonical_utf8": "[\"mse.export/0.2\",{\"anchor_sha256\":{\"HRV (SDNN)\":\"a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222\"},\"artifact\":{\"byte_length\":307,\"media_type\":\"application/json\",\"sha256\":\"6653607de5d14271e655c83316d41cef6b57e294ffd1bc51216a0a8e9f3a0fa3\",\"source_schema\":\"healtharchive-codable-json/0.1\"},\"batch_id\":\"batch-1\",\"capture_id\":\"capture-1\",\"coverage\":{\"backfill_start\":\"2001-01-01T00:00:00.000000Z\",\"capture_kind\":\"full_file\",\"completeness\":\"unknown\",\"observed_end\":\"2001-01-01T00:00:01.000000Z\",\"observed_start\":\"2001-01-01T00:00:00.000000Z\",\"permissions\":\"unknown\"},\"exporter_version\":\"fixture-1\",\"losses\":[{\"field\":\"event_start\",\"locator\":\"/readings/0/start\",\"reason\":\"microsecond_rounding\"},{\"field\":\"value\",\"locator\":\"/readings/0/value\",\"reason\":\"outside_reference_positive_domain\"}],\"revisions\":[{\"locators\":[\"/readings/0\"],\"native_id\":\"00000000-0000-4000-8000-000000000001\",\"observation\":{\"bundle_id\":\"test.synthetic\",\"calibration_id\":null,\"channel\":\"hrv_sdnn\",\"classification_basis\":\"healthkit_sdnn\",\"classification_evidence_sha256\":null,\"collector_received_at\":\"2001-01-01T00:00:02.000000Z\",\"device_id\":null,\"epistemic_type\":\"vendor_derived\",\"event_end\":\"2001-01-01T00:00:01.000000Z\",\"event_start\":\"2001-01-01T00:00:00.000000Z\",\"original_end\":\"1\",\"original_received_at\":\"2\",\"original_start\":\"0.0000005\",\"original_unit\":\"ms\",\"original_value\":\"-4.20e1\",\"source_available_at\":null,\"source_name\":\"Synthetic µ\",\"unit\":\"ms\",\"value\":\"-42\"},\"operation\":\"upsert\",\"revision_sha256\":\"a09e16fb5952ab127a3be2bbc5da80882f7f0057ca6ca473a7e5b3c605e137c2\"},{\"deleted_at\":\"2001-01-01T00:00:03.000000Z\",\"locators\":[\"/tombstones/00000000-0000-4000-8000-000000000002\"],\"native_id\":\"00000000-0000-4000-8000-000000000002\",\"operation\":\"delete\",\"original_deleted_at\":[\"3\"],\"revision_sha256\":\"1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82\"}],\"schema_version\":\"mse.healtharchive-export/0.2\",\"scope\":{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"}}]",
+      "sha256": "9ec65f942508fff7dbe8baeaa221b0db80c53b5fc14fc7823a3485bb07dca173"
+    },
+    "signed-zero_source_revision": {
+      "canonical_utf8": "[\"mse.source-revision/0.2\",{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"},\"00000000-0000-4000-8000-000000000001\",\"upsert\",{\"bundle_id\":\"test.synthetic\",\"channel\":\"hrv_sdnn\",\"end\":\"1\",\"source_name\":\"Synthetic µ\",\"start\":\"0.0000005\",\"unit\":\"ms\",\"value\":\"0\"}]",
+      "sha256": "379582d8875f09b5a7960d1ad77db49f6b0b5e820b1bbd6d1d28872a9bc11572"
+    },
+    "signed-zero_export": {
+      "canonical_utf8": "[\"mse.export/0.2\",{\"anchor_sha256\":{\"HRV (SDNN)\":\"a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222\"},\"artifact\":{\"byte_length\":305,\"media_type\":\"application/json\",\"sha256\":\"97a34a05b50b9f234c98cbdb365223eb68300a34794a70cb7500afd42ffda1f9\",\"source_schema\":\"healtharchive-codable-json/0.1\"},\"batch_id\":\"batch-1\",\"capture_id\":\"capture-1\",\"coverage\":{\"backfill_start\":\"2001-01-01T00:00:00.000000Z\",\"capture_kind\":\"full_file\",\"completeness\":\"unknown\",\"observed_end\":\"2001-01-01T00:00:01.000000Z\",\"observed_start\":\"2001-01-01T00:00:00.000000Z\",\"permissions\":\"unknown\"},\"exporter_version\":\"fixture-1\",\"losses\":[{\"field\":\"event_start\",\"locator\":\"/readings/0/start\",\"reason\":\"microsecond_rounding\"},{\"field\":\"value\",\"locator\":\"/readings/0/value\",\"reason\":\"outside_reference_positive_domain\"}],\"revisions\":[{\"locators\":[\"/readings/0\"],\"native_id\":\"00000000-0000-4000-8000-000000000001\",\"observation\":{\"bundle_id\":\"test.synthetic\",\"calibration_id\":null,\"channel\":\"hrv_sdnn\",\"classification_basis\":\"healthkit_sdnn\",\"classification_evidence_sha256\":null,\"collector_received_at\":\"2001-01-01T00:00:02.000000Z\",\"device_id\":null,\"epistemic_type\":\"vendor_derived\",\"event_end\":\"2001-01-01T00:00:01.000000Z\",\"event_start\":\"2001-01-01T00:00:00.000000Z\",\"original_end\":\"1\",\"original_received_at\":\"2\",\"original_start\":\"0.0000005\",\"original_unit\":\"ms\",\"original_value\":\"-0.00\",\"source_available_at\":null,\"source_name\":\"Synthetic µ\",\"unit\":\"ms\",\"value\":\"0\"},\"operation\":\"upsert\",\"revision_sha256\":\"379582d8875f09b5a7960d1ad77db49f6b0b5e820b1bbd6d1d28872a9bc11572\"},{\"deleted_at\":\"2001-01-01T00:00:03.000000Z\",\"locators\":[\"/tombstones/00000000-0000-4000-8000-000000000002\"],\"native_id\":\"00000000-0000-4000-8000-000000000002\",\"operation\":\"delete\",\"original_deleted_at\":[\"3\"],\"revision_sha256\":\"1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82\"}],\"schema_version\":\"mse.healtharchive-export/0.2\",\"scope\":{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"}}]",
+      "sha256": "27e2d059ec2a89de617d0b447540ce6c19e0bc921c6e028c654a75c51855604c"
+    },
+    "within_capture_repeat_export": {
+      "canonical_utf8": "[\"mse.export/0.2\",{\"anchor_sha256\":{\"HRV (SDNN)\":\"a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222\"},\"artifact\":{\"byte_length\":490,\"media_type\":\"application/json\",\"sha256\":\"d997b857cb1f5a4f247606fb0cf17cac9a94faa7f0040e975c6537936a220843\",\"source_schema\":\"healtharchive-codable-json/0.1\"},\"batch_id\":\"batch-1\",\"capture_id\":\"capture-1\",\"coverage\":{\"backfill_start\":\"2001-01-01T00:00:00.000000Z\",\"capture_kind\":\"full_file\",\"completeness\":\"unknown\",\"observed_end\":\"2001-01-01T00:00:01.000000Z\",\"observed_start\":\"2001-01-01T00:00:00.000000Z\",\"permissions\":\"unknown\"},\"exporter_version\":\"fixture-1\",\"losses\":[{\"field\":\"event_start\",\"locator\":\"/readings/0/start\",\"reason\":\"microsecond_rounding\"},{\"field\":\"event_start\",\"locator\":\"/readings/1/start\",\"reason\":\"microsecond_rounding\"},{\"field\":\"source_sighting\",\"locator\":\"/readings/1\",\"reason\":\"alternate_sighting_retained_in_original\"}],\"revisions\":[{\"locators\":[\"/readings/0\",\"/readings/1\"],\"native_id\":\"00000000-0000-4000-8000-000000000001\",\"observation\":{\"bundle_id\":\"test.synthetic\",\"calibration_id\":null,\"channel\":\"hrv_sdnn\",\"classification_basis\":\"healthkit_sdnn\",\"classification_evidence_sha256\":null,\"collector_received_at\":\"2001-01-01T00:00:02.000000Z\",\"device_id\":null,\"epistemic_type\":\"vendor_derived\",\"event_end\":\"2001-01-01T00:00:01.000000Z\",\"event_start\":\"2001-01-01T00:00:00.000000Z\",\"original_end\":\"1\",\"original_received_at\":\"2\",\"original_start\":\"0.0000005\",\"original_unit\":\"ms\",\"original_value\":\"4.20e1\",\"source_available_at\":null,\"source_name\":\"Synthetic µ\",\"unit\":\"ms\",\"value\":\"42\"},\"operation\":\"upsert\",\"revision_sha256\":\"422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f\"},{\"deleted_at\":\"2001-01-01T00:00:03.000000Z\",\"locators\":[\"/tombstones/00000000-0000-4000-8000-000000000002\"],\"native_id\":\"00000000-0000-4000-8000-000000000002\",\"operation\":\"delete\",\"original_deleted_at\":[\"3\"],\"revision_sha256\":\"1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82\"}],\"schema_version\":\"mse.healtharchive-export/0.2\",\"scope\":{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"}}]",
+      "sha256": "0684e068d9ca30bcdc713d8175dea97986134d08bbe61def691ce8eca063b2d8"
     }
   },
   "negative_cases": [
@@ -1133,5 +1153,309 @@
       }
     ],
     "expected_native_projection_sha256": "2dd8a65f9b041c5b5f6c7fd831bbcccdac968237b6e35d3a23f037c9e8eef115"
+  },
+  "capture_edge_cases": {
+    "repeated_upsert": {
+      "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2},{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":42.0,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":0}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+      "expected_export": {
+        "schema_version": "mse.healtharchive-export/0.2",
+        "scope": {
+          "subject_id": "synthetic-atlas",
+          "source_system": "healthkit",
+          "source_instance": "fixture-store",
+          "collection": "healtharchive"
+        },
+        "batch_id": "batch-1",
+        "capture_id": "capture-1",
+        "exporter_version": "fixture-1",
+        "artifact": {
+          "sha256": "d997b857cb1f5a4f247606fb0cf17cac9a94faa7f0040e975c6537936a220843",
+          "byte_length": 490,
+          "media_type": "application/json",
+          "source_schema": "healtharchive-codable-json/0.1"
+        },
+        "coverage": {
+          "capture_kind": "full_file",
+          "backfill_start": "2001-01-01T00:00:00.000000Z",
+          "observed_start": "2001-01-01T00:00:00.000000Z",
+          "observed_end": "2001-01-01T00:00:01.000000Z",
+          "permissions": "unknown",
+          "completeness": "unknown"
+        },
+        "anchor_sha256": {
+          "HRV (SDNN)": "a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222"
+        },
+        "revisions": [
+          {
+            "native_id": "00000000-0000-4000-8000-000000000001",
+            "operation": "upsert",
+            "observation": {
+              "channel": "hrv_sdnn",
+              "original_value": "4.20e1",
+              "original_unit": "ms",
+              "value": "42",
+              "unit": "ms",
+              "original_start": "0.0000005",
+              "original_end": "1",
+              "original_received_at": "2",
+              "event_start": "2001-01-01T00:00:00.000000Z",
+              "event_end": "2001-01-01T00:00:01.000000Z",
+              "collector_received_at": "2001-01-01T00:00:02.000000Z",
+              "source_name": "Synthetic µ",
+              "bundle_id": "test.synthetic",
+              "epistemic_type": "vendor_derived",
+              "classification_basis": "healthkit_sdnn",
+              "classification_evidence_sha256": null,
+              "device_id": null,
+              "calibration_id": null,
+              "source_available_at": null
+            },
+            "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+            "locators": [
+              "/readings/0",
+              "/readings/1"
+            ]
+          },
+          {
+            "native_id": "00000000-0000-4000-8000-000000000002",
+            "operation": "delete",
+            "deleted_at": "2001-01-01T00:00:03.000000Z",
+            "original_deleted_at": [
+              "3"
+            ],
+            "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+            "locators": [
+              "/tombstones/00000000-0000-4000-8000-000000000002"
+            ]
+          }
+        ],
+        "losses": [
+          {
+            "field": "event_start",
+            "reason": "microsecond_rounding",
+            "locator": "/readings/0/start"
+          },
+          {
+            "field": "event_start",
+            "reason": "microsecond_rounding",
+            "locator": "/readings/1/start"
+          },
+          {
+            "field": "source_sighting",
+            "reason": "alternate_sighting_retained_in_original",
+            "locator": "/readings/1"
+          }
+        ]
+      },
+      "expected_export_sha256": "0684e068d9ca30bcdc713d8175dea97986134d08bbe61def691ce8eca063b2d8",
+      "candidate_enumerations": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected_representative_pointer": "/readings/0",
+      "numeric_order_example": {
+        "candidate_pointers": [
+          "/readings/10",
+          "/readings/2"
+        ],
+        "sorted_locator_list": [
+          "/readings/10",
+          "/readings/2"
+        ],
+        "expected_representative_pointer": "/readings/2"
+      }
+    },
+    "nonpositive": [
+      {
+        "name": "negative",
+        "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":-4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+        "expected_export": {
+          "schema_version": "mse.healtharchive-export/0.2",
+          "scope": {
+            "subject_id": "synthetic-atlas",
+            "source_system": "healthkit",
+            "source_instance": "fixture-store",
+            "collection": "healtharchive"
+          },
+          "batch_id": "batch-1",
+          "capture_id": "capture-1",
+          "exporter_version": "fixture-1",
+          "artifact": {
+            "sha256": "6653607de5d14271e655c83316d41cef6b57e294ffd1bc51216a0a8e9f3a0fa3",
+            "byte_length": 307,
+            "media_type": "application/json",
+            "source_schema": "healtharchive-codable-json/0.1"
+          },
+          "coverage": {
+            "capture_kind": "full_file",
+            "backfill_start": "2001-01-01T00:00:00.000000Z",
+            "observed_start": "2001-01-01T00:00:00.000000Z",
+            "observed_end": "2001-01-01T00:00:01.000000Z",
+            "permissions": "unknown",
+            "completeness": "unknown"
+          },
+          "anchor_sha256": {
+            "HRV (SDNN)": "a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222"
+          },
+          "revisions": [
+            {
+              "native_id": "00000000-0000-4000-8000-000000000001",
+              "operation": "upsert",
+              "observation": {
+                "channel": "hrv_sdnn",
+                "original_value": "-4.20e1",
+                "original_unit": "ms",
+                "value": "-42",
+                "unit": "ms",
+                "original_start": "0.0000005",
+                "original_end": "1",
+                "original_received_at": "2",
+                "event_start": "2001-01-01T00:00:00.000000Z",
+                "event_end": "2001-01-01T00:00:01.000000Z",
+                "collector_received_at": "2001-01-01T00:00:02.000000Z",
+                "source_name": "Synthetic µ",
+                "bundle_id": "test.synthetic",
+                "epistemic_type": "vendor_derived",
+                "classification_basis": "healthkit_sdnn",
+                "classification_evidence_sha256": null,
+                "device_id": null,
+                "calibration_id": null,
+                "source_available_at": null
+              },
+              "revision_sha256": "a09e16fb5952ab127a3be2bbc5da80882f7f0057ca6ca473a7e5b3c605e137c2",
+              "locators": [
+                "/readings/0"
+              ]
+            },
+            {
+              "native_id": "00000000-0000-4000-8000-000000000002",
+              "operation": "delete",
+              "deleted_at": "2001-01-01T00:00:03.000000Z",
+              "original_deleted_at": [
+                "3"
+              ],
+              "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+              "locators": [
+                "/tombstones/00000000-0000-4000-8000-000000000002"
+              ]
+            }
+          ],
+          "losses": [
+            {
+              "field": "event_start",
+              "reason": "microsecond_rounding",
+              "locator": "/readings/0/start"
+            },
+            {
+              "field": "value",
+              "reason": "outside_reference_positive_domain",
+              "locator": "/readings/0/value"
+            }
+          ]
+        },
+        "expected_export_sha256": "9ec65f942508fff7dbe8baeaa221b0db80c53b5fc14fc7823a3485bb07dca173",
+        "expected_normalized_pf001_observations": 0,
+        "expected_native_observations": 0,
+        "expected_retained_upserts": 1
+      },
+      {
+        "name": "signed-zero",
+        "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":-0.00,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+        "expected_export": {
+          "schema_version": "mse.healtharchive-export/0.2",
+          "scope": {
+            "subject_id": "synthetic-atlas",
+            "source_system": "healthkit",
+            "source_instance": "fixture-store",
+            "collection": "healtharchive"
+          },
+          "batch_id": "batch-1",
+          "capture_id": "capture-1",
+          "exporter_version": "fixture-1",
+          "artifact": {
+            "sha256": "97a34a05b50b9f234c98cbdb365223eb68300a34794a70cb7500afd42ffda1f9",
+            "byte_length": 305,
+            "media_type": "application/json",
+            "source_schema": "healtharchive-codable-json/0.1"
+          },
+          "coverage": {
+            "capture_kind": "full_file",
+            "backfill_start": "2001-01-01T00:00:00.000000Z",
+            "observed_start": "2001-01-01T00:00:00.000000Z",
+            "observed_end": "2001-01-01T00:00:01.000000Z",
+            "permissions": "unknown",
+            "completeness": "unknown"
+          },
+          "anchor_sha256": {
+            "HRV (SDNN)": "a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222"
+          },
+          "revisions": [
+            {
+              "native_id": "00000000-0000-4000-8000-000000000001",
+              "operation": "upsert",
+              "observation": {
+                "channel": "hrv_sdnn",
+                "original_value": "-0.00",
+                "original_unit": "ms",
+                "value": "0",
+                "unit": "ms",
+                "original_start": "0.0000005",
+                "original_end": "1",
+                "original_received_at": "2",
+                "event_start": "2001-01-01T00:00:00.000000Z",
+                "event_end": "2001-01-01T00:00:01.000000Z",
+                "collector_received_at": "2001-01-01T00:00:02.000000Z",
+                "source_name": "Synthetic µ",
+                "bundle_id": "test.synthetic",
+                "epistemic_type": "vendor_derived",
+                "classification_basis": "healthkit_sdnn",
+                "classification_evidence_sha256": null,
+                "device_id": null,
+                "calibration_id": null,
+                "source_available_at": null
+              },
+              "revision_sha256": "379582d8875f09b5a7960d1ad77db49f6b0b5e820b1bbd6d1d28872a9bc11572",
+              "locators": [
+                "/readings/0"
+              ]
+            },
+            {
+              "native_id": "00000000-0000-4000-8000-000000000002",
+              "operation": "delete",
+              "deleted_at": "2001-01-01T00:00:03.000000Z",
+              "original_deleted_at": [
+                "3"
+              ],
+              "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+              "locators": [
+                "/tombstones/00000000-0000-4000-8000-000000000002"
+              ]
+            }
+          ],
+          "losses": [
+            {
+              "field": "event_start",
+              "reason": "microsecond_rounding",
+              "locator": "/readings/0/start"
+            },
+            {
+              "field": "value",
+              "reason": "outside_reference_positive_domain",
+              "locator": "/readings/0/value"
+            }
+          ]
+        },
+        "expected_export_sha256": "27e2d059ec2a89de617d0b447540ce6c19e0bc921c6e028c654a75c51855604c",
+        "expected_normalized_pf001_observations": 0,
+        "expected_native_observations": 0,
+        "expected_retained_upserts": 1
+      }
+    ]
   }
 }
