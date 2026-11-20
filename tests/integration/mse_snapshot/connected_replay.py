@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from integrations.healthbridge.export import normalize_capture
 from integrations.mse_ingest import RecoveryError, Scope
@@ -88,8 +89,10 @@ class ConnectedReplayTests(unittest.TestCase):
                 del forged["snapshot_sha256"]
                 change(forged)
                 forged["snapshot_sha256"] = digest(["mse.snapshot/0.2", forged])
-                with self.assertRaises((ContractError, RecoveryError, ValueError)):
-                    self.replay(forged)
+                with patch("integrations.mse_snapshot.ledger._replay_validated_snapshot") as run:
+                    with self.assertRaises((ContractError, RecoveryError, ValueError)):
+                        self.replay(forged)
+                    run.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ OPTIONS = {"expected_scope": SCOPE, "expected_archive_id": "synthetic-archive",
            "max_bytes": 20000, "max_members": 100}
 
 
-def revision(i, *, delete_time=None, hr=False):
+def revision(i, *, delete_time=None, hr=False, value="42"):
     native = f"00000000-0000-4000-8000-{i:012x}"
     member = {
         "pf001_revision_id": f"revision-{i}-{delete_time}",
@@ -35,16 +35,16 @@ def revision(i, *, delete_time=None, hr=False):
 
     normalized = {
         "channel": "heart_rate" if hr else "hrv_sdnn", "unit": "bpm" if hr else "ms",
-        "epistemic_type": "unknown" if hr else "vendor_derived", "value": "42",
+        "epistemic_type": "unknown" if hr else "vendor_derived", "value": value,
         "event_start": START, "event_end": END,
         "classification_basis": "capture_derivation_unavailable" if hr else "healthkit_sdnn",
         "classification_evidence_sha256": None,
     }
-    fact = {"channel": normalized["channel"], "value": "42", "unit": normalized["unit"],
+    fact = {"channel": normalized["channel"], "value": value, "unit": normalized["unit"],
             "start": "0.0000005", "end": "1", "source_name": "Synthetic Device", "bundle_id": None}
     source_hash = digest(["mse.source-revision/0.2", SCOPE, native, "upsert", fact])
     observation = dict(
-        normalized, original_value="4.20e1", original_unit=normalized["unit"],
+        normalized, original_value="4.20e1" if value == "42" else value, original_unit=normalized["unit"],
         original_start="0.0000005", original_end="1", original_received_at="2",
         collector_received_at=COLLECTED, source_name=fact["source_name"],
         bundle_id=None, device_id=None, calibration_id=None, source_available_at=None,
@@ -76,7 +76,8 @@ def replay_fixture(raw, **changes):
     # Test-only independent membership oracle assembled from synthetic ledger
     # rows. Production integration must use FORGE's reopened authoritative state.
     committed_rows = [revision(1), revision(2, hr=True),
-                      revision(2, delete_time="3"), revision(2, delete_time="3.0000001")]
+                      revision(2, delete_time="3"), revision(2, delete_time="3.0000001"),
+                      revision(1, value="-1"), revision(1, value="0")]
     def verify(archive_id, scope, member):
         return archive_id == OPTIONS["expected_archive_id"] and scope == SCOPE and member in committed_rows
     return replay_snapshot(raw, **dict(OPTIONS, verify_membership=verify, **changes))
@@ -209,6 +210,17 @@ class SnapshotTests(unittest.TestCase):
             select([a, ("fixture-1", variant)], 5)
         with self.assertRaisesRegex(ContractError, "distinct revisions"):
             select([a, ("fixture-1", revision(2))], 5)
+
+    def test_nonpositive_source_scalars_are_retained_and_unavailable(self):
+        for value in ("-1", "0"):
+            with self.subTest(value=value):
+                row = revision(1, value=value)
+                result = replay_fixture(encode(snapshot([row])))
+                self.assertEqual(result["status"], "unavailable")
+                self.assertEqual(result["reference_result"]["states"], [])
+                self.assertEqual(result["lineage"]["observation_revisions"][0]["revision_sha256"],
+                                 row["source_revision"]["revision_sha256"])
+                self.assertEqual(result["projection_losses"][0]["reason"], "scalar_unrepresentable_in_reference")
 
     def test_unknown_hr_only_is_unavailable(self):
         result = replay_fixture(encode(snapshot([revision(2, hr=True)])))
