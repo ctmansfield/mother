@@ -11,7 +11,7 @@ class IngestBindingError(RuntimeError):
     """The authoritative service result does not bind the adapter inputs."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class CaptureDelivery:
     export: dict
     receipt: dict

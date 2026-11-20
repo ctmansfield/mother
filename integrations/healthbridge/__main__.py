@@ -22,6 +22,7 @@ def main() -> int:
     parser.add_argument("--batch-id", required=True)
     parser.add_argument("--capture-id", required=True)
     parser.add_argument("--capture-kind", required=True, choices=("full_file", "partial"))
+    parser.add_argument("--status-only", action="store_true", help="omit counts and digests")
     for name, ceiling in vars(defaults).items():
         parser.add_argument(
             "--max-" + name.replace("_", "-"),
@@ -51,6 +52,10 @@ def main() -> int:
     except OSError:
         print("healthbridge: capture read failed", file=sys.stderr)
         return 1
+
+    if args.status_only:
+        sys.stdout.buffer.write(b'{"status":"valid"}\n')
+        return 0
 
     summary = {
         "artifact_sha256": export["artifact"]["sha256"],

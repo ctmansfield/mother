@@ -139,7 +139,7 @@ def _decimal_text(value: Decimal) -> str:
     return digits.rstrip("0").rstrip(".") if "." in digits else digits
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Capture:
     sha256: str
     byte_length: int

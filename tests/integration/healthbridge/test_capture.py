@@ -251,3 +251,10 @@ class CaptureTests(unittest.TestCase):
                          (9007199254740992.0, "pf001_binary64_rounding"))
         self.assertEqual(project_binary64("1E+400"), (None, "pf001_binary64_out_of_range"))
         self.assertEqual(project_binary64("1E-400"), (None, "pf001_binary64_out_of_range"))
+
+    def test_in_memory_capture_repr_does_not_disclose_source_fields(self):
+        raw = capture([reading(source="synthetic-sensitive-source")])
+        parsed = parse_capture(raw)
+        self.assertIn("synthetic-sensitive-source", parsed.upserts[HR][0]["source_name"])
+        self.assertNotIn("synthetic-sensitive-source", repr(parsed))
+        self.assertNotIn(HR, repr(parsed))

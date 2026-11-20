@@ -176,3 +176,11 @@ class IngestTests(unittest.TestCase):
                     if row["reason"] == "pf001_binary64_rounding"}
         self.assertEqual(findings, {(field, "/readings/0/value")
                                    for field in ("original_value", "value")})
+
+    def test_delivery_repr_does_not_disclose_export_or_receipt_fields(self):
+        result = self.delivery("baseline")
+        self.assertEqual(result.receipt["status"], "normalized")
+        logged = repr(result)
+        for value in (result.receipt["batch_id"], result.receipt["artifact_sha256"],
+                      result.receipt["scope"]["subject_id"], result.receipt["receipt_id"]):
+            self.assertNotIn(value, logged)

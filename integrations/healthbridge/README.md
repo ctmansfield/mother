@@ -109,3 +109,32 @@ zero. The exporter marks this explicitly. The FORGE writer must omit those
 records while preserving source evidence. Reconstruction of historical
 exports must explicitly use `healtharchive-capture:0.2`, which keeps its
 original loss behavior. Do not rewrite older receipts with the new exporter.
+
+## Output and custody boundaries
+
+For a status check outside the local evidence transcript, use
+`--status-only`. Success then prints only `{"status":"valid"}` and retains
+the same exit codes. The default summary's digests, counts and size are
+linkable evidence and belong in a restricted transcript. The CLI opens no
+file by name, prints no capture content, and accepts synthetic inputs only.
+
+The original and full export are separately restricted. The original may
+contain native UUIDs, exact measurement and receipt times, source and bundle
+strings, opaque query anchors, unknown extension names and values, and
+deletion UUIDs/times. The export additionally binds subject/store, capture
+and batch tokens; it carries canonical UUIDs, clock/value representations,
+source/bundle strings, stable digests and original locators. A deletion
+pointer can contain a UUID, and an extension pointer can contain an
+arbitrary source key. Structured device, calibration and availability
+fields are null for this capture shape; source strings or unknown original
+extensions can still carry identifying material. Missing structured fields
+cannot establish anonymity.
+
+The library performs no logging. Its capture and delivery wrappers suppress
+field-bearing default representations. Callers should log an approved
+status category and keep full exports, receipts, exceptions and tracebacks
+in restricted custody. Parser errors are sanitized, while downstream
+validation exceptions may contain the rejected instance. The full export
+is authoritative exchange input and is unsuitable as an analytics or
+telemetry view. Any reduced-identity projection needs a separate reviewed
+contract and must not rewrite this evidence.

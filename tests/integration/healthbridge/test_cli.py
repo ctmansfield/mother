@@ -28,6 +28,22 @@ class CaptureCLITests(unittest.TestCase):
         self.assertNotIn(b"synthetic-subject", result.stdout)
         self.assertNotIn(b"backfillStart", result.stdout)
 
+    def test_status_only_omits_linkable_metadata_on_success(self):
+        raw = (b'{"readings":[{"id":"a0000000-0000-4000-8000-000000000001",'
+               b'"kind":"Heart rate","value":64.125,"unit":"bpm","start":785000000,'
+               b'"end":785000001,"source":"synthetic-source-marker",'
+               b'"bundleID":"test.synthetic.marker","receivedAt":785000010,'
+               b'"synthetic/path-marker":"extension-value-marker"}],'
+               b'"anchors":{},"tombstones":{},"backfillStart":0}')
+        summary = self.invoke(raw)
+        self.assertEqual(summary.returncode, 0)
+        for marker in (b"a0000000", b"64.125", b"785000000", b"synthetic-source-marker",
+                       b"test.synthetic.marker", b"path-marker", b"extension-value-marker"):
+            self.assertNotIn(marker, summary.stdout + summary.stderr)
+        status = self.invoke(raw, "--status-only")
+        self.assertEqual((status.returncode, status.stdout, status.stderr),
+                         (0, b'{"status":"valid"}\n', b""))
+
     def test_invalid_or_oversize_input_has_no_output_and_no_value_echo(self):
         for options in ((), ("--max-byte-length", "1")):
             with self.subTest(options=options):
