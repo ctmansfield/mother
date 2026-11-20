@@ -1,0 +1,219 @@
+{
+  "acceptance": [
+    "Cite exact receipts and pins; distinguish code/tests/merge/deploy/runtime.",
+    "Retain measured tests, original failures and pending host/live results.",
+    "Prepare local article states and university queue without claiming metadata is full text.",
+    "Validate source-bound capsule/index using the current reader before handoff."
+  ],
+  "authorization": {
+    "allowed": [
+      "Read sources, run isolated offline tests, draft report and derived context locally."
+    ],
+    "not_authorized": [
+      "This worker must not write remotely, merge, deploy, change credentials or runtime.",
+      "No real-person records, raw papers or university credentials in this report package."
+    ],
+    "source": "user-task",
+    "state": "current-user-task-with-bounded-root-delegation"
+  },
+  "blockers": [
+    "No llm host access from this session; provider probe timeout."
+  ],
+  "conflicts": [
+    "FW00413/FW00414 numbers are reused in other framework issues; identify #144/#145 by issue and exact pin."
+  ],
+  "constraints": [
+    "No terminal-closing shell flags; preserve historical evidence.",
+    "No permanent model-role assignment from exploratory scores.",
+    "Article acquisition, source interpretation and scientific causal validation are separate."
+  ],
+  "decisions": [
+    {
+      "id": "preserve-original-refusal",
+      "reason": "A corrected source guard does not retroactively pass a failed host attempt.",
+      "source": "source-receipts",
+      "supersedes": [],
+      "value": "Keep original FW00411 preflight refusal and qualify its corrected pin separately."
+    },
+    {
+      "id": "source-only-report",
+      "reason": "Current work is review, drafting and bounded qualification; deployment is not the task.",
+      "source": "user-task",
+      "supersedes": [],
+      "value": "Prepare report/context on a separate MOTHER source branch, preserving existing MSE12 and runtime."
+    },
+    {
+      "id": "separate-acquisition-state",
+      "reason": "The requested local article library needs auditable per-reference acquisition outcomes.",
+      "source": "current-report",
+      "supersedes": [],
+      "value": "Track downloaded full text separately from metadata, university queue and transport errors."
+    }
+  ],
+  "dependencies": [
+    "Root must fill pending results, synchronize report evidence, recompute hashes and register the updated capsule before publication."
+  ],
+  "goal": "Review completed stack work, test available source, draft behavioral next round and E1 local literature trial; preserve findings in MOTHER.",
+  "instruction_binding": {
+    "id": "behavior-e1-review-20261119",
+    "ref": "user-task",
+    "revision": "current-turn-2026-11-19",
+    "sha256": "fc10e4ce753101028892a71f656c0ad234b006a3099b1bcac74122a95c76e18e",
+    "source": "Current ChatGPT user task; local capture with root delegation"
+  },
+  "next_action": {
+    "action": "Root: finalize behavioral/literature evidence, refresh report/capsule, validate index and persist the source-only MOTHER draft PR.",
+    "role": "/root"
+  },
+  "observed_at": "2026-11-19T13:50:46Z",
+  "receipt": {
+    "instruction_binding": {
+      "id": "behavior-e1-review-20261119",
+      "revision": "current-turn-2026-11-19",
+      "sha256": "fc10e4ce753101028892a71f656c0ad234b006a3099b1bcac74122a95c76e18e",
+      "source": "Current ChatGPT user task; local capture with root delegation"
+    },
+    "source": "local-intake",
+    "state": "ACKNOWLEDGED"
+  },
+  "record_kind": "source_projection",
+  "refs": {
+    "current-report": {
+      "observation": {
+        "environment": "local source-only report package",
+        "kind": "report_prepublication",
+        "limitations": [
+          "Not yet persisted as a MOTHER commit or draft PR."
+        ],
+        "method": "Reconcile fetched receipts and measured local tests",
+        "observed_at": "2026-11-19T13:50:46Z",
+        "result": "IN_PROGRESS; behavior/literature final fields pending root"
+      },
+      "path": "evidence/behavior-e1-report.md",
+      "sha256": "0e2dee2cdc0cc24fe5fb45f8fe22aae8be5215af31a90bd26cde6bb6a50e0df6"
+    },
+    "local-intake": {
+      "observation": {
+        "environment": "local isolated workspace",
+        "kind": "worker_intake_receipt",
+        "limitations": [
+          "No external ACK; no pre-existing issue assignment invented."
+        ],
+        "method": "Read pinned policy and run current project reader",
+        "observed_at": "2026-11-19T13:50:46Z",
+        "result": "ACKNOWLEDGED locally; initial reader returned UNSEEDED"
+      },
+      "path": "evidence/behavior-e1-intake.md",
+      "sha256": "a512735e0220a0f78e92a92d011df8c2bda07212348168457aed9b14b7504e33"
+    },
+    "local-tests": {
+      "observation": {
+        "environment": "local extracted source snapshot",
+        "kind": "offline_test_evidence",
+        "limitations": [
+          "Not a real Git checkout or llm host inference qualification."
+        ],
+        "method": "Run three unit suites, manifests and four smokes",
+        "observed_at": "2026-11-19T13:50:46Z",
+        "result": "179 tests PASS; 37 hashes match; four smokes PASS"
+      },
+      "path": "evidence/behavior-e1-local-tests.json",
+      "sha256": "f606dd31aaab81f53ea3707ffda78cb34b3e421376858978acc6b6c82343dbae"
+    },
+    "source-receipts": {
+      "observation": {
+        "environment": "GitHub connector",
+        "kind": "source_receipt_capture",
+        "limitations": [
+          "Host-local raw campaign outputs were not inspected."
+        ],
+        "method": "Fetch exact issue comments and pinned source metadata",
+        "observed_at": "2026-11-19T13:50:46Z",
+        "result": "Observed FW00412 offline receipt and FW00567 live campaign receipt"
+      },
+      "path": "evidence/behavior-e1-source-receipts.json",
+      "sha256": "db0dcef3b36918e8d6d76fb3415863d627333a2498f5035ab37662f06141c5dd"
+    },
+    "user-task": {
+      "observation": {
+        "environment": "current ChatGPT turn",
+        "kind": "user_instruction_capture",
+        "limitations": [
+          "Local textual capture; no external message ID or independent authentication."
+        ],
+        "method": "Capture directly visible task and bounded root delegation",
+        "observed_at": "2026-11-19T13:50:46Z",
+        "result": "Current task received"
+      },
+      "path": "evidence/behavior-e1-task-request.md",
+      "sha256": "fc10e4ce753101028892a71f656c0ad234b006a3099b1bcac74122a95c76e18e"
+    }
+  },
+  "report": {
+    "instruction_ref": {
+      "id": "behavior-e1-review-20261119",
+      "revision": "current-turn-2026-11-19",
+      "sha256": "fc10e4ce753101028892a71f656c0ad234b006a3099b1bcac74122a95c76e18e",
+      "source": "Current ChatGPT user task; local capture with root delegation"
+    },
+    "limitations": [
+      "Host unavailable; no live scientific inference or complete article-library result.",
+      "Behavior correction read-back and literature final pin/counts pending root.",
+      "This report package is local and not yet committed or published."
+    ],
+    "next_action": "#next_action",
+    "report_id": "behavior-e1-review-20261119-local-r1",
+    "requested_decision": "No additional user decision for local preparation; root reconciles final evidence and source-only publication.",
+    "source": "current-report",
+    "status": "IN_PROGRESS",
+    "tests_performed": [
+      "FW00410 59 + FW00411 50 + FW00412 70 = 179 PASS; 37 manifest entries; four smokes PASS.",
+      "Current MOTHER reader resume returned UNSEEDED before registration."
+    ]
+  },
+  "schema": "context-projection-task",
+  "scope": [
+    "Completed coding/scientific receipts and available offline tests.",
+    "Behavioral next-round design and E1 article acquisition/queue review.",
+    "Source-only MOTHER report and schema-v2 context; preserve existing MSE12."
+  ],
+  "source_freshness": {
+    "detail": "User request is visible; MOTHER policy/reader observed at 818426fe90fab1bfd9583640363d4001b30e633f. Final source reconciliation and remote report persistence remain pending.",
+    "state": "visible-user-task-and-pinned-repository-read",
+    "sync_state": "LOCAL_PREPUBLICATION"
+  },
+  "state": {
+    "code": {
+      "detail": "MOTHER review/runbooks/context prepared; behavior candidate reported separately and pending final source read-back.",
+      "source": "current-report",
+      "status": "LOCAL_DRAFT"
+    },
+    "deploy": {
+      "detail": "No runtime changes made by this task preparation.",
+      "source": "local-intake",
+      "status": "NOT_DEPLOYED"
+    },
+    "merge": {
+      "detail": "No MOTHER commit or draft PR created by this worker.",
+      "source": "local-intake",
+      "status": "NOT_MERGED_THIS_PACKAGE"
+    },
+    "runtime": {
+      "detail": "llm unavailable; provider probe timeout reported by root; live/library results pending.",
+      "source": "current-report",
+      "status": "NOT_VERIFIED_ON_HOST"
+    },
+    "test": {
+      "detail": "179 scientific tests and four smokes passed; not host model inference.",
+      "source": "local-tests",
+      "status": "PASS_LOCAL_SNAPSHOT"
+    }
+  },
+  "task_id": "behavior-e1-review-20261119",
+  "task_revision": "r1-local-prepublication",
+  "unknowns": [
+    "Final literature correction pin and verified retrieval/queue counts.",
+    "Current host model roster and available GPU resources."
+  ],
+  "version": 2
+}

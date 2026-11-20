@@ -1,0 +1,17 @@
+{
+  "schema": "context-validation-receipt.v1",
+  "registration_exit": 0,
+  "pinned_resume_exit": 0,
+  "index_sha256": "8322e630a92b52839eb6213c88657cfc0764da00eddba25539028e6a0ad8067b",
+  "capsule_sha256": "a5448618e4998a11dc23e18897af5dd62367fcccb273a99f19af50ee1727922a",
+  "resume_log_sha256": "f1ff87a6484e8a3666e13dd0ea971a471261d18acca4a6800933624de1c772a4",
+  "reference_count": 5,
+  "source_work_status": "READY_FOR_REVIEW",
+  "task_status": "IN_PROGRESS_HOST_EVIDENCE_PENDING",
+  "host_execution": "PENDING",
+  "report_sha256": "1be375413fe15be1272e2275ebfd5c8f91b928e9e38dd45d1de52307fbff5af3",
+  "resolved_validation_errors": [
+    "Normalized context timestamps to required UTC seconds format.",
+    "Used IN_PROGRESS from the existing report-status vocabulary."
+  ]
+}

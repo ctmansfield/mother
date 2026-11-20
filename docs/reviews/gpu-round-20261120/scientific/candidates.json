@@ -1,0 +1,12 @@
+{
+  "schema": "fw00412.comparative-candidates.v1",
+  "source_pin": "ba6fbb90c031f122b7db61d2f67f2b22ef1cf130",
+  "scope": "Ollama comparative scientific evidence-boundary reasoning screen; MedGemma variants and general reasoning controls; no permanent role assignments",
+  "models": [
+    "gpt-oss:20b",
+    "medgemma1.5:4b",
+    "medgemma:27b",
+    "deepseek-r1:14b",
+    "ministral-3:14b"
+  ]
+}
