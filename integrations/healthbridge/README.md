@@ -68,3 +68,27 @@ PF-001. Supply these local paths and run the unittest command above.
   `13d2e19825aa872c04cf174cd8adef1bc8d40756`.
 PF-001 schema validation requires the FORGE Python environment with jsonschema.
 The adapter itself has no added Python dependency.
+
+## Verify a synthetic capture from the command line
+
+Run from the repository root with a local synthetic fixture. The CLI reads
+only stdin, stops after the byte limit plus one byte, and opens no ledger
+or output file. It prints one deterministic JSON summary containing the
+artifact and export digests, byte length and counts. The summary omits
+scope, records, numeric values, and detailed loss locators. Keep even the
+digests in local custody when applicable.
+
+```sh
+python3 -B -m integrations.healthbridge \
+  --subject-id synthetic-demo --source-instance demo-store \
+  --batch-id batch-1 --capture-id capture-1 --capture-kind full_file \
+  < synthetic-healtharchive.json
+```
+
+Defaults are 4 MiB, 20,000 records, nesting depth 32 and numeric-token
+length 256. The respective `--max-byte-length`, `--max-records`,
+`--max-depth` and `--max-numeric-token-length` options can reduce them.
+Exit 0 means the export was constructed, exit 1 rejects the capture or an
+input read, and exit 2 denotes invalid arguments. Error text omits source
+bytes and invalid argument values. For a durable synthetic trial use the
+existing `ingest_capture` Python entry point above.
