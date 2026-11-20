@@ -92,3 +92,20 @@ Exit 0 means the export was constructed, exit 1 rejects the capture or an
 input read, and exit 2 denotes invalid arguments. Error text omits source
 bytes and invalid argument values. For a durable synthetic trial use the
 existing `ingest_capture` Python entry point above.
+
+### PF-001 numeric projection
+
+Exporter `healtharchive-capture:0.2.1` accounts for the auxiliary PF-001
+binary64 projection of eligible positive observations. Comparison uses the
+exact binary64 value against the exact source decimal. It detects both
+subtle rounding such as decimal 0.1 and changes visible in the serialized
+numeric value. Findings use the frozen 0.2 loss shape and identify the
+`original_value` and `value` fields at their original reading pointer.
+Exact decimal values, original lexemes and source revision identities are
+unchanged. Timestamp rounding remains a separate finding.
+
+The projection helper returns no usable float for overflow or underflow to
+zero. The exporter marks this explicitly. The FORGE writer must omit those
+records while preserving source evidence. Reconstruction of historical
+exports must explicitly use `healtharchive-capture:0.2`, which keeps its
+original loss behavior. Do not rewrite older receipts with the new exporter.

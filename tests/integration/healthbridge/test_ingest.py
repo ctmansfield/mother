@@ -145,3 +145,34 @@ class IngestTests(unittest.TestCase):
                     {"field": "value", "reason": "outside_reference_positive_domain",
                      "locator": "/readings/0/value"}, snapshot["losses"],
                 )
+
+    def test_pf001_float_rounding_is_visible_in_verified_snapshot(self):
+        from integrations.mse_ingest.connected import NORMALIZER_VERSION
+        from mother.physiology.archive import Archive
+
+        goldens = json.loads((Path(CONTRACT) / "golden-vectors.json").read_bytes())
+        raw = goldens["source_utf8"].replace("4.20e1", "9007199254740993").encode()
+        self.scope = type(self.scope)(**goldens["export"]["scope"])
+        service = self.service()
+        delivery = ingest_capture(
+            service, raw, batch_id="rounded", capture_id="rounded",
+            capture_kind="full_file",
+        )
+        self.assertEqual(delivery.receipt["status"], "normalized")
+        with Archive(service.archive) as archive:
+            record, = archive.records(current=False)
+            self.assertEqual(record["value"], 9007199254740992.0)
+            self.assertEqual(record["metadata"]["exact_decimal_value"], "9007199254740993")
+        snapshot = service.build_snapshot(
+            measurement_start="2001-01-01T00:00:00.000000Z",
+            measurement_end="2001-01-01T00:00:02.000000Z",
+            knowledge_cutoff_sequence=delivery.receipt["commit_sequence"],
+            normalizer_version=NORMALIZER_VERSION,
+        )
+        service.verify_snapshot(snapshot)
+        member, = snapshot["observations"]
+        self.assertEqual(member["source_revision"]["observation"]["value"], "9007199254740993")
+        findings = {(row["field"], row["locator"]) for row in snapshot["losses"]
+                    if row["reason"] == "pf001_binary64_rounding"}
+        self.assertEqual(findings, {(field, "/readings/0/value")
+                                   for field in ("original_value", "value")})

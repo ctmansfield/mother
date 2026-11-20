@@ -222,3 +222,32 @@ class CaptureTests(unittest.TestCase):
         for kwargs in ({"capture_kind": "auto"}, {"subject_id": ""}, {"batch_id": "a/b"}):
             with self.subTest(kwargs=kwargs), self.assertRaises(CaptureError):
                 normalize(raw, **kwargs)
+
+    def test_pf001_rounding_is_field_specific_and_versioned(self):
+        row = reading(SDNN, kind="HRV (SDNN)", unit="ms", value=9007199254740993)
+        raw = capture([row]).replace(b'"start": 0', b'"start": -0.00000050001')
+        current = normalize(raw)
+        legacy = normalize(raw, exporter_version="healtharchive-capture:0.2")
+        self.assertEqual(current["revisions"], legacy["revisions"])
+        observation = current["revisions"][0]["observation"]
+        self.assertEqual(observation["original_value"], "9007199254740993")
+        self.assertEqual(observation["value"], "9007199254740993")
+        self.assertEqual(observation["original_start"], "-0.00000050001")
+        self.assertEqual(observation["event_start"], "2000-12-31T23:59:59.999999Z")
+        added = [loss for loss in current["losses"] if loss not in legacy["losses"]]
+        self.assertEqual({(loss["field"], loss["reason"], loss["locator"]) for loss in added},
+                         {(field, "pf001_binary64_rounding", "/readings/0/value")
+                          for field in ("original_value", "value")})
+        self.assertIn({"field": "event_start", "reason": "microsecond_rounding",
+                       "locator": "/readings/0/start"}, legacy["losses"])
+        self.assertNotEqual(export_sha256(legacy), export_sha256(current))
+
+    def test_binary64_exact_rounded_and_unusable_projections(self):
+        from integrations.healthbridge.numeric import project_binary64
+
+        self.assertEqual(project_binary64("42.125"), (42.125, None))
+        self.assertEqual(project_binary64("0.1"), (0.1, "pf001_binary64_rounding"))
+        self.assertEqual(project_binary64("9007199254740993"),
+                         (9007199254740992.0, "pf001_binary64_rounding"))
+        self.assertEqual(project_binary64("1E+400"), (None, "pf001_binary64_out_of_range"))
+        self.assertEqual(project_binary64("1E-400"), (None, "pf001_binary64_out_of_range"))

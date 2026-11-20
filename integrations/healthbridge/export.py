@@ -4,10 +4,13 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from decimal import Decimal
 
 from .capture import CaptureError, CaptureLimits, _decimal_text, parse_capture
+from .numeric import project_binary64
 
-EXPORT_VERSION = "healtharchive-capture:0.2"
+LEGACY_EXPORT_VERSION = "healtharchive-capture:0.2"
+EXPORT_VERSION = "healtharchive-capture:0.2.1"
 SOURCE_REVISION = "mse.source-revision/0.2"
 
 
@@ -69,14 +72,27 @@ def normalize_capture(
             "locators": sorted(set(locators)),
         })
 
+    findings = list(capture.losses)
     for native, (observation, fact, locators) in capture.upserts.items():
+        if (
+            exporter_version != LEGACY_EXPORT_VERSION
+            and observation["epistemic_type"] != "unknown"
+            and Decimal(observation["value"]) > 0
+        ):
+            for field in ("original_value", "value"):
+                _, reason = project_binary64(observation[field])
+                if reason is not None:
+                    findings.extend(
+                        {"field": field, "reason": reason, "locator": pointer + "/value"}
+                        for pointer in locators
+                    )
         revision(native, "upsert", {"observation": observation}, fact, locators)
     for native, facts in capture.deletions.items():
         for seconds, (date, locators, lexemes) in facts.items():
             payload = {"deleted_at": date, "original_deleted_at": sorted(lexemes)}
             revision(native, "delete", payload, _decimal_text(seconds), locators)
     revisions.sort(key=lambda row: (row["native_id"], row["operation"], row["revision_sha256"]))
-    losses = {canonical_json(loss): loss for loss in capture.losses}
+    losses = {canonical_json(loss): loss for loss in findings}
     return {
         "schema_version": "mse.healtharchive-export/0.2",
         "scope": scope,
