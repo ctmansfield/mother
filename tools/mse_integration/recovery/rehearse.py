@@ -31,7 +31,9 @@ def read_only(path):
 
 def verify_restore(backup, destination):
     manifest = json.loads((backup / "manifest.json").read_text())
-    if manifest.get("pf_commit") != PF_COMMIT or set(manifest.get("members", {})) != set(MEMBERS):
+    if manifest.get("pf_commit") != PF_COMMIT or set(
+        manifest.get("members", {})
+    ) != set(MEMBERS):
         raise ValueError("Unexpected restore manifest")
     for member in MEMBERS:
         source = backup / member
@@ -50,7 +52,9 @@ def verify_restore(backup, destination):
             raise ValueError("SQLite integrity failed")
         if db.execute("PRAGMA foreign_key_check").fetchall():
             raise ValueError("SQLite foreign key integrity failed")
-        version = db.execute("SELECT version, contract_version FROM schema_versions").fetchall()
+        version = db.execute(
+            "SELECT version, contract_version FROM schema_versions"
+        ).fetchall()
         if version != [(1, "1.0.0")]:
             raise ValueError("Unexpected archive schema version")
         artifacts = db.execute("SELECT sha256, content FROM raw_artifacts").fetchall()
@@ -72,7 +76,9 @@ def verify_restore(backup, destination):
             (fixture["source"], fixture["collection"]),
         ).fetchall()
         if len(checkpoint) != 1 or (
-            checkpoint[0][0], json.loads(checkpoint[0][1]), checkpoint[0][2]
+            checkpoint[0][0],
+            json.loads(checkpoint[0][1]),
+            checkpoint[0][2],
         ) != ("complete", fixture["checkpoint"], fixture["run_id"]):
             raise ValueError("Completed run and checkpoint linkage mismatch")
 
@@ -94,27 +100,46 @@ def build_backup(root):
     backup.mkdir(mode=0o700)
     with Archive(primary) as archive:
         archive.connection.execute("PRAGMA journal_mode=WAL")
-        run_id = archive.begin_run(source, collection, "recovery-fixture/1", {}, started_at=WHEN)
+        run_id = archive.begin_run(
+            source, collection, "recovery-fixture/1", {}, started_at=WHEN
+        )
         revisions = []
         for record, disposition in zip(payload, ("accepted", "deleted")):
             key = "native:" + record["id"]
             value_hash = content_hash(record)
-            revisions.append(dict(
-                revision_id=stable_id("revision", source, collection, key, value_hash),
-                source_instance=source, collection=collection, source_key=key,
-                native_id=record["id"], revision_hash=value_hash, raw_json=canonical_json(record),
-                first_seen_at=WHEN, ingested_at=WHEN, import_run_id=run_id,
-                disposition=disposition, artifact_sha256=digest(original),
-            ))
+            revisions.append(
+                dict(
+                    revision_id=stable_id(
+                        "revision", source, collection, key, value_hash
+                    ),
+                    source_instance=source,
+                    collection=collection,
+                    source_key=key,
+                    native_id=record["id"],
+                    revision_hash=value_hash,
+                    raw_json=canonical_json(record),
+                    first_seen_at=WHEN,
+                    ingested_at=WHEN,
+                    import_run_id=run_id,
+                    disposition=disposition,
+                    artifact_sha256=digest(original),
+                )
+            )
         archive.commit_batch(
-            run_id, revisions, artifacts=[{"sha256": digest(original), "content": original}],
-            checkpoint=checkpoint, complete=True,
+            run_id,
+            revisions,
+            artifacts=[{"sha256": digest(original), "content": original}],
+            checkpoint=checkpoint,
+            complete=True,
         )
         # In-flight writer state must stay out of a second connection's backup.
         archive.connection.execute("BEGIN IMMEDIATE")
         archive.connection.execute("DELETE FROM checkpoints")
         try:
-            with closing(read_only(primary)) as reader, closing(sqlite3.connect(backup / DATABASE)) as copy:
+            with (
+                closing(read_only(primary)) as reader,
+                closing(sqlite3.connect(backup / DATABASE)) as copy,
+            ):
                 reader.backup(copy)
         finally:
             archive.connection.rollback()
@@ -123,20 +148,43 @@ def build_backup(root):
             raise ValueError("Backup could not be sealed as a standalone file")
     primary.unlink()
     (backup / "original.json").write_bytes(original)
-    (backup / "checkpoint.json").write_text(json.dumps(dict(
-        run_id=run_id, source=source, collection=collection, checkpoint=checkpoint,
-        revisions=[[r[key] for key in ("revision_id", "native_id", "disposition", "artifact_sha256")]
-                   for r in revisions],
-    )))
+    (backup / "checkpoint.json").write_text(
+        json.dumps(
+            dict(
+                run_id=run_id,
+                source=source,
+                collection=collection,
+                checkpoint=checkpoint,
+                revisions=[
+                    [
+                        r[key]
+                        for key in (
+                            "revision_id",
+                            "native_id",
+                            "disposition",
+                            "artifact_sha256",
+                        )
+                    ]
+                    for r in revisions
+                ],
+            )
+        )
+    )
     write_manifest(backup)
     return backup
 
 
 def write_manifest(backup):
-    (backup / "manifest.json").write_text(json.dumps({
-        "pf_commit": PF_COMMIT,
-        "members": {member: digest((backup / member).read_bytes()) for member in MEMBERS},
-    }))
+    (backup / "manifest.json").write_text(
+        json.dumps(
+            {
+                "pf_commit": PF_COMMIT,
+                "members": {
+                    member: digest((backup / member).read_bytes()) for member in MEMBERS
+                },
+            }
+        )
+    )
 
 
 class RestoreTests(unittest.TestCase):
@@ -182,13 +230,28 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pf-checkout", required=True, type=Path)
     checkout = parser.parse_args().pf_checkout.resolve()
-    commit = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
-    if commit != PF_COMMIT or subprocess.check_output(
-        ["git", "-C", str(checkout), "status", "--porcelain", "--untracked-files=all"], text=True
-    ).strip():
+    commit = subprocess.check_output(
+        ["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True
+    ).strip()
+    if (
+        commit != PF_COMMIT
+        or subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(checkout),
+                "status",
+                "--porcelain",
+                "--untracked-files=all",
+            ],
+            text=True,
+        ).strip()
+    ):
         parser.error(f"Use an isolated clean PF-001 checkout at {PF_COMMIT}")
     sys.path.insert(0, str(checkout))
-    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(RestoreTests))
+    result = unittest.TextTestRunner(verbosity=2).run(
+        unittest.defaultTestLoader.loadTestsFromTestCase(RestoreTests)
+    )
     return 0 if result.wasSuccessful() else 1
 
 
