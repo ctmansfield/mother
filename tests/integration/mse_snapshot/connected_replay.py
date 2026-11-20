@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from integrations.healthbridge.export import normalize_capture
+from integrations.healthbridge.export import export_sha256, normalize_capture
 from integrations.mse_ingest import RecoveryError, Scope
 from integrations.mse_ingest.connected import ConnectedIngest
 from integrations.mse_snapshot.ledger import replay_ledger_snapshot
@@ -26,7 +26,7 @@ class ConnectedReplayTests(unittest.TestCase):
         self.normalizer_version = self.vectors["snapshot"]["normalizer_version"]
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        self.root = Path(temporary.name).resolve()
         self.export = normalize_capture(
             self.original, subject_id=self.scope["subject_id"],
             source_instance=self.scope["source_instance"],
@@ -61,14 +61,25 @@ class ConnectedReplayTests(unittest.TestCase):
     def test_real_capture_reopened_snapshot_and_derived_lineage(self):
         self.assertEqual(self.reopened.verify_receipt(self.receipt), self.receipt)
         self.assertEqual(self.receipt["artifact_sha256"], sha256(self.original).hexdigest())
+        self.assertEqual(self.receipt["export_sha256"], export_sha256(self.export))
+        self.assertTrue(self.reopened.verify_snapshot(self.snapshot))
         result = self.replay(self.snapshot)
+        self.assertEqual(result, self.replay(self.snapshot))
         self.assertEqual(result["epistemic_class"], "derived")
         self.assertEqual(result["reference_result"]["active_observation_count"], 1)
-        self.assertEqual(len(result["lineage"]["deletion_facts"]), 1)
+        self.assertEqual(len(self.snapshot["tombstones"]), 1)
+        self.assertEqual(result["lineage"]["deletion_facts"], self.snapshot["tombstones"])
+        self.assertEqual(result["lineage"]["snapshot_sha256"], sha256(canonical(self.snapshot).encode()).hexdigest())
+        self.assertEqual(result["lineage"]["reference_run_id"], result["reference_result"]["run_id"])
+        self.assertEqual(result["lineage"]["reference_result_sha256"], digest(result["reference_result"]))
+        self.assertEqual(result["result_id"], "derived:" + digest(result["lineage"]))
         member = result["lineage"]["observation_revisions"][0]
         self.assertEqual(member["receipt_id"], self.receipt["receipt_id"])
         self.assertEqual(member["artifact_sha256"], self.receipt["artifact_sha256"])
         self.assertEqual(member["revision_sha256"], self.export["revisions"][0]["revision_sha256"])
+        selected = self.snapshot["observations"][0]
+        for field in ("pf001_revision_id", "processing_revision_sha256", "commit_sequence", "committed_at", "mother_received_at"):
+            self.assertEqual(member[field], selected[field])
         self.assertEqual(result["lineage"]["snapshot_manifest_sha256"], self.snapshot["snapshot_sha256"])
         self.assertEqual(
             result["lineage"]["native_projection_sha256"], self.vectors["digests"]["projected_envelope"]["sha256"]
