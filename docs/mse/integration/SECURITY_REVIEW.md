@@ -29,3 +29,22 @@ Main was `c05f38096406965496d7d4a09edf4b3575235311`. The requirements and plan w
 | D / E | Infrastructure and real-data use remain held. Require accepted D-01–D-08 decisions, separate synthetic restore evidence, an authorized pilot scope and independently verified access, privacy and recovery controls before live qualification. |
 
 Next review uses the ATLAS contract draft and the exact author heads delivered by GADGET. This branch changes review documentation only.
+
+## Revision 2 checkpoint
+
+Reviewed [ATLAS draft 0.1](https://github.com/ctmansfield/mother/blob/a732adda92cc79659bf2413c7d45891cf2d13264/docs/mse/integration/contracts/README.md) under the [r2 directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041572809). **GO for provisional local work. HOLD for freezing draft 0.1.** The next contract needs these reviewable changes:
+
+- Define exact nested members and status-specific required/null fields. Supply versioned, noncircular digest preimages, including which fields encode source facts versus processing, receipt or clock metadata. Define canonical ordering, duplicate handling, Unicode/decimal handling and bounds. Supply golden bytes, digests and rejection cases.
+- Bind receipt verification to the expected subject/source and selected ledger/archive. Declare where destination identity is encoded or verified against reopened state. Cover concurrent retries, replay of a copied receipt and changed bytes under the same identity. Test uncertainty independently for each durability boundary.
+- Separate source and processing revisions. Define same-UUID changed content across captures, multiple explicit delete facts and precedence for late upserts, including previously unknown UUIDs. Keep availability, collector receipt, MOTHER receive and durable commitment distinct. Preserve raw numeric lexemes and record conversion loss. HR derivation stays unknown when source evidence cannot substantiate its class.
+- Define exact snapshot membership and deterministic selection at the declared cutoff. Bind the projected replay to the exact snapshot, including scope, coverage and tombstones. Reject unrelated snapshot/projection pairs. Preserve historical availability and keep derived results separate.
+
+Independent reproductions used Python 3.9.6 and clean, detached checkouts.
+
+| Candidate | Invocation and observed result |
+| --- | --- |
+| [NICKY #25](https://github.com/ctmansfield/mother/pull/25) `3951b9d6306190fbb713cb0b3cabd13f35da2f66` | `python3 -B -m unittest discover -s tests/acceptance/mse_integration -v` ran five fixture checks. Five passed, zero failures/errors/skips. No PF-001 import. |
+| [PROVENANCE #27](https://github.com/ctmansfield/mother/pull/27) `35e661c7934dce54044d4b14084120abd1f3b4e8` | Plain discovery exited 1 with one import error before test execution. The documented `PYTHONPATH=research/mse/reference-v0.1.0/prototype python3 -B -m unittest discover -s tests/integration/mse_snapshot -v` ran four tests. Four passed, zero failures/errors/skips. No PF-001 import. |
+| [PHOENIX #29](https://github.com/ctmansfield/mother/pull/29) assigned head `6c2af4bf7ef42b53fd8acd123be83bf3d5180a21` | `python3 -B tools/mse_integration/recovery/rehearse.py --pf-checkout <clean PF-001 checkout>` used #18 `b4e70b7123689ec164ba09e2974645ae36b184a2`. Five passed, zero failures/errors/skips. The PR branch had advanced to `1d003625` at fetch, so this run intentionally used the assigned parent. |
+
+These are fixture, reference seam and standalone restore results. Combined adapter, ledger, archive, and snapshot acceptance remains open. ATLAS received the blocking contract items for the next candidate. GADGET owns shared freeze and combined selection.
