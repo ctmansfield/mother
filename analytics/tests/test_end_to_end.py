@@ -13,7 +13,7 @@ def test_e2e_parquet_to_rules(tmp_path):
     # Create minimal CGM & treatments
     cgm = pd.DataFrame(
         {
-            "ts": pd.date_range("2025-01-01", periods=200, freq="5T", tz="UTC").astype(
+            "ts": pd.date_range("2025-01-01", periods=200, freq="5min", tz="UTC").astype(
                 "int64"
             )
             // 1_000_000,
