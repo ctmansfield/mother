@@ -136,8 +136,11 @@ class IngestV02(LocalIngest):
             )
             yield db
 
-    def ingest(self, original, export, *, adapter_version, normalize):
-        """Commit the validated exchange envelope and run the trusted PF-001 mapper."""
+    def ingest(self, *args, **kwargs):
+        raise TypeError("Use ConnectedIngest.ingest_export for authoritative intake")
+
+    def _ingest(self, original, export, *, adapter_version, normalize):
+        """Commit an adapter-verified export with the internal PF-001 mapper."""
         export = deepcopy(export)
         self.validators["export"].validate(export)
         if export["scope"] != self.scope.fields():
@@ -251,7 +254,10 @@ class IngestV02(LocalIngest):
         return result
 
     @staticmethod
-    def _check_mapping(export, revisions, records):
+    def _requires_record(observation):
+        return requires_pf001_observation(observation)
+
+    def _check_mapping(self, export, revisions, records):
         facts = export["revisions"]
         expected = Counter(
             (
@@ -294,7 +300,7 @@ class IngestV02(LocalIngest):
             {
                 native: 1
                 for native, observation in observations.items()
-                if requires_pf001_observation(observation)
+                if self._requires_record(observation)
             }
         ):
             raise ValueError(

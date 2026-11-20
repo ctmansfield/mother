@@ -13,8 +13,8 @@ from tempfile import TemporaryDirectory
 
 PF001 = "b4e70b7123689ec164ba09e2974645ae36b184a2"
 ATLAS = "769a0966da251da4d08633cc7663af9869da70e6"
-ORACLE = "7825b02093d280321af34af88aed96da44b33594"
-PROVENANCE = "7be9ea31c6c68643573afdf37ccfa0a41901a368"
+ORACLE = "ac3fbf61389ca2a6e82683aa520c15181ac1aa80"
+PROVENANCE = "5482f25c10a4ba4f2217625c8ecef45002184833"
 NICKY = "bf646a8e2f77c277717dc97b24b8957e9a380579"
 CONTRACTS = "docs/mse/integration/contracts"
 REFERENCE = "research/mse/reference-v0.1.0/prototype"

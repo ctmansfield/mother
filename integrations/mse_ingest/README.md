@@ -46,9 +46,8 @@ synthetic trial.
 
 ## Provisional ATLAS 0.2 boundary
 
-Use `IngestV02` in a fresh private trial directory with a configured archive ID,
-expected scope and the exact ATLAS #28 schema. The caller supplies the parsed
-0.2 export and a trusted local mapper. The harness validates the envelope,
+`IngestV02` is the internal custody seam. Use `ConnectedIngest.ingest_export`
+for authoritative 0.2 intake. The connected mapper owns the PF-001 write. The harness validates the envelope,
 original byte digest/length, scoped source fact digests and canonical export
 digest before custody. The mapper binds each PF-001 source row through
 `mse_source_revision_sha256` in its canonical raw JSON. Unknown-derivation HR
@@ -88,7 +87,7 @@ ID, `Scope`, and the pinned ATLAS schema. Pass exact HealthBridge bytes and the
 actual adapter's export to `ingest_export`. It assigns immutable PF-001 source
 IDs from scope and source digest, and processing IDs from source identity and
 the selected normalizer version. The default local mapper version is
-`forge-pf001-0.2`. Exact decimals remain in the exchange export. PF-001's
+`forge-pf001-binary64-0.2`. Exact decimals remain in the exchange export. PF-001's
 numeric projection is auxiliary. Unknown HR derivation and nonpositive metrics
 remain source evidence. Neither creates a PF-001 normalized observation.
 The latter produces an explicit exclusion when otherwise eligible at cutoff.
@@ -121,7 +120,7 @@ tree and the unchanged reference prototype on `PYTHONPATH`. Then run the
 unittest discovery command above. Only the sibling-dependent cases skip
 when their respective fixture roots are absent.
 
-The round 4 public-entry check uses ORACLE #30
+The recorded round 4 public-entry check used ORACLE #30
 `7825b02093d280321af34af88aed96da44b33594`, ATLAS #28
 `769a0966da251da4d08633cc7663af9869da70e6`, PROVENANCE #27
 `7be9ea31c6c68643573afdf37ccfa0a41901a368`, and the NICKY #25 source fixtures
@@ -161,3 +160,27 @@ Each Git command has a ten-second deadline and the test subprocess has a
 discovery, skips, expected failures, ordinary failures or timeouts. This
 command qualifies the FORGE suite. Independent NICKY acceptance and PHOENIX
 restore have their own commands and evidence.
+
+## Source binding and PF-001 numeric projection
+
+The public entry rederives the full export from the exact supplied bytes
+before custody and uses only that reconstruction. The scope, exporter
+version and finite parser limits are set by the ledger. Batch ID, capture ID
+and capture kind remain caller declarations. Default limits are 4 MiB,
+20,000 records, depth 32 and 256 bytes per numeric token. Reopened verification
+also rederives the export using the recorded supported exporter version.
+
+The PF-001 mapper uses the ORACLE binary64 helper for each persisted numeric
+field. Exact conversion emits no rounding finding. Finite rounded values
+retain the exact decimal and binary64 encoding in record metadata and carry
+the exporter’s field-level findings through the snapshot. Out-of-range values
+remain in the original/export and the PF-001 source revision, with explicit
+exclusions from normalized observation and replay selection. The ATLAS 0.2
+envelope is unchanged. Historical exporter and mapper versions remain
+available for verification. The current write path requires the new
+loss-accounting exporter and mapper versions. It does not augment historical
+receipts, records, or snapshots in place.
+
+The r6 verifier uses ORACLE #30 `ac3fbf61389ca2a6e82683aa520c15181ac1aa80` and
+PROVENANCE #27 `5482f25c10a4ba4f2217625c8ecef45002184833`. The frozen ATLAS
+schema and other dependency pins remain as recorded by the verifier.

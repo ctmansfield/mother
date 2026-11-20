@@ -1,10 +1,8 @@
 """Receipt-backed PF-001 mapping and snapshots for the synthetic ATLAS trial."""
 
 from collections import defaultdict
-from copy import deepcopy
 from decimal import Decimal
 import json
-import math
 import re
 import sqlite3
 
@@ -19,9 +17,11 @@ from mother.physiology.contracts import (
 
 from . import RecoveryError
 from .receipt import _timestamp
-from .v02 import SAFE_INTEGER, IngestV02, digest, requires_pf001_observation
+from .v02 import SAFE_INTEGER, IngestV02, _decimal, digest, requires_pf001_observation
 
-NORMALIZER_VERSION = "forge-pf001-0.2"
+NUMERIC_NORMALIZER_PREFIX = "forge-pf001-binary64-"
+NORMALIZER_VERSION = NUMERIC_NORMALIZER_PREFIX + "0.2"
+NUMERIC_FIELDS = ("original_value", "value")
 PROCESSING_FIELDS = (
     "channel",
     "value",
@@ -76,10 +76,9 @@ def _record(scope, fact, version, received_at):
     observation = fact.get("observation")
     if observation is None or not requires_pf001_observation(observation):
         return None
-    original_value = float(observation["original_value"])
-    value = float(observation["value"])
-    if not math.isfinite(original_value) or not math.isfinite(value):
-        raise ValueError("Value exceeds the trial PF-001 numeric representation")
+    values, numeric_losses = _numeric_projection(observation)
+    if len(values) != len(NUMERIC_FIELDS):
+        return None
     processing = _processing(fact, version)
     revision_id, _ = _source_row(scope, fact)
     fields = {
@@ -97,8 +96,7 @@ def _record(scope, fact, version, received_at):
         source_available_at=observation["source_available_at"],
         first_seen_at=received_at,
         ingested_at=received_at,
-        original_value=original_value,
-        value=value,
+        **values,
         recording_app=observation["bundle_id"],
         method="HealthKit SDNN" if observation["channel"] == "hrv_sdnn" else None,
         metadata={
@@ -109,8 +107,35 @@ def _record(scope, fact, version, received_at):
                 "classification_evidence_sha256"
             ],
             "processing_revision_sha256": processing,
+            **(
+                {"numeric_projection_losses": numeric_losses}
+                if version.startswith(NUMERIC_NORMALIZER_PREFIX)
+                else {}
+            ),
         },
     )
+
+
+def _numeric_projection(observation):
+    from integrations.healthbridge.numeric import project_binary64
+
+    values, losses = {}, []
+    for field in NUMERIC_FIELDS:
+        binary, reason = project_binary64(observation[field])
+        if binary is not None:
+            values[field] = binary
+        if reason:
+            losses.append(
+                {
+                    "field": field,
+                    "reason": reason,
+                    "exact_decimal": _decimal(observation[field]),
+                    "projected_binary64_hex": (
+                        binary.hex() if binary is not None else None
+                    ),
+                }
+            )
+    return values, losses
 
 
 class ConnectedIngest(IngestV02):
@@ -118,7 +143,9 @@ class ConnectedIngest(IngestV02):
 
     def ingest_export(self, original, export, *, normalizer_version=NORMALIZER_VERSION):
         version = _version(normalizer_version)
-        export = deepcopy(export)
+        if not version.startswith(NUMERIC_NORMALIZER_PREFIX):
+            raise ValueError("Historical normalizer is available for verification only")
+        export = self._bound_export(original, export)
 
         def normalize(_original, context):
             revisions, records = [], []
@@ -151,9 +178,71 @@ class ConnectedIngest(IngestV02):
                     records.append(record)
             return revisions, records
 
-        return super().ingest(
+        return self._ingest(
             original, export, adapter_version=version, normalize=normalize
         )
+
+    @staticmethod
+    def _requires_record(observation):
+        return requires_pf001_observation(observation) and len(
+            _numeric_projection(observation)[0]
+        ) == len(NUMERIC_FIELDS)
+
+    def _bound_export(self, original, submitted, *, reopened=False):
+        # The capture module is below the public integration wrapper in the
+        # dependency graph. The ledger never asks the wrapper or caller to
+        # verify their own export.
+        from integrations.healthbridge.capture import CaptureLimits
+        from integrations.healthbridge.export import (
+            EXPORT_VERSION,
+            LEGACY_EXPORT_VERSION,
+            normalize_capture,
+        )
+
+        metadata = ("batch_id", "capture_id", "coverage", "scope", "exporter_version")
+        if type(submitted) is not dict or any(key not in submitted for key in metadata):
+            raise ValueError("A complete adapter export is required")
+        coverage = submitted["coverage"]
+        exporter_version = submitted["exporter_version"]
+        supported = (
+            (EXPORT_VERSION, LEGACY_EXPORT_VERSION) if reopened else (EXPORT_VERSION,)
+        )
+        if (
+            type(coverage) is not dict
+            or "capture_kind" not in coverage
+            or submitted["scope"] != self.scope.fields()
+            or exporter_version not in supported
+        ):
+            raise ValueError(
+                "Export metadata differs from the configured capture adapter"
+            )
+        reconstructed = normalize_capture(
+            original,
+            subject_id=self.scope.subject_id,
+            source_instance=self.scope.source_instance,
+            batch_id=submitted["batch_id"],
+            capture_id=submitted["capture_id"],
+            capture_kind=coverage["capture_kind"],
+            exporter_version=exporter_version,
+            limits=CaptureLimits(),
+        )
+        if submitted != reconstructed:
+            raise ValueError("Export does not match the original capture")
+        return reconstructed
+
+    def _verify_custody(self, db, row):
+        super()._verify_custody(db, row)
+        export = db.execute(
+            "SELECT export_json FROM trial_exports WHERE batch_id=?", (row["batch_id"],)
+        ).fetchone()
+        try:
+            self._bound_export(
+                row["artifact"], json.loads(export["export_json"]), reopened=True
+            )
+        except (TypeError, ValueError) as error:
+            raise RecoveryError(
+                "Stored export does not match the retained capture"
+            ) from error
 
     def verify_receipt(self, candidate):
         verified = super().verify_receipt(candidate)
@@ -306,7 +395,7 @@ class ConnectedIngest(IngestV02):
                         upserts[native].append((actual_version, member))
 
         deleted = {native for native, _ in deletes}
-        observations, losses = [], []
+        observations, excluded, losses = [], [], []
         for native in sorted(set(upserts) - deleted):
             candidates = upserts[native]
             if (
@@ -345,10 +434,18 @@ class ConnectedIngest(IngestV02):
                         }
                     )
                 continue
-            observations.append(eligible[0])
+            representative = eligible[0]
+            if version.startswith(
+                NUMERIC_NORMALIZER_PREFIX
+            ) and requires_pf001_observation(event):
+                values, _ = _numeric_projection(event)
+                if len(values) != len(NUMERIC_FIELDS):
+                    excluded.append(representative)
+                    continue
+            observations.append(representative)
 
         tombstones = [deletes[key] for key in sorted(deletes)]
-        for member in observations + tombstones:
+        for member in observations + tombstones + excluded:
             export = source_exports[member["receipt_id"]]
             locators = member["source_revision"]["locators"]
             losses.extend(
