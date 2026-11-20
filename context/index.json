@@ -1,9 +1,17 @@
 {
   "schema": "context-projection-index",
   "tasks": {
+    "MHB-MOTHER-DATA-001": {
+      "path": "tasks/mhb-mother-data-r1.json",
+      "sha256": "9af9721fc82c38a20eb3a21c3560dbb193eedb29a37d1fd26a2feceb04970153"
+    },
     "MSE-001-publication": {
       "path": "tasks/MSE-001-publication-r1.json",
       "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
+    },
+    "MSE-INTEGRATION-20261120-01": {
+      "path": "tasks/mse-integration-r2.json",
+      "sha256": "49b6fc4aa6a4a387ffc2a78880e888ef6fe4bc2b6eb12c390e49d2d2c9fab03a"
     }
   },
   "version": 1

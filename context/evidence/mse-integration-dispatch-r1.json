@@ -1,0 +1,8 @@
+{
+  "report_id": "MSE-INTEGRATION-20261120-01-DISPATCH-R1",
+  "status": "IN_PROGRESS",
+  "plan": "docs/mse/IMPLEMENTATION_PLAN.md",
+  "plan_sha256": "10dd18fb2661a3b97c68de1513b9631cd8625c4df8fd2ec18e64284c409444d5",
+  "result": "Plan pushed; canonical directive read back; all eight direct prompts delivered; individual ACKs pending.",
+  "next_action": "Collect ATLAS contracts and worker ACK/dependency pins, then review shared interface before combined synthetic qualification."
+}

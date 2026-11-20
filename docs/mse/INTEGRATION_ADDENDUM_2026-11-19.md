@@ -196,3 +196,7 @@ These are pinned source/design locators, not assertions about current host state
 - R3. [COACH I01 physiology source](https://github.com/ctmansfield/coach/tree/184606fe9d5022997f09a2e4d6ef38e5dca4a9bc/coach_app/physiology).
 - R4. [Preserved foreground inbox source](https://github.com/ctmansfield/mother-health-bridge/blob/65e67f5d73ad1bc7011579947972c394d68e09da/MotherHealthBridge/ForegroundInboxCore.swift).
 - R5. [Current documentary phase reconciliation and parked work](https://github.com/ctmansfield/production-framework/issues/42#issuecomment-6908655745); [successor closeout preserving historical receipts](https://github.com/ctmansfield/production-framework/issues/42#issuecomment-6907820371).
+
+## Acquisition and storage requirements companion
+
+[HealthBridge → MOTHER ingestion and storage requirements](HEALTH_DATA_INGESTION_REQUIREMENTS.md) extends this design with acquisition-side acceptance criteria and explicit deployment/storage decisions for joint review. It is proposed requirements, not implemented adapters, a production database choice or authorization to transfer personal data.

@@ -1,0 +1,147 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MHB-MOTHER-DATA-001",
+  "task_revision": "1",
+  "observed_at": "2026-11-20T13:57:58Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "User instruction mirrored in draft PR23; recheck PR and design before execution."
+  },
+  "goal": "Contribute HealthBridge acquisition/storage requirements within MSE.",
+  "scope": [
+    "Documentation and source-bound handoff only."
+  ],
+  "acceptance": [
+    "30 requirements with evidence, eight decisions, existing MSE ownership preserved; draft PR and readback."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Write and publish requirements to Mother review branch."
+    ],
+    "not_authorized": [
+      "Live data transfer, deployment, collector cutover or runtime changes."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Preserve original evidence, current acquisition and existing holds."
+  ],
+  "instruction_binding": {
+    "id": "MHB-MOTHER-DATA-001",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23",
+    "sha256": "ba7791fb930e5655da4c842893826edf218559fd138504a8b619a67c867a30b8",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "MHB-MOTHER-DATA-001-R1",
+    "status": "COMPLETED",
+    "instruction_ref": {
+      "id": "MHB-MOTHER-DATA-001",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23",
+      "sha256": "ba7791fb930e5655da4c842893826edf218559fd138504a8b619a67c867a30b8"
+    },
+    "tests_performed": [
+      "Unique IDs, eight decision rows, relative links resolved; documentation-only; no runtime tests."
+    ],
+    "limitations": [
+      "Proposed requirements; no architecture selection, application changes, live transfer or deployment."
+    ],
+    "requested_decision": "MOTHER review and ADR for D-01 through D-08.",
+    "next_action": "#next_action",
+    "source": "report"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MHB-MOTHER-DATA-001",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23",
+      "sha256": "ba7791fb930e5655da4c842893826edf218559fd138504a8b619a67c867a30b8"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "extend-mse",
+      "value": "Requirements companion under docs/mse, linked from existing addendum.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "User identified MSE as likely existing home; preserve established responsibilities."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "DOCUMENTATION_ONLY",
+      "detail": "No application code changed.",
+      "source": "report"
+    },
+    "test": {
+      "status": "DOC_CHECKS_PASS",
+      "detail": "30 unique IDs; eight decisions; relative links resolve.",
+      "source": "report"
+    },
+    "merge": {
+      "status": "DRAFT_UNMERGED",
+      "detail": "PR23; no main merge authorized.",
+      "source": "report"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "No runtime or service changes.",
+      "source": "report"
+    },
+    "runtime": {
+      "status": "NOT_RUN",
+      "detail": "No personal data, device or host execution.",
+      "source": "report"
+    }
+  },
+  "unknowns": [
+    "Production host/volume, database decision, retention/backup and model query interface."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "MOTHER architecture review and separate implementation authorization."
+  ],
+  "next_action": {
+    "action": "MOTHER maps requirements to implementation/evidence/gaps and resolves D-01 through D-08 in an ADR.",
+    "role": "MOTHER maintainer/PM and Chad"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/mhb-mother-data-source-r1.json",
+      "sha256": "ba7791fb930e5655da4c842893826edf218559fd138504a8b619a67c867a30b8",
+      "observation": {
+        "kind": "labeled_source_projection",
+        "environment": "Local documentation checkout and GitHub review PR",
+        "method": "Record user scope and measured documentation checks.",
+        "result": "Proposed requirements contribution prepared.",
+        "limitations": [
+          "No independent review, merge or runtime authority."
+        ],
+        "observed_at": "2026-11-20T13:57:58Z"
+      }
+    },
+    "report": {
+      "path": "evidence/mhb-mother-data-report-r1.json",
+      "sha256": "aabf8c63590dfb420e45c1f7c2020f2c37590b38e1ea6dde1f7e30ecda97ad92",
+      "observation": {
+        "kind": "labeled_source_projection",
+        "environment": "Local documentation checkout and GitHub review PR",
+        "method": "Record user scope and measured documentation checks.",
+        "result": "Proposed requirements contribution prepared.",
+        "limitations": [
+          "No independent review, merge or runtime authority."
+        ],
+        "observed_at": "2026-11-20T13:57:58Z"
+      }
+    }
+  }
+}

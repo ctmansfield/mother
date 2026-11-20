@@ -1,0 +1,137 @@
+# MSE contract reconciliation
+
+MSE-INTEGRATION-20261120-01 r1 · ATLASv2 · Source reconciliation and offline interface proposal.
+
+[Dispatch](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041443650) · [30 requirements](https://github.com/ctmansfield/mother/blob/91d67e387e91d93a7a60aec03c8164c11c7aa994/docs/mse/HEALTH_DATA_INGESTION_REQUIREMENTS.md) · [Plan](https://github.com/ctmansfield/mother/blob/91d67e387e91d93a7a60aec03c8164c11c7aa994/docs/mse/IMPLEMENTATION_PLAN.md) · [Integration addendum](../INTEGRATION_ADDENDUM_2026-11-19.md) · [Draft interfaces](contracts/README.md)
+
+## Source seams and mismatches
+
+| Seam | Observed at exact source | Proposed first-slice mapping |
+| --- | --- | --- |
+| HealthArchive | [Active ContentView.swift](https://github.com/ctmansfield/mother-health-bridge/blob/9b85cf1a12ecb1f91f414e8f5366d81f3dbb81d6/MotherHealthBridge/ContentView.swift) embeds SavedReading/HealthArchive. Default Codable JSON contains readings, opaque Data anchors, dictionary tombstones and backfillStart. HR is bpm and SDNN is ms. Deletion can exist in both the reading and dictionary, including a UUID without a reading. receivedAt and deletion time are collector clocks. | ORACLE consumes captured bytes read-only, supplies declared scope, normalizes Swift Date, preserves a locator for each original fact and records unavailable device/calibration/source revision and permission evidence. Recheck source digest/length when reopening. |
+| PF-001 archive | [PR #18 archive.py](https://github.com/ctmansfield/mother/blob/b4e70b7123689ec164ba09e2974645ae36b184a2/mother/physiology/archive.py), [schema](https://github.com/ctmansfield/mother/blob/b4e70b7123689ec164ba09e2974645ae36b184a2/mother/physiology/schemas/v1.schema.json), [I01 recovery](https://github.com/ctmansfield/mother/blob/b4e70b7123689ec164ba09e2974645ae36b184a2/mother/physiology/receipt_recovery.py). Unmerged dependency. Archive.begin_run and commit_batch support originals, source revisions, normalized records, source heads and checkpoint only on completion. Source head uses observed_at, and current_records has no as-of query or explicit HealthKit delete operation. The I01 receipt verifies a single event envelope; its wire schema is distinct. | FORGE uses PF-001 artifact bytes and commit seam. Bind scope to both run and receipt. Preserve delete as a raw typed source revision with no invented normalized observation. Resolve current and cutoff views over retained committed operations; a late upsert cannot revive a tombstoned UUID. Keep one acceptance ledger tied to PF-001 run identity. If a separate journal is needed, prove reopen/reconciliation at artifact, archive and receipt boundaries. |
+| PF-001 observation | make_observation validates source_revision_id, lineage, enum, timestamps and derivative method. Existing first_seen_at and ingested_at mean this system's observation and ingestion. Neither is the collector clock. | Use scoped stable source key and immutable source revision. Map original_value/original_unit and decimal value/unit; SDNN is vendor_derived with declared HealthKit SDNN method and unknown device/calibration. HR derivation is unknown without independent evidence. PF-001 has no unknown epistemic enum, so retain unqualified HR as a source revision without fabricating a normalized physiological record or reference input. Carry collector receipt in metadata and retain authoritative commitment separately. Different processing versions require distinct immutable normalized IDs. |
+| MSE | [adapters.py](https://github.com/ctmansfield/mother/blob/c05f38096406965496d7d4a09edf4b3575235311/research/mse/reference-v0.1.0/prototype/mse/adapters.py), [contracts.py](https://github.com/ctmansfield/mother/blob/c05f38096406965496d7d4a09edf4b3575235311/research/mse/reference-v0.1.0/prototype/mse/contracts.py), [storage.py](https://github.com/ctmansfield/mother/blob/c05f38096406965496d7d4a09edf4b3575235311/research/mse/reference-v0.1.0/prototype/mse/storage.py) and model.replay. Native replay takes strict observation rows with positive scalars, canonical scope/native IDs and received_at, and separate {observation_id, deleted_at} tombstones. Reference Store rejects conflicting immutable values under one observation ID. Its optional global receipt cutoff filters source receipt and event end and is retrospective. | PROVENANCE projects one selected revision per UUID into an isolated reference store per snapshot, using identifier("observation", subject_id, source_instance, native_id) and preserving the full authoritative scope outside the envelope. Use collector_received_at for the reference received_at slot, with its meaning explicit in provenance. Filter authoritative eligibility upstream using MOTHER commit sequence. Do not ask the reference cutoff to reconstruct archive availability. Bind projected input digest, snapshot, adapter/code/config/run and unknowns externally. |
+
+A record revision digest binds source content independently of capture path or ingest clocks. A receipt binds a batch to a capture and export; a snapshot binds exact accepted revisions to a local cutoff. These identities are distinct from a HealthKit anchor. Equal artifacts establish byte identity. Authorization, evidence quality and medical meaning are separate gates.
+
+## Destination-readiness mapping
+
+[MSE-DESTINATION-READINESS-20261121-01 r1](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041665721). This is a source-only mapping from the current collector definition at `9b85cf1a12ecb1f91f414e8f5366d81f3dbb81d6`, the [PF-001 SQLite migration](https://github.com/ctmansfield/mother/blob/b4e70b7123689ec164ba09e2974645ae36b184a2/mother/physiology/migrations/0001_archive.sql) and the proposed 0.2 exchange. No host, database catalog, capture, physiological row or file was read. Runtime location, available capacity, applied schema and write/recovery behavior remain with the owning audit.
+
+| Current source field and Codable type | Destination representation and semantics |
+| --- | --- |
+| Whole HealthArchive as captured JSON bytes | Retain immutable bytes with SHA-256, byte length, source schema, media type and capture/exporter binding. PF-001 `raw_artifacts` has digest, BLOB, media type and created_at; length can be derived from bytes, while capture and export linkage belongs in acceptance metadata. Verify on reopen. |
+| `readings[].id: UUID`, `kind: String` | Preserve native UUID, canonical lowercase text for equality and original spelling via artifact pointer. Logical key is within subject, HealthKit store instance and collection. A PF-001 `source_key` and namespace must bind that full scope; the PF-001 uniqueness tuple omits subject, so reserve store namespace to one subject or encode subject collision-safely before import. Verify kind against the two known literals. Unknown kinds are explicit unsupported inputs. |
+| `value: Double`, `unit: String` | Capture the exact JSON number token before any binary floating conversion. Heart rate maps to `heart_rate`/`bpm`, derivation class unknown from the capture. HRV (SDNN) maps to `hrv_sdnn`/`ms`, vendor-derived. No cross-metric conversion. Use canonical decimal strings at interchange and PF-001 `original_value`/`original_unit` and `value`/`unit` where supported. Preserve source revisions for unknown HR and exclude from PF-001 normalized observations and MSE pending an evidence-supported class. |
+| `start: Date`, `end: Date` | Capture numeric Swift Date tokens as exact decimals and map to biological interval UTC in source revisions and normalized measurement_start/end when applicable. Use six fractional digits, explicit rounding loss and interval validation. Use range queries on the same canonical timeline, keeping half-open scope semantics and the completed-interval rule. No inferred acquisition window. |
+| `source: String`, `bundleID: String` | Keep both in the source payload and record locator. Map known bundle to PF-001 recording_app or typed metadata with explicit meaning. Neither identifies the physical sensor or the scoped store by itself. Device, calibration, acquisition method for HR, and source revision/version stay unknown. |
+| `receivedAt: Date` | Preserve original Swift Date token and normalized collector_received_at in capture/record metadata. Do not populate PF-001 `first_seen_at`, `ingested_at`, `source_available_at` or `source_modified_at` with this value. Bind MOTHER first receipt and durable commit time/sequence from the local acceptance record; clocks may differ. In reference MSE only, received_at means collector receipt, declared in provenance. |
+| `deletedAt: Date?`, `tombstones: [String: Date]` | Preserve both locators and original delete times. Match a validated dictionary key to canonical UUID, including UUIDs with no reading. Preserve distinct exact delete facts; coalesce equal facts with all pointers. Map to typed source revisions using PF-001 disposition `deleted` and no fabricated observation. Project explicit deletion dominance at the requested commit cutoff. PF-001 latest-sighting heads alone cannot guarantee that policy. |
+| `anchors: [String: Data]` | Keep original base64 inside the protected capture. Export only digest of decoded opaque bytes per observed metric/store. Store digests and capture binding as metadata; no ordering, numeric conversion, cross-store transplantation or advancement of an import/delivery checkpoint. |
+| `backfillStart: Date` | Keep exact original token and canonical configured lower bound in coverage metadata. It gives no evidence of permission, completeness, measured watermarks or lifetime history. Partial/empty capture absence never generates deletion. |
+| Fields absent from the capture | MOTHER-assigned archive ID, subject/store scope, purpose, request/batch, commit sequence, precise archive cutoff and normalization versions come from the surrounding destination contract. Device/calibration/source availability and capture coverage claims remain explicitly unknown. No acquisition field is reconstructed from an inferred value. |
+
+### Write and retrieval contract
+
+- Accept original bytes plus a validated export for an explicitly configured destination and caller scope. Bind unique (archive ID, subject, source system, store instance, collection, batch ID) to artifact and export identities; compare both on retry. Restrict source namespace to the same subject on deletion-only and empty runs too. Commit or reconcile retained bytes, PF-001 run/revisions and the authoritative receipt before returning a stage as durable. Reject changed bound content and verify hashes/identities from reopened storage. PF-001 requires its revision_hash to equal the hash of its own canonical raw_json. Bind the portable 0.2 source digest separately if raw_json and preimage differ; link capture sightings to every retained artifact even when the source revision deduplicates.
+- Verify the requested subject/source/collection, purpose and archive authorization before reading. Use finalized receipt sequence as the authoritative cutoff within that archive, together with the half-open biological interval and selected normalizer version. Return bounded pages using stable native/revision identity ordering and a cursor bound to the exact immutable snapshot digest and query scope. Reject mixed snapshot/cursor reuse. The local first slice can produce a single bounded snapshot; network pagination and caller authorization remain future contracts.
+- For every selected observation or deletion, retain revision, artifact, receipt and cutoff linkage. Resolve corrected/deleted state at the cutoff and test late-arrival cases. A current PF-001 heads query or a collector receipt-time filter cannot reconstruct historical archive eligibility. Return coverage/unknown and typed exclusions with the snapshot. Keep raw bytes and ingestion credentials outside model access. Keep derived results in a distinct namespace linked to the exact input snapshot and projection.
+- Structural readiness remains open until PHOENIX verifies sanitized catalog/storage metadata and FORGE reconciles it with schema constraints. In particular, verify scope/batch uniqueness, retained artifact and revision linkage, stable commit sequencing and cutoff access, deletion dominance, and separate backup treatment for artifacts and acceptance state. Require an authorized synthetic write/reopen/recovery test before any assertion of intake readiness.
+
+## Requirement matrix
+
+**Existing** records source capability only. **Next evidence** describes implementation/acceptance still to obtain unless expressly identified as existing. Rows do not assert synthetic, runtime or production PASS.
+
+| ID | Existing evidence / gap | Next offline evidence or separate dependency |
+| --- | --- | --- |
+| ACQ-01 | Collector persists its own JSON; reference adapter accepts captured bytes. No capture handoff qualified. | ORACLE/NICKY verify read-only digest and stable captured snapshot with inference absent. |
+| ACQ-02 | PF-001 can store original digest/bytes; no HealthArchive capture manifest. | ORACLE export binds file digest, length, scope, schema and exporter version; reject mismatches. |
+| ACQ-03 | SavedReading carries UUID, metric, interval, value/unit, source/bundle and collector receipt. Device/calibration absent. | ORACLE maps exact source fields and demonstrates explicit loss using NICKY fixtures. |
+| ACQ-04 | Source has dictionary and embedded deletion; MSE reference permits unseen UUID tombstone; PF-001 lacks typed delete schema. | FORGE/ORACLE retain both source forms, test delete-before-add and partial absence. |
+| ACQ-05 | HealthKit anchors opaque; PF-001 checkpoint only on complete range. | ORACLE/FORGE keep anchor, export batch and receipt separate; test stale scope/reopen. |
+| ACQ-06 | No bounded phone exporter/outbox or disk-pressure policy qualified. | ORACLE/FORGE use finite synthetic fixtures; Stage C proves interruption and limits before upload. |
+| ACQ-07 | Backfill start is configuration, not permission/completeness. | NICKY adds empty, partial and sparse captures with explicit coverage unknown. |
+| ING-01 | Earlier foreground messaging/transport is a separate authority and purpose. | Stage C/E require scoped HTTPS, redirect/size/auth denial, placement and owned qualification. No listener in this slice. |
+| ING-02 | PF-001 dedupes immutable revisions; I01 has event-specific retry/recovery. | FORGE proves same scoped batch returns original receipt, changed bytes conflict, lost response/reopen stable; concurrency later. |
+| ING-03 | No HealthArchive delivery outbox. | Stage C durable outbox and restart/uncertain-response fixture. |
+| ING-04 | I01 receipt ties one event envelope to archive; no capture receipt. | FORGE reopens exact artifact and PF-001 run; cross-check receipt scope/hash/time/sequence. |
+| ING-05 | PF-001 has run state and dispositions; coverage/normalization must stay separate. | FORGE tests durably_received, normalized, quarantined and rejected transitions. |
+| ING-06 | PF-001 commit_batch can atomically retain original/revisions/records; separate ledger boundary unproven. | FORGE injects faults at custody, archive commit and receipt publication; journal recovers exact identity. |
+| ING-07 | PF-001 supports dispositions; HealthArchive mixed-validity quarantine unproven. | FORGE/NICKY reject or quarantine whole ambiguous batch and prove no checkpoint advancement. |
+| ING-08 | No HealthArchive grant/remap lifecycle. | FORGE checks scope mismatch locally; Stage C fences generation, expiry, sign-out and late receipt. |
+| STO-01 | PF-001 artifacts/records and MSE derived store have distinct roles. | FORGE/PROVENANCE demonstrate separate evidence and scratch replay; PHOENIX maps production custodians under D-01–D-03. |
+| STO-02 | PF-001 immutable revisions and heads exist; heads alone cannot resolve delete/late arrival. | FORGE/PROVENANCE prove corrected/current/historical synthetic views, preserving originals and delete facts. |
+| STO-03 | HealthArchive receipt and PF-001 clock fields available with different meanings. | Bind collector time, MOTHER receipt/commit/sequence and unknown source availability; cutoff and late-arrival checks. |
+| STO-04 | PF-001 and MSE validate unit/class; current source loses metadata. | ORACLE/PROVENANCE verify Swift epoch, decimal policy, units, SDNN classification and explicit loss. |
+| STO-05 | No production identity, custody or at-rest decision. | SENTINEL verifies synthetic-only fixtures and sanitized reports; infrastructure/private policy separate. |
+| STO-06 | Capacity, quotas, retention and RPO/RTO unselected. | PHOENIX proposes measurable limits and backup/alert tradeoffs; no live inventory. |
+| STO-07 | Archive reopen exists; independent complete restore remains open. | PHOENIX rehearses synthetic artifact/ledger/DB restore with schema and linkage checks. |
+| STO-08 | Source delete and reference invalidation exist; protected erasure policy absent. | Demonstrate tombstone suppression without erasure; owner policy governs backups, derived and memory references. |
+| STO-09 | PF-001 schema migration and separate phone migration work exist. | PHOENIX rehearses isolated rollback and reader compatibility; active JSON collector unchanged. |
+| LLM-01 | MSE reference runs from files/local DB; no authorized query enforcement. | PROVENANCE passes scoped snapshots only; SENTINEL checks scope mismatch; service auth remains Stage C. |
+| LLM-02 | Reference global cutoff is retrospective and lacks revision-bound authoritative coverage. | Build deterministic snapshot scoped by cutoff, revision/artifact/receipt and coverage; test later commit exclusion. |
+| LLM-03 | Numerical reference is separate from proposed semantic memory. | Preserve direct revision locators; no embedding-based measurement substitution. |
+| LLM-04 | Reference returns model/config/dataset lineage and explicit unknowns, with uncalibrated uncertainty. | Attach exact bridge/snapshot digest, versions and unavailable result; derived-only namespace. |
+| LLM-05 | Reference conservatively invalidates on new data; no auth-revocation serving layer. | Verify synthetic cutoff/correction/deletion changes current eligibility, preserves prior manifests; retraction/access enforcement later. |
+| LLM-06 | Offline invocation is separable from PF-001 writes; backlog/throughput unqualified. | FORGE/PROVENANCE show archive acceptance without model; Stage C/D define quotas and backlog state. |
+
+## Round 4 actual connected-test coverage
+
+[Round 4 directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7042142491). ATLAS independently ran the four [ConnectedIngest cases](https://github.com/ctmansfield/mother/blob/d2441050726f1b3f50c928d5f8205d5ea179276d/tests/integration/mse_ingest/test_connected.py) in an isolated local assembly. **4 passed, 0 failed, 0 skipped.** Log SHA-256 `e26a00970ca608e5996d72e1bec538d938817132cfd6c3432ddb96a3ad2812ff`. This is an independent execution of FORGE-authored tests, separate from NICKY's public-entry acceptance. Base PF-001 #18 `b4e70b7123689ec164ba09e2974645ae36b184a2` remains unmerged.
+
+Exact assembly: FORGE #31 `d2441050726f1b3f50c928d5f8205d5ea179276d`; ORACLE #30 `c26180c1cbf78a9d2e1915d0e83241b1d36cdac9`; PROVENANCE #27 `089e627bccf93513d52a04c7eb45d27800c0817e`; NICKY fixture source #25 `13d2e19825aa872c04cf174cd8adef1bc8d40756`; ATLAS contract #28 `769a0966da251da4d08633cc7663af9869da70e6`. The runner uses the real adapter export, real ledger/PF-001 and the real snapshot verifier/MSE bridge. It does not enter through ORACLE's public wrapper. The prior FORGE component total of 16 is owner-reported. [FORGE receipt](https://github.com/ctmansfield/mother/pull/31#issuecomment-7042102444)
+
+Evidence keys below name actual methods: **E1** `test_real_adapter_archive_and_reference_replay`, **E2** `test_retries_conflict_receipt_order_and_exact_processing_version`, **E3** `test_interrupted_archive_and_member_verification_after_restart`, and **E4** `test_source_only_zero_and_first_equal_sighting`. A row with a narrow synthetic result may still have unproved production requirements.
+
+| Requirement | Actual connected evidence | Remaining acceptance |
+| --- | --- | --- |
+| ACQ-01 | E1 uses a captured fixture and independent local inference. | Live collector continuity, coherent acquisition capture and network-outage behavior. |
+| ACQ-02 | E1 receipt reopens; E3 rejects tampered retained bytes. | Source authority and approved capture custody. |
+| ACQ-03 | E1 verifies normalized SDNN value and unknown HR exclusion; E4 verifies collector clock and locators. | Full field-by-field independent capture/export comparison and finite negative branch. |
+| ACQ-04 | E1 preserves two deletions including unknown UUID; E2 verifies historical cutoff stability. | Connected delete-before-add and partial-absence cases remain to be asserted explicitly. |
+| ACQ-05 | No connected checkpoint assertion. | Prove acquisition anchor, export progress and server checkpoint remain separate across restart. |
+| ACQ-06 | No connected pressure/limit assertion. | Bounded session, quotas and disk-full failure without cursor advance. |
+| ACQ-07 | Connected test labels full and partial inputs. | Assert coverage/permission unknown for sparse and empty fixture through public entry. |
+| ING-01 | No listener used. | Scoped HTTPS, hostname, redirects, authentication, placement and request-size qualification. |
+| ING-02 | E2 stable same-batch retry, changed-batch conflict and same-UUID content quarantine; E3 recovers same identity after interruption. | Concurrent/lost-response transport behavior and external caller scope. |
+| ING-03 | No outbox used. | Durable sender outbox and kill-before/after-send tests. |
+| ING-04 | E1 reopens receipt; E3 verifies reopened membership and rejects invalid linkage. | Independent external receipt acceptance/authorization. |
+| ING-05 | E2 sees quarantine; E3 distinguishes durable custody from normalized availability. | Connected malformed/rejected and client-facing state-transition evidence. |
+| ING-06 | E3 interrupts archive stage and recovers with stable custody; tampered bytes fail closed. | Remaining write boundaries, disk-full, orphan cleanup and independent paired restore. |
+| ING-07 | E2 quarantines conflicting source payload without modifying historical snapshot. | Unsupported schema, mixed validity, private retention and checkpoint protection through public entry. |
+| ING-08 | No grant lifecycle exercised. | Cancellation, expiry, remap and late response fencing. |
+| STO-01 | E1 observes normalized archive rows and separate derived replay output. | Selected placement, canonical locators and custodians. |
+| STO-02 | E1 retains tombstones; E2 protects earlier state and selects exact processing revision. | Authorized correction and explicit delete-before-add across batches. |
+| STO-03 | E2 exercises historical cutoff under repeat receipt and later addition; E4 verifies first collector receipt. | Historical online knowledge claim remains unproved; independently verify all clock fields. |
+| STO-04 | E1 checks normalized SDNN; E4 preserves zero source evidence. | Negative branch currently incompatible; unit/date/lexeme conversions have separate fixture checks. |
+| STO-05 | Only isolated synthetic inputs used here. | Identity/access denials, key custody, transport and at-rest protection. |
+| STO-06 | No live retention or quota exercised. | Capacity, quotas, retention, backup frequency and RPO/RTO. |
+| STO-07 | E3 reopens and detects corruption. | Restore from a separate paired artifact/ledger/archive backup and replay exact surviving state. |
+| STO-08 | E1 preserves explicit deletions. | Owner erasure policy across evidence, backups, projections and memory. |
+| STO-09 | Tests create and reopen disposable PF-001 storage. | Migration/rollback preserving accepted runs and historical evidence. |
+| LLM-01 | E1 uses expected scope/archive and trusted local verifier; E3 rejects forged member. | Cross-subject/purpose and bounded service denial on actual query interface. |
+| LLM-02 | E2 exact normalizer, old cutoff and repeated receipt selection; E3 rejects omitted member even after rehash. | Explicit query authorization, coverage and mixed pagination/snapshot-cursor tests. |
+| LLM-03 | E1 derives from archive-bound snapshot and no memory search. | Production evidence-reference resolution independent of semantic retrieval. |
+| LLM-04 | E1 validates derived class and exact snapshot manifest linkage. | Independent full result/configuration lineage and model-unavailable result checks. |
+| LLM-05 | E2 later evidence leaves historical explanation reproducible. | Correction/deletion and authorization revocation invalidate current serving without rewriting history. |
+| LLM-06 | E2/E3 accept and reconcile archive work without invoking inference. | Model-offline service behavior, backlog, concurrency limits and recovery. |
+
+### Narrow freeze disposition
+
+The exact contract candidate remains `769a0966da251da4d08633cc7663af9869da70e6`. E4 independently verifies intact first-row metadata and all locators in the pinned connected zero case. Contract golden vectors separately check numeric index 2 versus 10 and signed finite values. A direct probe with the finite-negative golden capture shows **the pinned ORACLE adapter rejects it before ledger**, so end-to-end negative compatibility is **open**. Probe log SHA-256 `579b474715ce83db0cb6e742d4fdde5f25a2324dbb1a44102f495b6893e968bf`. This reproduces the known pinned-version incompatibility without changing the contract. Require ORACLE's aligned candidate and a real FORGE ledger/snapshot probe showing retained negative source fact, typed loss and no normalized/native observation. SENTINEL must review that exact delta and GADGET owns freeze. Destination remains NOT READY.
+
+## Decision register
+
+| ID | Offline choice for review | Production owner / remaining decision |
+| --- | --- | --- |
+| D-01 | Separate local ingestion from offline inference. | MOTHER + infrastructure select topology, volume and isolation. |
+| D-02 | Reuse pinned PF-001 SQLite seam in disposable synthetic storage. | Archive owner decides concurrency, support and migration model. |
+| D-03 | Use digest-bound original bytes and a recoverable acceptance ledger. | MOTHER + infrastructure choose protected artifact placement and recovery strategy. |
+| D-04 | Captured JSON adapter first. | HealthBridge + ingest determine bounded upload/outbox and capabilities. |
+| D-05 | Keep synthetic originals during acceptance. | Chad + custodian choose quotas, erasure/retention, backups, RPO/RTO. |
+| D-06 | Immutable evidence snapshot plus isolated reference bridge. | MOTHER/MSE decide authorized query interface and derived retention. |
+| D-07 | New synthetic HR/SDNN and tombstones only. | Chad decides any later dataset, purpose, scope and recipients. |
+| D-08 | Ingestion remains independent of model. | Operations define identity lifecycle, lag, failures, alert and recovery ownership. |
+
+GADGET owns interface freeze and shared context registration. Authors own implementation and tests on separate heads. Current matrix is source review; it makes no deployment or live-data claim.
