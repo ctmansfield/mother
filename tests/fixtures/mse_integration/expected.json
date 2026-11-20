@@ -39,7 +39,9 @@
           1
         ]
       ],
-      "disposition": "accept"
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/baseline.json",
+      "source_compatible_sha256": "020197048bc537ae3476f9768ed731b73bc2140df236457d54d76df22209c05a"
     },
     "partial": {
       "file": "partial.json",
@@ -58,7 +60,9 @@
           1
         ]
       ],
-      "disposition": "accept"
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/partial.json",
+      "source_compatible_sha256": "0b8ed0cd505ddd300bfb585a823300001378dccc10a9cfd86f3ec3c6f968fe7f"
     },
     "empty": {
       "file": "empty.json",
@@ -70,7 +74,9 @@
       "live_ids": [],
       "tombstone_ids": [],
       "observed_revisions": [],
-      "disposition": "accept"
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/empty.json",
+      "source_compatible_sha256": "d8bf0ec8f4a63f8a8961c665c61554a83a6d04328845ccd956332c873417150c"
     },
     "late": {
       "file": "late.json",
@@ -89,7 +95,9 @@
           1
         ]
       ],
-      "disposition": "accept"
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/late.json",
+      "source_compatible_sha256": "9664643b64c85cf29e24916beccaa8ed444b2f5782d692883e5da40381fd2963"
     },
     "conflicting-uuid": {
       "file": "conflicting-uuid.json",
@@ -101,7 +109,9 @@
       "live_ids": [],
       "tombstone_ids": [],
       "observed_revisions": [],
-      "disposition": "reject_or_quarantine"
+      "disposition": "reject_or_quarantine",
+      "source_compatible_file": "source-compatible/conflicting-uuid.json",
+      "source_compatible_sha256": "5bb198050484f04d8195439aa2a94acf91a097778c97b67947122539e06f6aa8"
     },
     "changed-batch": {
       "file": "changed-batch.json",

@@ -21,14 +21,16 @@ class AdapterAcceptance(unittest.TestCase):
 
     def normalize_case(self, name):
         case = CASES[name]
-        path = FIXTURES / case["file"]
+        path = FIXTURES / case.get("source_compatible_file", case["file"])
         raw = path.read_bytes()
+        expected_hash = case.get("source_compatible_sha256", case["sha256"])
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), expected_hash)
         export = self.normalize(
             raw, subject_id="synthetic-acceptance", source_instance="synthetic-store",
             batch_id=case["batch_id"], capture_id=f"capture-{name}",
             capture_kind="partial" if case["coverage"] == "partial" else "full_file",
         )
-        self.assertEqual(export["artifact"]["sha256"], hashlib.sha256(raw).hexdigest())
+        self.assertEqual(export["artifact"]["sha256"], expected_hash)
         self.assertEqual(path.read_bytes(), raw)
         return export
 
