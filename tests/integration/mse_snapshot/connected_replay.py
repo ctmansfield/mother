@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from integrations.healthbridge.export import export_sha256
+from integrations.healthbridge.export import export_sha256, normalize_capture
 from integrations.healthbridge.ingest import ingest_capture
 from integrations.mse_ingest import RecoveryError, Scope
 from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
@@ -102,8 +102,7 @@ class ConnectedReplayTests(unittest.TestCase):
         self.assertEqual(lineage["model_version"], MODEL_VERSION)
         self.assertEqual(lineage["model_config_sha256"], digest(run["configuration"]))
 
-    def test_public_ingest_manifest_survives_paired_sqlite_restore(self):
-        original = self.replay(self.snapshot)
+    def restored_ledger(self):
         restored = self.root.parent / (self.root.name + "-restored")
         restored.mkdir(mode=0o700)
         self.addCleanup(shutil.rmtree, restored)
@@ -116,7 +115,11 @@ class ConnectedReplayTests(unittest.TestCase):
                     self.assertIsNone(writer.execute("PRAGMA foreign_key_check").fetchone())
             destination.chmod(0o600)
 
-        reopened = self.ledger(restored)
+        return self.ledger(restored)
+
+    def test_public_ingest_manifest_survives_paired_sqlite_restore(self):
+        original = self.replay(self.snapshot)
+        reopened = self.restored_ledger()
         self.assertEqual(reopened.verify_receipt(self.receipt), self.receipt)
 
         def verify(output):
@@ -133,8 +136,107 @@ class ConnectedReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "differs from verified replay"):
             verify(altered)
 
+    def test_direct_ingest_rejects_self_consistent_invented_source_facts(self):
+        original_artifact = self.export["artifact"]
+        variants = {
+            "revised-value": self.original.replace(b"4.20e1", b"43", 1),
+            "changed-source": self.original.replace("Synthetic µ".encode(), b"Other source", 1),
+            "omitted-deletion": self.original.replace(
+                b'"00000000-0000-4000-8000-000000000002":3', b"", 1
+            ),
+        }
+        for name, modified in variants.items():
+            with self.subTest(name=name):
+                self.assertNotEqual(modified, self.original)
+                forged = normalize_capture(
+                    modified, subject_id=self.scope["subject_id"],
+                    source_instance=self.scope["source_instance"], batch_id=name,
+                    capture_id=name, capture_kind="full_file",
+                )
+                forged["artifact"] = original_artifact.copy()
+                self.assertNotEqual(export_sha256(forged), export_sha256(self.export))
+                try:
+                    receipt = self.ledger(self.root / name).ingest_export(self.original, forged)
+                except (ValueError, RecoveryError):
+                    continue
+                self.assertNotEqual(receipt["status"], "normalized")
+
+    def test_exact_decimal_conversion_loss_survives_verified_restore(self):
+        # Use a value whose exact decimal differs even from float's shortest spelling.
+        exact = "42.000000000000000001"
+        original = self.original.replace(b"4.20e1", exact.encode(), 1).replace(
+            b'"00000000-0000-4000-8000-000000000001"',
+            b'"00000000-0000-4000-8000-000000000003"', 1,
+        )
+        delivery = ingest_capture(
+            self.reopened, original, batch_id="precision", capture_id="precision",
+            capture_kind="partial",
+        )
+        self.assertEqual(delivery.receipt["status"], "normalized")
+        revision = next(fact for fact in delivery.export["revisions"] if fact["operation"] == "upsert")
+        self.assertEqual(revision["observation"]["original_value"], exact)
+        self.assertEqual(revision["observation"]["value"], exact)
+        self.assertEqual(delivery.receipt["artifact_sha256"], sha256(original).hexdigest())
+        snapshot = self.reopened.build_snapshot(
+            measurement_start=self.snapshot["measurement_start"],
+            measurement_end=self.snapshot["measurement_end"],
+            knowledge_cutoff_sequence=delivery.receipt["commit_sequence"],
+            normalizer_version=self.normalizer_version,
+        )
+        result = self.replay(snapshot)
+        self.assertEqual(result["input_losses"], snapshot["losses"])
+        precision_losses = [
+            {"field": field, "reason": "pf001_binary64_rounding", "locator": "/readings/0/value"}
+            for field in ("original_value", "value")
+        ]
+        self.assertTrue(all(loss in delivery.export["losses"] for loss in precision_losses))
+        self.assertTrue(all(loss in snapshot["losses"] for loss in precision_losses))
+        selected = next(member for member in snapshot["observations"]
+                        if member["source_revision"]["revision_sha256"] == revision["revision_sha256"])
+        self.assertEqual(selected["source_revision"], revision)
+        reopened = self.restored_ledger()
+        with closing(sqlite3.connect(reopened.archive.as_uri() + "?mode=ro", uri=True)) as archive:
+            row, = archive.execute(
+                "SELECT record_json FROM normalized_records WHERE revision_id=?",
+                (selected["pf001_revision_id"],),
+            ).fetchone()
+        record = json.loads(row)
+        self.assertEqual(record["original_value"], 42.0)
+        self.assertEqual(record["value"], 42.0)
+        self.assertEqual(record["metadata"]["exact_decimal_value"], exact)
+        self.assertEqual(reopened.verify_receipt(delivery.receipt), delivery.receipt)
+        options = dict(
+            ledger=reopened, expected_scope=self.scope, expected_archive_id=self.archive_id,
+            max_bytes=64_000, max_members=128, max_manifest_bytes=128_000,
+        )
+        raw = canonical(snapshot).encode()
+        self.assertEqual(
+            verify_ledger_replay_manifest(raw, canonical(result).encode(), **options), result
+        )
+        counterfeit = deepcopy(result)
+        counterfeit["input_losses"] = [loss for loss in result["input_losses"] if loss not in precision_losses]
+        counterfeit["result_id"] = "derived:" + digest(counterfeit["lineage"])
+        with self.assertRaisesRegex(ContractError, "differs from verified replay"):
+            verify_ledger_replay_manifest(raw, canonical(counterfeit).encode(), **options)
+
     def test_resigned_forged_or_incomplete_snapshot_fails_before_replay(self):
+        def replace_with_invented_fact(snapshot):
+            member = snapshot["observations"][0]
+            invented = normalize_capture(
+                self.original.replace(b"4.20e1", b"43", 1),
+                subject_id=self.scope["subject_id"], source_instance=self.scope["source_instance"],
+                batch_id="counterfeit", capture_id="counterfeit", capture_kind="full_file",
+            )["revisions"][0]
+            fields = ("channel", "value", "unit", "event_start", "event_end",
+                      "epistemic_type", "classification_basis", "classification_evidence_sha256")
+            member["source_revision"] = invented
+            member["processing_revision_sha256"] = digest([
+                "mse.processing-revision/0.2", invented["revision_sha256"], self.normalizer_version,
+                {field: invented["observation"][field] for field in fields},
+            ])
+
         changes = {
+            "self-consistent invented fact": replace_with_invented_fact,
             "invented-receipt": lambda s: s["observations"][0].update(receipt_id="f" * 64),
             "wrong-source": lambda s: s["observations"][0]["source_revision"].update(revision_sha256="e" * 64),
             "wrong-processing": lambda s: s["observations"][0].update(processing_revision_sha256="d" * 64),
