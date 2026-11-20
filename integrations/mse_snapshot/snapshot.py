@@ -109,6 +109,8 @@ def _sha(value):
 
 
 def _read_snapshot(snapshot_bytes, max_bytes, max_members):
+    if any(type(n) is not int or n <= 0 for n in (max_bytes, max_members)):
+        raise ContractError("Snapshot limits must be positive integers")
     if len(snapshot_bytes) > max_bytes:
         raise ContractError("Snapshot exceeds byte limit")
     try:
@@ -220,8 +222,8 @@ def _project_observation(member, revision, key, snapshot, start, end):
     elif obs["classification_evidence_sha256"] is not None:
         raise ContractError("Unexpected classification evidence")
 
-    _match(obs["value"], r"(?:0|[1-9][0-9]*)(?:\.[0-9]*[1-9])?")
-    if _decimal(obs["original_value"]) != obs["value"]:
+    _match(obs["value"], r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]*[1-9])?")
+    if obs["value"] == "-0" or _decimal(obs["original_value"]) != obs["value"]:
         raise ContractError("Normalized measurement value mismatch")
     source_fact = {
         "channel": channel, "value": obs["value"], "unit": unit,
@@ -380,18 +382,24 @@ def replay_snapshot(
     verify_membership: Callable[[str, dict, dict], bool],
 ) -> dict:
     """Validate and replay the projection derived from one scoped synthetic snapshot."""
-    if any(type(n) is not int or n <= 0 for n in (max_bytes, max_members)):
-        raise ContractError("Snapshot limits must be positive integers")
     snapshot = _read_snapshot(snapshot_bytes, max_bytes, max_members)
     if snapshot["scope"] != expected_scope or snapshot["archive_id"] != expected_archive_id:
         raise ContractError("Snapshot does not match expected scope and archive")
     projection, losses = _project(snapshot)
-    # The verifier must compare against authoritative reopened state, not just
-    # confirm the caller-controlled receipt ID/digest is well formed.
+    # Standalone reference callers can verify selected membership independently.
     for field in ("observations", "tombstones"):
         for member in snapshot[field]:
             if verify_membership(snapshot["archive_id"], dict(snapshot["scope"]), deepcopy(member)) is not True:
                 raise ContractError("Snapshot member not verified in reopened authoritative ledger")
+    return _run_snapshot(snapshot_bytes, snapshot, projection, losses)
+
+
+def _replay_validated_snapshot(snapshot_bytes, snapshot):
+    projection, losses = _project(snapshot)
+    return _run_snapshot(snapshot_bytes, snapshot, projection, losses)
+
+
+def _run_snapshot(snapshot_bytes, snapshot, projection, losses):
     result = _replay_projection(snapshot_bytes, canonical(projection).encode("utf-8"))
     lineage = result["lineage"]
     lineage.update(
