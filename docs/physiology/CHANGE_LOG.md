@@ -71,3 +71,24 @@ with exit 130 and is not a passed acceptance gate.
    mismatches fail before inference. All 26 controlled unittest checks then
    passed on Linux/Python 3.12.14, including report preservation, redirects,
    failed advertised tools, missing capabilities, and zero/null handling.
+
+## 7 November 2026 — LW-002 bounded artifact qualification
+
+1. Kept installation evidence in the private handoff. Traced the native-tool
+   protocol against pinned Ollama v0.12.0 parser and template code. A tool's
+   declaration, generated JSON text and a parsed native call are distinct.
+2. Selected structured generation for four bounded synthetic task proposals.
+   The prior native-tool check retains its own outcome. Application contracts,
+   archive migrations and physiological requirements remain unchanged.
+3. Assigned exclusive runner, task-context and independent-verification files
+   in a new worktree based on LW-001. Froze independent acceptance criteria
+   before reading real task responses; acceptance answers are outside prompts.
+4. Added model pinning, exact context/schema lineage, per-task report checkpoints
+   and strict response validation. Generated code and tools remain proposal data.
+   Protocol validity is separate from substantive correctness and autonomy.
+5. Prepared standalone delivery and controlled failure tests. Exact verification
+   results and paired source identities belong in the release evidence; no real
+   model-task result or deployment is implied by implementation alone.
+6. Independent verification reproduced acceptance of a Windows drive-qualified
+   scope label on a POSIX host. Rejected both absolute and drive-relative forms.
+   All 21 new controlled tests then passed; Black and Ruff checks also passed.

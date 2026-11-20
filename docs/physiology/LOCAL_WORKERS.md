@@ -60,9 +60,24 @@ or equivalence with a larger model is asserted before qualification.
 Start with one resident coding model and queued inference requests. Logical
 worker roles may share it while keeping separate contexts and worktrees.
 Deterministic import/archive/replay/evaluation/test jobs execute as ordinary
-local software. A local worker runner and a connection to the project
-coordinator have not yet been established. A successful LW-001 report does not
-complete that orchestration work.
+local software. A bounded artifact runner is provided by LW-002. It supplies
+four fixed task contexts and retains proposed artifacts for independent review.
+A remote coordinator connection and autonomous repository operation remain
+separate work. A successful runtime or response-schema check does not qualify
+the proposed code.
+
+### Separate protocol and task correctness
+
+Native-tool parsing and schema-constrained generation are distinct interfaces.
+A failed native-tool response does not prevent a fixed runner from submitting
+curated coding tasks through structured generation. Retain the failure and its
+exact prompt condition; do not reinterpret ordinary content as an executed call.
+
+LW-002 acceptance criteria are frozen before real task responses are read. The
+model receives only the task manifest, not independent expected answers.
+Responses remain data until reviewed. Installation reports and task responses
+belong in the private handoff. See `tools/local_workers/QUALIFY.md` for task
+ownership, limits and interpretation.
 
 Physiological outcome definitions, device/garment choices and intervention
 principles remain with the design session. Local worker qualification can

@@ -1,0 +1,264 @@
+{
+  "version": "lw002-acceptance/1.0.0",
+  "frozen_at_utc": "2026-11-06T17:35:47.406382+00:00",
+  "manifest_sha256": "11054dafbf778ced28a2435690ceddc3d4008da5e4d10388c0f31a2d2ed3f728",
+  "manifest_version": "lw002-tasks/1.0.0",
+  "owner": "independent_verifier",
+  "model_input": false,
+  "actual_model_outputs_inspected_before_freeze": false,
+  "evidence_boundary": {
+    "protocol_success_is_task_quality_success": false,
+    "generated_code_execution_allowed": false,
+    "generated_commands_execution_allowed": false,
+    "arbitrary_patch_correctness_from_static_inspection": false,
+    "autonomous_or_repository_qualification_from_artifact_receipt": false,
+    "timestamp_source_behavior": "pending independent source inspection and separately controlled behavioral verification",
+    "evaluation_policy": "Keep these criteria and expected answers outside all inference prompts. Record attempts and failures; do not tune against the scored outputs and report the tuned attempt as an unseen result."
+  },
+  "global_gates": [
+    "Strict task response schema succeeds independently of model claims; wrong task, unknown keys, duplicate members, nonfinite numbers, type confusion, and incomplete generation fail protocol.",
+    "Each required task is evaluated separately against its substantive criteria. One task cannot compensate for another.",
+    "Only the manifest-owned proposal paths are in scope. Outputs are retained as data, never imported, executed, applied, or passed as shell commands.",
+    "Record the exact model digest, manifest/context/schema/evaluator versions or hashes, completion state, raw output, and every failure.",
+    "Receipt of four schema-valid artifacts leaves substantive_review pending and autonomous_worker_qualified/repository_work_qualified false.",
+    "Free-text rationale is reviewed for correctness and evidence; keyword presence alone is not acceptance."
+  ],
+  "tasks": [
+    {
+      "id": "contract_mapping",
+      "evaluation_method": "Compare both observations in input order to the independently computed expectations; enforce scalar types separately from Python-style equality.",
+      "expected_payload": {
+        "observations": [
+          {
+            "id": "obs-zero",
+            "subject_id": "synthetic-subject",
+            "source_revision_id": "rev-zero",
+            "channel": "glucose",
+            "measurement_start": "2026-01-15T12:30:00Z",
+            "measurement_end": null,
+            "source_available_at": null,
+            "first_seen_at": "2026-01-15T12:35:00Z",
+            "ingested_at": "2026-01-15T12:35:01Z",
+            "original_value": 0,
+            "original_unit": "mg/dL",
+            "value": 0,
+            "unit": "mg/dL",
+            "value_status": "valid",
+            "epistemic_type": "measured",
+            "measurement_group_id": "group-zero",
+            "lineage": [
+              "rev-zero"
+            ],
+            "clock": {
+              "original_timestamp": "2026-01-15T07:30:00-05:00"
+            }
+          },
+          {
+            "id": "obs-missing",
+            "subject_id": "synthetic-subject",
+            "source_revision_id": "rev-missing",
+            "channel": "glucose",
+            "measurement_start": "2026-01-15T12:40:00Z",
+            "measurement_end": null,
+            "source_available_at": null,
+            "first_seen_at": "2026-01-15T12:45:00Z",
+            "ingested_at": "2026-01-15T12:45:02Z",
+            "original_value": null,
+            "original_unit": "mg/dL",
+            "value": null,
+            "unit": "mg/dL",
+            "value_status": "missing",
+            "epistemic_type": "measured",
+            "measurement_group_id": "group-missing",
+            "lineage": [
+              "rev-missing"
+            ],
+            "clock": {
+              "original_timestamp": "2026-01-15T22:40:00+10:00"
+            }
+          }
+        ]
+      },
+      "must_pass": [
+        "Zero is a numeric zero, not boolean, string or null, with original_value zero and value_status valid.",
+        "Missing numeric value remains null in original_value and value, with value_status missing.",
+        "UTC conversions are 12:30Z and 12:40Z respectively; original timestamp strings are preserved verbatim.",
+        "Unknown availability and measurement_end remain null. first_seen_at and ingested_at remain the supplied independent timestamps.",
+        "Identities, group IDs and source revision lineage remain row-specific; units remain mg/dL with no conversion; both epistemic types are measured."
+      ],
+      "failure_examples": [
+        "availability copied from first_seen_at",
+        "missing replaced by zero",
+        "offset stripped without conversion",
+        "revision IDs swapped",
+        "measured values relabeled inferred"
+      ]
+    },
+    {
+      "id": "timestamp_repair",
+      "evaluation_method": "Review proposed source as bounded text/AST only. Static inspection can reject violations and explain a plausible repair, but does not certify arbitrary Python behavior. Keep behavioral verification pending until independently inspected and tested in a separate controlled environment.",
+      "owned_path": "fixtures/lw002/time_adapter.py",
+      "required_interface": "normalize_iso(value)",
+      "source_scope": [
+        "Complete Python module; datetime standard-library imports only.",
+        "Exactly one function normalize_iso with the original one-argument interface; no helper functions, classes, decorators, host-timezone inference, dynamic imports, command execution, file access, or top-level work.",
+        "Function/module docstrings may be treated as inert documentation, not evidence of behavioral correctness."
+      ],
+      "must_pass_review": [
+        "Explain that replace(tzinfo=UTC) relabels an offset timestamp and changes its instant; conversion must preserve the instant.",
+        "Explicitly reject non-string and empty/malformed values using ValueError.",
+        "Require a date, time of day, and an explicit offset or trailing Z; reject naive or date-only input.",
+        "Return aware UTC output ending Z and preserve fractional-second precision supported by datetime.",
+        "Do not claim execution or passing behavioral tests of the proposal."
+      ],
+      "future_behavior_vectors": [
+        {
+          "input": "2026-01-15T07:30:00-05:00",
+          "expected": "2026-01-15T12:30:00Z"
+        },
+        {
+          "input": "2026-01-15T22:40:00+10:00",
+          "expected": "2026-01-15T12:40:00Z"
+        },
+        {
+          "input": "2026-01-15T12:40:00.123456Z",
+          "expected": "2026-01-15T12:40:00.123456Z"
+        },
+        {
+          "input": "2026-01-15T07:30:00.125-05:00",
+          "expected_instant": "2026-01-15T12:30:00.125000Z"
+        },
+        {
+          "input": "2026-01-15T12:40:00",
+          "expected_exception": "ValueError"
+        },
+        {
+          "input": "2026-01-15",
+          "expected_exception": "ValueError"
+        },
+        {
+          "input": "",
+          "expected_exception": "ValueError"
+        },
+        {
+          "input": "not-a-timestamp",
+          "expected_exception": "ValueError"
+        },
+        {
+          "input": null,
+          "expected_exception": "ValueError"
+        },
+        {
+          "input": 0,
+          "expected_exception": "ValueError"
+        },
+        {
+          "input": false,
+          "expected_exception": "ValueError"
+        }
+      ],
+      "execution_status": "not_executed"
+    },
+    {
+      "id": "archive_tests",
+      "evaluation_method": "Independently simulate typed input vectors using trusted evaluator logic; never evaluate or execute generated source. Compare all declared final states and require discrimination against the specified faulty archive.",
+      "required_case_kinds": [
+        "duplicate",
+        "correction",
+        "interruption_replay"
+      ],
+      "reference_semantics": [
+        "Every case starts independently with no retained pairs, no latest values, and checkpoint zero.",
+        "Cursor and revision are positive integers excluding booleans. interrupt_after is null or an integer in [1, len(rows)], excluding booleans.",
+        "Identity is (id, revision); repeating an identical pair/payload adds nothing. Conflicting payloads for one pair are an invalid test proposal.",
+        "Retain each encountered row durably. For a non-null interruption, process exactly that many rows and do not advance checkpoint, even if that count equals the page length.",
+        "Only a null interrupt_after means complete page and updates checkpoint to that step cursor. Restart preserves prior retained pairs and the prior completed checkpoint.",
+        "Latest selects the greatest revision for each id, not last response order. Retained revision count counts all distinct pairs, including superseded values.",
+        "Compare expected_latest as an identity-keyed set, reject duplicate IDs, and preserve null versus numeric zero."
+      ],
+      "case_requirements": {
+        "duplicate": "Repeat the same complete page and verify stable distinct-pair count, final checkpoint and latest values. Do not claim this case alone detects overwriting history.",
+        "correction": "Ingest an original followed by a higher revision with the same id. Preserve both original pairs, select the higher revision, and compute the completed checkpoint.",
+        "interruption_replay": "Exactly the described three phases: interrupt a two-row page after its first durable row, replay the identical complete page, then interrupt a later page after one durable row. The final cursor must differ from the last completed cursor so premature advancement is observable. Final state must include durable interrupted rows and exclude unprocessed rows; replay must not add duplicates."
+      },
+      "discrimination_gates": [
+        "At least the correction vector produces a retained-history expectation different from one-record-per-id overwrite behavior.",
+        "The final interruption produces a checkpoint expectation different from advancing at page start.",
+        "All supplied expected counts, checkpoints and latest values agree with the independent simulation; schema-valid but inconsistent vectors fail.",
+        "The rationale correctly identifies both history loss and premature checkpoint advancement, without claiming proposed regression code was run."
+      ]
+    },
+    {
+      "id": "review_release",
+      "evaluation_method": "Independently inspect substantive findings against the fixed source and evidence. Validate action catalogs and ordering as data; no generated release action is executed.",
+      "required_findings": [
+        {
+          "anchors": [
+            2
+          ],
+          "issue": "Measurement-only cutoff leaks unavailable information. Require measurement_at <= cutoff, known source availability <= cutoff, and first_seen_at <= cutoff. Unknown availability must remain excluded or explicitly unresolved."
+        },
+        {
+          "anchors": [
+            3,
+            4
+          ],
+          "issue": "Missing measurements are converted to zero and an all-missing selection becomes a fabricated zero mean. Preserve real zero; exclude or explicitly handle missing values and return an unknown mean when no measured values remain."
+        },
+        {
+          "anchors": [
+            7
+          ],
+          "issue": "Acknowledgment is not evidence that an action was actually performed. Keep acknowledgment and observed/reported action separate; do not invent performance from ack."
+        },
+        {
+          "anchors": [
+            8
+          ],
+          "issue": "Absent outcome is not no_effect. Preserve an unknown outcome and avoid inventing a clinical endpoint or treatment policy."
+        }
+      ],
+      "finding_constraints": [
+        "Findings may combine related lines but must cover each required issue with concrete consequences and corrections.",
+        "Every anchor lies within source lines 1 through 9 and corresponds to the reported problem; do not invent timestamp-parsing defects outside scope.",
+        "Severity labels alone do not establish quality; the proposed correction must address the actual evidence-semantic error."
+      ],
+      "allowed_completed_evidence": [
+        "source_inspection",
+        "isolated_synthetic_tests"
+      ],
+      "required_evidence_qualification": "The 12 passing isolated synthetic tests concern the pre-existing fixture harness. No tests of any proposed correction have run. Integration, deployment and live behavior remain unverified.",
+      "disallowed_completed_evidence": [
+        "integration_tests",
+        "deployed",
+        "live_verified"
+      ],
+      "installation_actions": {
+        "allowed": [
+          "prepare_isolated_checkout",
+          "apply_reviewed_patch",
+          "review_diff",
+          "commit_reviewed_change"
+        ],
+        "requirements": [
+          "Prepare isolated checkout before applying the reviewed patch.",
+          "Review the resulting diff before a proposed commit.",
+          "Treat these as planned actions, not completed installation evidence."
+        ]
+      },
+      "verification_actions": {
+        "allowed": [
+          "run_offline_fixture_tests",
+          "check_exact_revisions",
+          "inspect_diff_scope",
+          "record_unverified_integration"
+        ],
+        "requirements": [
+          "Include offline fixture verification, exact revisions and diff scope.",
+          "Record unverified integration.",
+          "Clearly separate planned corrected-code verification from the 12 already-passing harness tests."
+        ]
+      }
+    }
+  ]
+}
