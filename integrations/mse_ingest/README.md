@@ -126,3 +126,38 @@ The round 4 public-entry check uses ORACLE #30
 `769a0966da251da4d08633cc7663af9869da70e6`, PROVENANCE #27
 `7be9ea31c6c68643573afdf37ccfa0a41901a368`, and the NICKY #25 source fixtures
 at `13d2e19825aa872c04cf174cd8adef1bc8d40756`.
+
+## Finite offline verifier
+
+Run from a checkout of the exact ledger or combined candidate commit. Prepare
+an isolated Python 3.10+ virtual environment. The verified build used Python
+3.12.14. Install the exact qualification dependencies into that environment:
+
+```sh
+python -m pip install jsonschema==4.25.1 attrs==26.1.0 \
+  jsonschema-specifications==2025.9.1 referencing==0.37.0 \
+  rpds-py==2026.9.1 typing-extensions==4.16.0
+```
+
+Ensure the pinned objects are available locally. If missing, fetch the heads
+for PRs #18, #25, #27, #28 and #30 from the authorized repository remote.
+The normative #28 `769a0966da251da4d08633cc7663af9869da70e6` commit is an
+ancestor of the docs follow-up and may need extra history in a shallow
+checkout. The verifier reports every exact commit it requires.
+
+```sh
+python -B integrations/mse_ingest/verify_offline.py
+```
+
+Use `--candidate <exact-local-commit>` to qualify a separate immutable combined
+candidate. If that commit already has a dependency subtree, the command checks
+it against the expected Git tree before testing.
+
+The command assembles the committed candidate ledger files, PF-001 archive,
+immutable reference package and pinned sibling inputs in a new temporary
+tree. It reads from local Git and does not fetch or install dependencies.
+Each Git command has a ten-second deadline and the test subprocess has a
+45-second deadline. The process exits nonzero on unavailable inputs, empty
+discovery, skips, expected failures, ordinary failures or timeouts. This
+command qualifies the FORGE suite. Independent NICKY acceptance and PHOENIX
+restore have their own commands and evidence.
