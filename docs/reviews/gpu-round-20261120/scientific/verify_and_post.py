@@ -12,7 +12,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-PR = "19"
+PR = "20"
 REPO = "ctmansfield/mother"
 TARGET = "docs/reviews/gpu-round-20261120/scientific"
 ROOT = Path(__file__).resolve().parents[4]
@@ -77,7 +77,7 @@ def main():
         print("GITHUB RECEIPT NOT POSTED:", posted.stderr.strip()[:500])
         print("Host tests were executed; local receipt preserved.")
         return 3 if completed.returncode == 0 else 4
-    print("GITHUB RECEIPT POSTED:", "https://github.com/ctmansfield/mother/pull/19")
+    print("GITHUB RECEIPT POSTED:", "https://github.com/ctmansfield/mother/pull/20")
     return 0 if completed.returncode == 0 else 4
 
 if __name__ == "__main__":
