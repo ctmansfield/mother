@@ -10,8 +10,8 @@
       "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
     },
     "MSE-INTEGRATION-20261120-01": {
-      "path": "tasks/mse-integration-r1.json",
-      "sha256": "af42722b0bfec957714905a4cc949ef563c05dd9827d6e0953cfb023dc862a4c"
+      "path": "tasks/mse-integration-r2.json",
+      "sha256": "49b6fc4aa6a4a387ffc2a78880e888ef6fe4bc2b6eb12c390e49d2d2c9fab03a"
     }
   },
   "version": 1

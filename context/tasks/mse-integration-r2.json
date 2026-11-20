@@ -1,0 +1,147 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-INTEGRATION-20261120-01",
+  "task_revision": "2",
+  "observed_at": "2026-11-20T14:07:36Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Canonical directive read back; author ACKs and current candidate heads require subsequent receipts."
+  },
+  "goal": "Implement the first synthetic HealthBridge-to-MSE integration with existing archive seams.",
+  "scope": [
+    "Stage A contracts and local synthetic Stage B source; C recovery design/preparation."
+  ],
+  "acceptance": [
+    "Exact contracts, recoverable synthetic archive/snapshot/MSE path, independent tests and reviews."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Local synthetic implementation and draft PRs under assigned paths."
+    ],
+    "not_authorized": [
+      "Main merge, deployment, private-host/phone/VM/credential/real-data/GPU operations."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Preserve original evidence, current acquisition and existing holds."
+  ],
+  "instruction_binding": {
+    "id": "MSE-INTEGRATION-20261120-01",
+    "revision": "2",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7041572809",
+    "sha256": "e48af1449712e408b13b59aa1e1b7a7d8fecf17e536e57aec5055e7f0e94f6bf",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "MSE-INTEGRATION-20261120-01-DISPATCH-R2",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-INTEGRATION-20261120-01",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7041572809",
+      "sha256": "e48af1449712e408b13b59aa1e1b7a7d8fecf17e536e57aec5055e7f0e94f6bf"
+    },
+    "tests_performed": [
+      "Reviewed GitHub owning receipts/live heads and actual ATLAS contract text; no combined runtime tests by PM."
+    ],
+    "limitations": [
+      "Implementation and worker ACK are not implied by dispatch."
+    ],
+    "requested_decision": "No new owner decision for local synthetic work.",
+    "next_action": "#next_action",
+    "source": "report"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-INTEGRATION-20261120-01",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7041572809",
+      "sha256": "e48af1449712e408b13b59aa1e1b7a7d8fecf17e536e57aec5055e7f0e94f6bf"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "team-focus-mse",
+      "value": "Eight workers assigned bounded Mother integration work.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit user focus and assignment request."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "ASSIGNED",
+      "detail": "First author milestones reviewed; r2 implementation assignments delivered.",
+      "source": "report"
+    },
+    "test": {
+      "status": "PENDING",
+      "detail": "Combined implementation acceptance not run.",
+      "source": "report"
+    },
+    "merge": {
+      "status": "DRAFT_UNMERGED",
+      "detail": "PR23; no main merge authorized.",
+      "source": "report"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "No runtime or service changes.",
+      "source": "report"
+    },
+    "runtime": {
+      "status": "NOT_RUN",
+      "detail": "No personal data, device or host execution.",
+      "source": "report"
+    }
+  },
+  "unknowns": [
+    "Shared schema/pinned dependency choices; D-01 through D-08 production decisions."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "ATLAS contract draft before author interface freeze."
+  ],
+  "next_action": {
+    "action": "Clarify exact contracts while ORACLE/FORGE implement; independent reproduction and later interface freeze.",
+    "role": "GADGET and assigned workers"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/mse-integration-source-r2.json",
+      "sha256": "e48af1449712e408b13b59aa1e1b7a7d8fecf17e536e57aec5055e7f0e94f6bf",
+      "observation": {
+        "kind": "labeled_source_projection",
+        "environment": "Local documentation checkout and GitHub review PR",
+        "method": "Record user scope and measured documentation checks.",
+        "result": "R2 canonical directive read back; owning milestones and next tasks recorded.",
+        "limitations": [
+          "No independent review, merge or runtime authority."
+        ],
+        "observed_at": "2026-11-20T14:07:36Z"
+      }
+    },
+    "report": {
+      "path": "evidence/mse-integration-dispatch-r2.json",
+      "sha256": "cc5c9dffb8fb0ebb9fdc3bd3ecd889c4113f4b1e4f9cffc7380739059c13d511",
+      "observation": {
+        "kind": "labeled_source_projection",
+        "environment": "Local documentation checkout and GitHub review PR",
+        "method": "Record user scope and measured documentation checks.",
+        "result": "R2 canonical directive read back; owning milestones and next tasks recorded.",
+        "limitations": [
+          "No independent review, merge or runtime authority."
+        ],
+        "observed_at": "2026-11-20T14:07:36Z"
+      }
+    }
+  }
+}

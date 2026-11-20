@@ -1,0 +1,7 @@
+{
+  "instruction_id": "MSE-INTEGRATION-20261120-01",
+  "revision": "2",
+  "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7041572809",
+  "scope": "Same local synthetic authority; exact next assignments after first author milestones.",
+  "next_action": "Clarify exact contracts while ORACLE/FORGE implement; independent reproduction and later interface freeze."
+}
