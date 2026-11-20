@@ -21,15 +21,11 @@ Status: REVIEW ONLY. **Do not merge, deploy, or restart Protocol B from this pat
 cd /home/chad/fw-gpu-20261120.NPGt2w/mother
 git fetch origin review/gpu-guard-protocol-b-20261120
 # For a clean, dedicated review checkout, prefer a separate worktree:
-git worktree add /home/chad/fw-gpu-guard-review-20261120 origin/review/gpu-guard-protocol-b-20261120
+git worktree add -b review/gpu-guard-protocol-b-20261120 /home/chad/fw-gpu-guard-review-20261120 origin/review/gpu-guard-protocol-b-20261120
 python3 -B /home/chad/fw-gpu-guard-review-20261120/docs/reviews/gpu-round-20261120/scientific/verify_and_post.py
 ```
 
-The verifier requires `git branch --show-current` to match the review branch. When creating a worktree from the remote tracking ref, it may be detached, so create a *local branch* at worktree creation using:
-```bash
-git worktree add -b review/gpu-guard-protocol-b-20261120 /home/chad/fw-gpu-guard-review-20261120 origin/review/gpu-guard-protocol-b-20261120
-```
-Use this second worktree command **instead of**, not after, the first when no local review branch exists. Do not run both. The verification script uses existing `gh` auth to post a compact result to PR #15, preserves a private local receipt whether posting succeeds or fails, and never starts Ollama inference. If `gh` is not already authenticated, do not change credentials automatically.
+The verifier requires a clean local review branch; these commands intentionally create a separate checkout so the existing working tree remains untouched. If a local branch of that name already exists, inspect it before using an alternate worktree command. Do not run both. The verification script uses existing `gh` auth to post a compact result to PR #15, preserves a private local receipt whether posting succeeds or fails, and never starts Ollama inference. If `gh` is not already authenticated, do not change credentials automatically.
 
 ## Qualification gate
 - GitHub publication: complete on review branch.
