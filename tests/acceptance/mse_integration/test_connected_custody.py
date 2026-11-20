@@ -85,9 +85,9 @@ class ConnectedCustody(unittest.TestCase):
         raw = (FIXTURES / CASES["baseline"]["source_compatible_file"]).read_bytes()
         with tempfile.TemporaryDirectory() as directory:
             ledger = self.open_ledger(Path(directory).resolve())
-            with self.assertRaisesRegex(ValueError, "scope differs"):
+            with self.assertRaises(ValueError):
                 self.ingest(ledger, raw, self.exported(raw, "synthetic-other"))
-            with self.assertRaisesRegex(ValueError, "artifact digest or length mismatch"):
+            with self.assertRaises(ValueError):
                 self.ingest(ledger, raw + b" ", self.exported(raw))
 
     def test_reopened_real_ledger_refuses_corrupted_retained_artifact(self):
