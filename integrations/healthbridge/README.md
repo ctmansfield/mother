@@ -47,3 +47,30 @@ python3 -B -m unittest discover -s tests/integration/healthbridge -v
 ```
 
 [atlas]: https://github.com/ctmansfield/mother/blob/3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c/docs/mse/integration/contracts/README.md
+
+## Local adapter-to-ledger integration
+
+`ingest_capture` accepts a configured FORGE `IngestV02` service and the public
+FORGE mapper callable `map_export(export, context)`. The service supplies the
+expected scope. The adapter constructs the export from the original bytes and
+checks the retained bytes, digest and scope before invoking the mapper. It then
+compares the authoritative receipt against the same artifact and export and asks
+the service to verify it from reopened custody. The result contains the export
+and verified receipt. A quarantined receipt remains quarantined.
+
+For integration tests, assemble the adapter paths into a disposable checkout of
+the pinned FORGE PR #31, which includes PF-001 PR #18. Do not use a separate
+checkout on PYTHONPATH alone because the existing `mother` package can shadow
+PF-001. Supply these local paths and run the unittest command above.
+
+- `MSE_ATLAS_CONTRACT_DIR` points at PR #28 contracts at
+  `3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c`.
+- `MSE_HEALTHBRIDGE_FIXTURES` points at PR #25 fixture directory at
+  `4ba53e16185f3620a239b70cefbc2e03292552e2`.
+- `MSE_FORGE_MAPPER` is the production-path FORGE mapper in module:callable
+  form. Until its pinned implementation is available, accepted fixture tests
+  are skipped. The invalid fixture checks still use the actual ledger service
+  and assert that neither custody nor archive is created.
+
+PF-001 schema validation requires the FORGE Python environment with jsonschema.
+The adapter itself has no added Python dependency.
