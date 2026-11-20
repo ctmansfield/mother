@@ -149,3 +149,32 @@ end-to-end test once those APIs arrive. Keep the custody interruption
 regression. End-to-end evidence must use actual accepted receipts and run
 membership, then test conflicts, unknown tombstones, late additions and
 cutoffs before invoking MSE. [r3 directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041939410)
+
+## Round 4 verified connected replay
+
+[r4](https://github.com/ctmansfield/mother/pull/23#issuecomment-7042142491).
+In the detached PF-001 assembly replace the adapter with #30 `c26180c`,
+the ledger with #31 `afd07f1` (rerun after initial `d244105`), the snapshot
+with #27 `7be9ea3` (rerun after initial `089e627`), and ATLAS with
+#28 `769a096`. Keep the same paths and use `MSE_R3_DEPENDENCY_ROOT="$PWD"`,
+`MSE_HEALTHBRIDGE_FIXTURES="$PWD/tests/fixtures/mse_integration"`, and a
+private canonical `TMPDIR` inside the worktree. A prior run used macOS's
+symlinked temp parent, which the hardened store correctly refused.
+
+Run the independent connected gate with
+`python -B -m unittest discover -s tests/acceptance/mse_integration -p test_connected_pipeline.py -v`.
+The three tests include three successful actual MSE replay invocations and
+negative attempts rejected at receipt-backed verification. They drive
+`normalize_capture → ConnectedIngest.ingest_export → build_snapshot →
+replay_ledger_snapshot` on reopened PF-001/ledger files. No mapping or
+membership callback is supplied. Coverage includes identical retry,
+changed-batch conflict, cross-capture same-UUID quarantine, unknown
+tombstones, repeated sightings, late arrivals, historical cutoffs, omitted
+snapshot members and corrupted custody. The fixture paths are read only.
+
+The high-level ORACLE `ingest_capture` entry still requires a mapper
+callback that FORGE does not expose separately. Two adapter-author cases
+therefore remain skipped at this pin. The connected tests use the real
+public ledger entry. Nonpositive source-only acceptance and same-capture
+representative ordering remain pending the ORACLE delta.
+[Interface relay](https://github.com/ctmansfield/mother/pull/23#issuecomment-7042162989)

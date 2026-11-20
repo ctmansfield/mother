@@ -63,7 +63,7 @@ class ConnectedCustody(unittest.TestCase):
         raw = (FIXTURES / CASES["baseline"]["source_compatible_file"]).read_bytes()
         export = self.exported(raw)
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             ledger = self.open_ledger(root)
             with self.assertRaises(StopBeforeMapping):
                 self.ingest(ledger, raw, export)
@@ -83,7 +83,7 @@ class ConnectedCustody(unittest.TestCase):
     def test_real_ledger_rejects_adapter_scope_and_artifact_substitution(self):
         raw = (FIXTURES / CASES["baseline"]["source_compatible_file"]).read_bytes()
         with tempfile.TemporaryDirectory() as directory:
-            ledger = self.open_ledger(Path(directory))
+            ledger = self.open_ledger(Path(directory).resolve())
             with self.assertRaisesRegex(ValueError, "scope differs"):
                 self.ingest(ledger, raw, self.exported(raw, "synthetic-other"))
             with self.assertRaisesRegex(ValueError, "artifact digest or length mismatch"):
@@ -93,7 +93,7 @@ class ConnectedCustody(unittest.TestCase):
         raw = (FIXTURES / CASES["baseline"]["source_compatible_file"]).read_bytes()
         export = self.exported(raw)
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             ledger = self.open_ledger(root)
             with self.assertRaises(StopBeforeMapping):
                 self.ingest(ledger, raw, export)
