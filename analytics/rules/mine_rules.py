@@ -2,6 +2,7 @@
 from __future__ import annotations
 import os
 import argparse
+import json
 from typing import List
 
 import pandas as pd
@@ -67,8 +68,6 @@ def mine_rules(
     synergy_pairs = set()
     if feat_imp_path and os.path.exists(feat_imp_path):
         try:
-            import json
-
             with open(feat_imp_path, "r") as f:
                 fi = json.load(f)
             ev_key = event.replace("y_", "")
@@ -196,6 +195,8 @@ def mine_rules(
                 "if_all": if_all,
                 "action": "slow_carb_protein_snack",
                 "metadata": {
+                    "evaluation_scope": "discovery_only",
+                    "held_out_evaluation": None,
                     "ppv": r["ppv"],
                     "ppv_ci": r["ppv_ci"],
                     "support": r["support"],
@@ -205,7 +206,18 @@ def mine_rules(
 
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     with open(out, "w") as f:
-        json.dump({"rules": rules}, f, indent=2)
+        json.dump(
+            {
+                "rules": rules,
+                "evaluation": {
+                    "scope": "discovery_only",
+                    "held_out_evaluation": None,
+                    "note": "Selection and reported precision reuse the discovery data; not personal performance evidence.",
+                },
+            },
+            f,
+            indent=2,
+        )
     return len(rules)
 
 
