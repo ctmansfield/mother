@@ -177,8 +177,24 @@ def idle_snapshot(api, nvidia=nvidia_snapshot):
 
 
 def unattributed_processes(processes):
-    return (any(not Path(p["process_name"]).name.lower().startswith("ollama") for p in processes)
-            or len({p["pid"] for p in processes}) > 1)
+    """Fail closed unless the sole compute process is a known Ollama executable.
+
+    NVIDIA can report '[No data]' for process_name. That is not proof of
+    process identity; no PID continuity exception is made without independent
+    process-lifetime attestation. The standard Ollama GPU worker is llama-server.
+    """
+    def known_ollama_runner(process):
+        name = process.get("process_name")
+        if not isinstance(name, str):
+            return False
+        executable = Path(name)
+        return executable.name.lower() == "ollama" or (
+            executable.name == "llama-server" and
+            executable.parent.name == "ollama"
+        )
+
+    return (any(not known_ollama_runner(p) for p in processes)
+            or len({p.get("pid") for p in processes}) > 1)
 
 
 def settle_idle(api, nvidia, previous=None, seconds=12):
@@ -291,6 +307,11 @@ class ObservedAPI:
                 try:
                     snap = self.nvidia()
                     snap["elapsed_seconds"] = round(time.monotonic() - started, 3)
+                    # The HTTP thread may have completed while nvidia-smi
+                    # was running; preserve the sample and its boundary status.
+                    # Unknown processes remain HOLD even at the boundary: a
+                    # racing foreign process cannot be declared harmless.
+                    snap["http_completed_at_sample_end"] = event.is_set()
                     rec["nvidia_samples"].append(snap)
                     if unattributed_processes(snap["compute_processes"]):
                         self.hold = "unattributed or multiple GPU compute processes observed; future requests held"
