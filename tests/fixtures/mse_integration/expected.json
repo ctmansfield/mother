@@ -1,0 +1,222 @@
+{
+  "fixture_format": 1,
+  "case_order": [
+    "baseline",
+    "partial",
+    "empty",
+    "late",
+    "conflicting-uuid",
+    "changed-batch",
+    "malformed"
+  ],
+  "cases": {
+    "baseline": {
+      "file": "baseline.json",
+      "sha256": "dd2a0ceada325cdde1a38439e31746591df3d8a56eec84477cb0cbaccea74da4",
+      "bytes": 1162,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-baseline",
+      "coverage": "unknown",
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000001",
+        "C0DE0000-0000-4000-8000-000000000002"
+      ],
+      "tombstone_ids": [
+        "C0DE0000-0000-4000-8000-000000000003",
+        "C0DE0000-0000-4000-8000-000000000004"
+      ],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000001",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000002",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000003",
+          1
+        ]
+      ],
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/baseline.json",
+      "source_compatible_sha256": "020197048bc537ae3476f9768ed731b73bc2140df236457d54d76df22209c05a"
+    },
+    "partial": {
+      "file": "partial.json",
+      "sha256": "f2cdd6420ebe605260f0b2bc19e7f2e76a9b1f319f846ec83b3bcc6b128b85ce",
+      "bytes": 430,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-partial",
+      "coverage": "partial",
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000002"
+      ],
+      "tombstone_ids": [],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000002",
+          1
+        ]
+      ],
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/partial.json",
+      "source_compatible_sha256": "0b8ed0cd505ddd300bfb585a823300001378dccc10a9cfd86f3ec3c6f968fe7f"
+    },
+    "empty": {
+      "file": "empty.json",
+      "sha256": "4aeae68792ad2b1361c58f75bf4b208472162a2705686b7a4d5e81d0ee32cf9b",
+      "bytes": 135,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-empty",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/empty.json",
+      "source_compatible_sha256": "d8bf0ec8f4a63f8a8961c665c61554a83a6d04328845ccd956332c873417150c"
+    },
+    "late": {
+      "file": "late.json",
+      "sha256": "df0664d34f43dcaa07c0c0b911c38578ec2aa6e904e833e03d4c4e1b67cdd473",
+      "bytes": 432,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-late",
+      "coverage": "partial",
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000005"
+      ],
+      "tombstone_ids": [],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000005",
+          1
+        ]
+      ],
+      "disposition": "accept",
+      "source_compatible_file": "source-compatible/late.json",
+      "source_compatible_sha256": "9664643b64c85cf29e24916beccaa8ed444b2f5782d692883e5da40381fd2963"
+    },
+    "conflicting-uuid": {
+      "file": "conflicting-uuid.json",
+      "sha256": "6855e820afeaf7918fe43ea9172c841afcb9b0504f067c3d6c65214ce1e2ca0e",
+      "bytes": 726,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-conflicting-uuid",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "reject_or_quarantine",
+      "source_compatible_file": "source-compatible/conflicting-uuid.json",
+      "source_compatible_sha256": "5bb198050484f04d8195439aa2a94acf91a097778c97b67947122539e06f6aa8"
+    },
+    "changed-batch": {
+      "file": "changed-batch.json",
+      "sha256": "cc1926998d872755f497a3d35616f5721f27c71844f692897cfc3959d77ebc5f",
+      "bytes": 1161,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-baseline",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "delivery_conflict"
+    },
+    "malformed": {
+      "file": "malformed.json",
+      "sha256": "ca3d326c326936c47744c475cac987e3b2059a6428cf533fab6c231b8e128f8b",
+      "bytes": 15,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-malformed",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "reject_or_quarantine"
+    }
+  },
+  "replay": {
+    "baseline_retry": "same_receipt",
+    "changed_batch": "no_new_commit",
+    "after_baseline_partial_empty_late": {
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000001",
+        "C0DE0000-0000-4000-8000-000000000002",
+        "C0DE0000-0000-4000-8000-000000000005"
+      ],
+      "tombstone_ids": [
+        "C0DE0000-0000-4000-8000-000000000003",
+        "C0DE0000-0000-4000-8000-000000000004"
+      ],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000001",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000002",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000003",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000005",
+          1
+        ]
+      ]
+    },
+    "late_id": "C0DE0000-0000-4000-8000-000000000005",
+    "late_not_visible_at_baseline_cutoff": true
+  },
+  "provisional_edges": {
+    "repeated-delete": {
+      "file": "repeated-delete.json",
+      "sha256": "9b2343ec7878fbd98b4678df0b165a23b5cebd33dde6e7f6ae7287a9e313c43c",
+      "delete_facts": {
+        "C0DE0000-0000-4000-8000-000000000003": [
+          785000020,
+          785000031
+        ],
+        "C0DE0000-0000-4000-8000-000000000004": [
+          785000021
+        ]
+      },
+      "locators_by_fact": [
+        1,
+        1,
+        1
+      ]
+    },
+    "numeric-time": {
+      "file": "numeric-time.json",
+      "sha256": "02879abada7b578ffb7a801347e012a643374c4fcb47ca4f1311953c90965c60",
+      "value_lexeme": "6.42500e1",
+      "decimal_value": "64.25",
+      "start_utc": "2001-01-01T00:00:00.000000Z",
+      "end_utc": "2001-01-01T00:00:00.000002Z",
+      "time_rounding_loss": true
+    },
+    "reversed-interval": {
+      "file": "reversed-interval.json",
+      "sha256": "ae215244c7034e9dd02f4c661dc43328d09ad3ad9b0c39a38247ca18a2fef99f",
+      "disposition": "reject_or_quarantine"
+    },
+    "duplicate-json-key": {
+      "file": "duplicate-json-key.json",
+      "sha256": "c338743578728190264f020327ae3b5138c4d461e6800c42d7f1639d8af67ea3",
+      "disposition": "reject_or_quarantine"
+    }
+  },
+  "provisional_receipt_mismatches": [
+    "subject_id",
+    "source_instance",
+    "batch_id",
+    "artifact_sha256",
+    "export_sha256"
+  ]
+}

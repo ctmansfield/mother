@@ -1,0 +1,24 @@
+{
+  "anchors": {
+    "synthetic": "b3BhcXVlLXFhLWFuY2hvcg=="
+  },
+  "backfillStart": 784999880,
+  "readings": [
+    {
+      "bundleID": "org.example.synthetic.mse",
+      "deletedAt": 785000020,
+      "end": 785000001,
+      "id": "C0DE0000-0000-4000-8000-000000000003",
+      "kind": "Heart rate",
+      "receivedAt": 785000010,
+      "source": "Synthetic QA",
+      "start": 785000000,
+      "unit": "bpm",
+      "value": 64.25
+    }
+  ],
+  "tombstones": {
+    "C0DE0000-0000-4000-8000-000000000003": 785000031,
+    "C0DE0000-0000-4000-8000-000000000004": 785000021
+  }
+}
