@@ -1,0 +1,48 @@
+name: I01 paired Coach-to-Mother offline handoff
+
+on:
+  pull_request:
+    paths:
+      - 'mother/physiology/handoff.py'
+      - 'tests/physiology/test_handoff_crossrepo.py'
+      - '.github/workflows/i01-paired-handoff.yml'
+  push:
+    branches:
+      - 'work/i01-offline-event-receiver'
+    paths:
+      - 'mother/physiology/handoff.py'
+      - 'tests/physiology/test_handoff_crossrepo.py'
+      - '.github/workflows/i01-paired-handoff.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  paired-offline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Mother receiver
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Checkout exact reviewed Coach sender
+        uses: actions/checkout@v4
+        with:
+          repository: ctmansfield/coach
+          ref: 9fbe9b1580203be78ac8e06ae12dfae9f882c24d
+          path: paired-coach
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install contract validation
+        run: python -m pip install 'jsonschema>=4.18,<5'
+      - name: Verify exact Coach commit and detached source checkout
+        run: |
+          actual=$(git -C paired-coach rev-parse HEAD)
+          test "$actual" = "9fbe9b1580203be78ac8e06ae12dfae9f882c24d"
+      - name: Run only no-network paired sender-receiver tests
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/paired-coach" python -m unittest discover -s tests/physiology -p test_handoff_crossrepo.py -v
+      - name: Repeat existing Mother manual-ingest acceptance
+        run: python -m unittest discover -s tests/physiology -p test_manual_ingest.py -v
