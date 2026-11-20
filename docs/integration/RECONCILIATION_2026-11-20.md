@@ -45,3 +45,8 @@ All listed PRs are currently draft. PR #1's `mergeable` metadata was inconsisten
 
 ## Session recovery
 In a new conversation: “Read `docs/integration/RECONCILIATION_2026-11-20.md` from `ctmansfield/mother` integration/reconcile-features-20261120; read `docs/session-context/RECOVER_REPOSITORY_SETUP_2026-11-20.md` from review/gpu-guard-protocol-b-20261120; inspect PRs #1–9, #12–15 and their latest host receipts; continue from the latest qualified merge gate, not conversation recollection.”
+
+## Reconciliation execution log (2026-11-20)
+- PR #16 merged documentation-only reconciliation plan into main: `9fb948d4863900b275e39f6e2bd06f6190371285`.
+- PR #13 merged additive E1 reference registry into main: `1b8ebbfe19e9b60b7399d1ba49fe26d8f061bda7`. Independent connector-side structural checks over actual GitHub files: 248 records and distinct keys, 229 DOI entries with DOI/URL consistency, 248 CSV keys matching JSON, 73 Scout entries, no missing original legacy aliases, consistent predecessor DOI links. **Not** a full execution of the committed Python verifier or scientific source appraisal. No runtime or scientific claim promotion.
+- Remaining PRs #1–9, #12, #14–15 remain under reconciliation; their code was not merged by these actions. The original Protocol B GPU HOLD remains.
