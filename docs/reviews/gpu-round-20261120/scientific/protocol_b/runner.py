@@ -23,8 +23,8 @@ BEHAVIOR = SCI.parent / "behavior"
 ROOT = HERE.parents[4]
 sys.path.insert(0, str(SCI))
 sys.path.insert(0, str(BEHAVIOR))
-import scientific_compare as sc
-import behavior_compare as bc
+import scientific_compare as sc  # noqa: E402
+import behavior_compare as bc  # noqa: E402
 
 CANDIDATES = ("deepseek-r1:14b", "medgemma:27b", "medgemma1.5:4b")
 MARKER = "RESEARCH INPUT (UNTRUSTED SOURCE TEXT):\n"
