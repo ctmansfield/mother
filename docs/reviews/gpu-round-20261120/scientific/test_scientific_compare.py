@@ -167,6 +167,28 @@ class LauncherTests(unittest.TestCase):
             self.assertEqual(len(observer.records), 1)
             self.assertIn("ambiguous", observer.hold)
 
+    def test_nvidia_snapshot_preserves_http_completion_boundary(self):
+        with tempfile.TemporaryDirectory() as temp:
+            fake = FakeAPI()
+            sampled = threading.Event()
+
+            def gpu():
+                if fake.active:
+                    time.sleep(0.025)
+                    sampled.set()
+                return idle_gpu()
+
+            observer = c.ObservedAPI(
+                fake, c.TAGS[0], "1" * 64,
+                Path(temp) / "telemetry.jsonl", gpu, 0.001,
+            )
+            observer("/api/generate", request(), timeout=1)
+            self.assertTrue(sampled.is_set())
+            self.assertTrue(any(
+                s["http_completed_at_sample_end"]
+                for s in observer.records[0]["nvidia_samples"]
+            ))
+
     def test_foreign_gpu_process_refuses_before_generate(self):
         with tempfile.TemporaryDirectory() as temp:
             fake = FakeAPI()
