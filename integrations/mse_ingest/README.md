@@ -80,3 +80,41 @@ tests are skipped.
 MSE_ATLAS_CONTRACT_DIR=/path/to/pinned/contracts \
   python -B -m unittest discover -s tests/integration/mse_ingest -v
 ```
+
+## Connected synthetic pipeline
+
+Use `integrations.mse_ingest.connected.ConnectedIngest` with an explicit archive
+ID, `Scope`, and the pinned ATLAS schema. Pass exact HealthBridge bytes and the
+actual adapter's export to `ingest_export`. It assigns immutable PF-001 source
+IDs from scope and source digest, and processing IDs from source identity and
+the selected normalizer version. The default local mapper version is
+`forge-pf001-0.2`. Exact decimals remain in the exchange export. PF-001's
+numeric projection is auxiliary. Unknown HR derivation and nonpositive metrics
+remain source evidence. Neither creates a PF-001 normalized observation.
+The latter produces an explicit exclusion when otherwise eligible at cutoff.
+
+`build_snapshot` takes the requested UTC interval, local durable cutoff and
+exact normalizer version. It selects the earliest eligible complete sighting,
+retains explicit deletes irrespective of interval and rejects ambiguous
+processing identities. Its conservative coverage reports partial/unknown
+without asserting multi-capture completeness. `verify_snapshot` rebuilds the
+whole selection on reopen, including omitted members. `verify_membership`
+provides the narrower exact-member check and does not establish completeness
+on its own. `verify_receipt` rechecks complete run membership on normalization.
+For combined replay use the bridge's `replay_ledger_snapshot` with the trusted
+reopened ledger.
+
+The trial root must be canonical and mode 0700, with a caller-owned canonical
+parent that forbids group and other writes. For a fresh private temporary
+directory use `Path(root).resolve()`. Existing database and sidecar paths
+must be singly linked, owned mode-0600 regular files. The trial assumes
+exclusive ownership and trusted local actors with the same UID. The checks
+are not a confinement boundary against another process with that UID.
+
+To run the connected tests, place the exact #28 contract directory, #30
+`integrations/healthbridge`, #27 `integrations/mse_snapshot` and #25 captured
+fixtures in one separate dependency tree. Set `MSE_R3_DEPENDENCY_ROOT` to
+that tree, set `MSE_ATLAS_CONTRACT_DIR` to its contracts directory, and put the
+tree and the unchanged reference prototype on `PYTHONPATH`. Then run the
+unittest discovery command above. Only the sibling-dependent cases skip
+when their respective fixture roots are absent.

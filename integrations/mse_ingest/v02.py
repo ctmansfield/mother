@@ -80,6 +80,12 @@ def source_digest(scope, revision):
     )
 
 
+def requires_pf001_observation(observation):
+    return (
+        observation["epistemic_type"] != "unknown" and Decimal(observation["value"]) > 0
+    )
+
+
 class IngestV02(LocalIngest):
     """One trusted archive identity and source scope per private trial directory."""
 
@@ -88,7 +94,7 @@ class IngestV02(LocalIngest):
         self.archive_id = archive_id
         self.scope = scope
         self.validators = {}
-        for name in ("receipt", "export"):
+        for name in ("receipt", "export", "snapshot"):
             document = {
                 "$schema": schema["$schema"],
                 "$defs": deepcopy(schema["$defs"]),
@@ -270,8 +276,8 @@ class IngestV02(LocalIngest):
         by_id = {item["revision_id"]: item for item in revisions}
         if len(by_id) != len(revisions):
             raise ValueError("PF-001 mapping repeats a revision identity")
-        classes = {
-            fact["native_id"]: fact["observation"]["epistemic_type"]
+        observations = {
+            fact["native_id"]: fact["observation"]
             for fact in facts
             if fact["operation"] == "upsert"
         }
@@ -281,11 +287,15 @@ class IngestV02(LocalIngest):
             if revision is None or revision["disposition"] != "accepted":
                 raise ValueError("PF-001 observation has no mapped upsert")
             native = revision["native_id"]
-            if record.get("epistemic_type") != classes[native]:
+            if record.get("epistemic_type") != observations[native]["epistemic_type"]:
                 raise ValueError("PF-001 observation changes epistemic class")
             normalized[native] += 1
         if normalized != Counter(
-            {native: 1 for native, kind in classes.items() if kind != "unknown"}
+            {
+                native: 1
+                for native, observation in observations.items()
+                if requires_pf001_observation(observation)
+            }
         ):
             raise ValueError(
                 "PF-001 observation roster does not match qualified upserts"

@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+import os
 import hashlib
 from pathlib import Path
 import sqlite3
@@ -65,7 +66,7 @@ class LocalIngestTests(unittest.TestCase):
     def setUp(self):
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
-        self.root = Path(temp.name)
+        self.root = Path(temp.name).resolve()
 
     def apply(self, service=None, **options):
         arguments = dict(
@@ -185,6 +186,39 @@ class LocalIngestTests(unittest.TestCase):
         (self.root / "custody.sqlite3").unlink()
         with self.assertRaisesRegex(RecoveryError, "missing its custody journal"):
             self.apply()
+
+    def test_refuses_unsafe_paths_before_sqlite(self):
+        parent = self.root / "parent"
+        parent.mkdir(mode=0o700)
+        root = parent / "pair"
+        service = LocalIngest(root)
+        linked = self.root / "parent-link"
+        linked.symlink_to(parent, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "parent links"):
+            LocalIngest(linked / "pair")
+        target = self.root / "untouched"
+        target.touch(mode=0o600)
+        for filename in (
+            "custody.sqlite3",
+            "physiology.sqlite3",
+            "physiology.sqlite3-wal",
+        ):
+            file = root / filename
+            for make in (
+                lambda path: path.symlink_to(target),
+                lambda path: os.mkfifo(path, mode=0o600),
+                lambda path: os.link(target, path),
+            ):
+                make(file)
+                with self.assertRaisesRegex(RecoveryError, "owned regular files"):
+                    self.apply(service)
+                file.unlink()
+        journal = root / "custody.sqlite3"
+        journal.touch(mode=0o600)
+        journal.chmod(0o644)
+        with self.assertRaisesRegex(RecoveryError, "owned regular files"):
+            self.apply(service)
+        self.assertEqual(target.read_bytes(), b"")
 
     def test_concurrent_identical_retry_uses_one_run_and_receipt(self):
         with ThreadPoolExecutor(max_workers=2) as workers:

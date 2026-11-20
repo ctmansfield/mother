@@ -4,8 +4,11 @@ from contextlib import closing, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
+import os
+from pathlib import Path
 import re
 import sqlite3
+import stat
 from uuid import uuid4
 
 from mother.physiology.archive import Archive
@@ -56,17 +59,34 @@ class LocalIngest:
     """One private synthetic journal/archive pair in a caller-selected directory."""
 
     def __init__(self, root, *, clock=lambda: datetime.now(timezone.utc)):
+        root = Path(root).absolute()
+        parent = root.parent
+        if parent.resolve(strict=True) != parent:
+            raise ValueError("Select a canonical ingest path without parent links")
+        self._owner = os.geteuid()
+        parent_status = parent.stat()
+        if parent_status.st_uid != self._owner or parent_status.st_mode & 0o022:
+            raise ValueError(
+                "Select a caller-owned ingest parent with exclusive writes"
+            )
         root.mkdir(mode=0o700, exist_ok=True)
-        if root.is_symlink() or root.stat().st_mode & 0o077:
+        root_status = root.lstat()
+        if (
+            not stat.S_ISDIR(root_status.st_mode)
+            or root_status.st_uid != self._owner
+            or stat.S_IMODE(root_status.st_mode) != 0o700
+        ):
             raise ValueError("Select a private local ingest directory")
+        self._root = root
+        self._root_identity = (root_status.st_dev, root_status.st_ino)
+        self._parent_identity = (parent_status.st_dev, parent_status.st_ino)
         self.journal = root / "custody.sqlite3"
         self.archive = root / "physiology.sqlite3"
         self.clock = clock
 
     @contextmanager
     def _write(self):
-        if self.journal.is_symlink() or self.archive.is_symlink():
-            raise RecoveryError("Store paths must be local files")
+        self._validate_paths()
         if self.archive.exists() and not self.journal.is_file():
             raise RecoveryError("PF-001 archive is missing its custody journal")
         self.journal.touch(mode=0o600, exist_ok=True)
@@ -94,6 +114,37 @@ class LocalIngest:
                 """
                 )
                 yield db
+
+    def _validate_paths(self):
+        root = self._root
+        parent = root.parent
+        root_info, parent_info = root.lstat(), parent.lstat()
+        if (
+            root.resolve(strict=True) != root
+            or (root_info.st_dev, root_info.st_ino) != self._root_identity
+            or (parent_info.st_dev, parent_info.st_ino) != self._parent_identity
+            or root_info.st_uid != self._owner
+            or parent_info.st_uid != self._owner
+            or stat.S_IMODE(root_info.st_mode) != 0o700
+            or parent_info.st_mode & 0o022
+        ):
+            raise RecoveryError("Custody root or trusted parent changed")
+        for database in (self.journal, self.archive):
+            for suffix in ("", "-journal", "-wal", "-shm"):
+                path = database.with_name(database.name + suffix)
+                try:
+                    info = path.lstat()
+                except FileNotFoundError:
+                    continue
+                if (
+                    not stat.S_ISREG(info.st_mode)
+                    or info.st_uid != self._owner
+                    or stat.S_IMODE(info.st_mode) != 0o600
+                    or info.st_nlink != 1
+                ):
+                    raise RecoveryError(
+                        "Store files and sidecars must be private, owned regular files"
+                    )
 
     def _checkpoint(self, phase):
         """Fault injection point for local tests."""

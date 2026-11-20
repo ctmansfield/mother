@@ -29,7 +29,7 @@ class Atlas02Tests(unittest.TestCase):
         self.scope = Scope(**self.export["scope"])
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
-        self.root = Path(temp.name)
+        self.root = Path(temp.name).resolve()
 
     def service(self, archive_id=None):
         return IngestV02(
