@@ -339,6 +339,18 @@
     "second_delete": {
       "canonical_utf8": "[\"mse.source-revision/0.2\",{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"},\"00000000-0000-4000-8000-000000000002\",\"delete\",\"3.0000001\"]",
       "sha256": "d61bf809ce01ab709cb79c9e5775b0114d3e598ae5b11f13d7542e64075d2b1c"
+    },
+    "repeat_receipt_id": {
+      "canonical_utf8": "[\"mse.receipt-id/0.2\",\"synthetic-archive\",{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"},\"batch-2\"]",
+      "sha256": "c8fa0a3f02879c86305c31284e1dc0b128b9ed9fbc940618bc03a197c8c7d58e"
+    },
+    "repeat_export": {
+      "canonical_utf8": "[\"mse.export/0.2\",{\"anchor_sha256\":{\"HRV (SDNN)\":\"a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222\"},\"artifact\":{\"byte_length\":304,\"media_type\":\"application/json\",\"sha256\":\"572d7ee77c54586c5a02f8e5d9c90381550a8c9cc7a047d153deff417059cf2c\",\"source_schema\":\"healtharchive-codable-json/0.1\"},\"batch_id\":\"batch-2\",\"capture_id\":\"capture-2\",\"coverage\":{\"backfill_start\":\"2001-01-01T00:00:00.000000Z\",\"capture_kind\":\"full_file\",\"completeness\":\"unknown\",\"observed_end\":\"2001-01-01T00:00:01.000000Z\",\"observed_start\":\"2001-01-01T00:00:00.000000Z\",\"permissions\":\"unknown\"},\"exporter_version\":\"fixture-1\",\"losses\":[{\"field\":\"event_start\",\"locator\":\"/readings/0/start\",\"reason\":\"microsecond_rounding\"}],\"revisions\":[{\"locators\":[\"/readings/0\"],\"native_id\":\"00000000-0000-4000-8000-000000000001\",\"observation\":{\"bundle_id\":\"test.synthetic\",\"calibration_id\":null,\"channel\":\"hrv_sdnn\",\"classification_basis\":\"healthkit_sdnn\",\"classification_evidence_sha256\":null,\"collector_received_at\":\"2001-01-01T00:00:09.000000Z\",\"device_id\":null,\"epistemic_type\":\"vendor_derived\",\"event_end\":\"2001-01-01T00:00:01.000000Z\",\"event_start\":\"2001-01-01T00:00:00.000000Z\",\"original_end\":\"1\",\"original_received_at\":\"9\",\"original_start\":\"0.0000005\",\"original_unit\":\"ms\",\"original_value\":\"42.0\",\"source_available_at\":null,\"source_name\":\"Synthetic µ\",\"unit\":\"ms\",\"value\":\"42\"},\"operation\":\"upsert\",\"revision_sha256\":\"422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f\"},{\"deleted_at\":\"2001-01-01T00:00:03.000000Z\",\"locators\":[\"/tombstones/00000000-0000-4000-8000-000000000002\"],\"native_id\":\"00000000-0000-4000-8000-000000000002\",\"operation\":\"delete\",\"original_deleted_at\":[\"3\"],\"revision_sha256\":\"1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82\"}],\"schema_version\":\"mse.healtharchive-export/0.2\",\"scope\":{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"}}]",
+      "sha256": "24962ce960c2a570251d66200484c83971f51579c75c62011db5eb6cf57b7b9f"
+    },
+    "advanced_snapshot": {
+      "canonical_utf8": "[\"mse.snapshot/0.2\",{\"archive_id\":\"synthetic-archive\",\"coverage\":{\"backfill_start\":\"2001-01-01T00:00:00.000000Z\",\"capture_kind\":\"full_file\",\"completeness\":\"unknown\",\"observed_end\":\"2001-01-01T00:00:01.000000Z\",\"observed_start\":\"2001-01-01T00:00:00.000000Z\",\"permissions\":\"unknown\"},\"knowledge_cutoff_sequence\":4,\"losses\":[{\"field\":\"event_start\",\"locator\":\"/readings/0/start\",\"reason\":\"microsecond_rounding\"}],\"measurement_end\":\"2001-01-01T00:00:02.000000Z\",\"measurement_start\":\"2001-01-01T00:00:00.000000Z\",\"normalizer_version\":\"fixture-1\",\"observations\":[{\"artifact_sha256\":\"05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816\",\"commit_sequence\":2,\"committed_at\":\"2001-01-01T00:00:06.000000Z\",\"mother_received_at\":\"2001-01-01T00:00:04.000000Z\",\"pf001_revision_id\":\"synthetic-upsert\",\"processing_revision_sha256\":\"10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104\",\"receipt_id\":\"0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080\",\"source_revision\":{\"locators\":[\"/readings/0\"],\"native_id\":\"00000000-0000-4000-8000-000000000001\",\"observation\":{\"bundle_id\":\"test.synthetic\",\"calibration_id\":null,\"channel\":\"hrv_sdnn\",\"classification_basis\":\"healthkit_sdnn\",\"classification_evidence_sha256\":null,\"collector_received_at\":\"2001-01-01T00:00:02.000000Z\",\"device_id\":null,\"epistemic_type\":\"vendor_derived\",\"event_end\":\"2001-01-01T00:00:01.000000Z\",\"event_start\":\"2001-01-01T00:00:00.000000Z\",\"original_end\":\"1\",\"original_received_at\":\"2\",\"original_start\":\"0.0000005\",\"original_unit\":\"ms\",\"original_value\":\"4.20e1\",\"source_available_at\":null,\"source_name\":\"Synthetic µ\",\"unit\":\"ms\",\"value\":\"42\"},\"operation\":\"upsert\",\"revision_sha256\":\"422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f\"}}],\"purpose\":\"offline_synthetic_replay\",\"schema_version\":\"mse.evidence-snapshot/0.2\",\"scope\":{\"collection\":\"healtharchive\",\"source_instance\":\"fixture-store\",\"source_system\":\"healthkit\",\"subject_id\":\"synthetic-atlas\"},\"tombstones\":[{\"artifact_sha256\":\"05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816\",\"commit_sequence\":2,\"committed_at\":\"2001-01-01T00:00:06.000000Z\",\"mother_received_at\":\"2001-01-01T00:00:04.000000Z\",\"pf001_revision_id\":\"synthetic-delete\",\"receipt_id\":\"0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080\",\"source_revision\":{\"deleted_at\":\"2001-01-01T00:00:03.000000Z\",\"locators\":[\"/tombstones/00000000-0000-4000-8000-000000000002\"],\"native_id\":\"00000000-0000-4000-8000-000000000002\",\"operation\":\"delete\",\"original_deleted_at\":[\"3\"],\"revision_sha256\":\"1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82\"}}]}]",
+      "sha256": "aa8855d1332aa48fdc416ade3b86d30471fe6148f10ab5bb9fd8fdadc6d95961"
     }
   },
   "negative_cases": [
@@ -487,5 +499,639 @@
       },
       "expected": "retain_both_collapse_reference_pair_with_loss"
     }
-  ]
+  ],
+  "representative_cases": {
+    "later_source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":42.0,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":9}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+    "later_export": {
+      "schema_version": "mse.healtharchive-export/0.2",
+      "scope": {
+        "subject_id": "synthetic-atlas",
+        "source_system": "healthkit",
+        "source_instance": "fixture-store",
+        "collection": "healtharchive"
+      },
+      "batch_id": "batch-2",
+      "capture_id": "capture-2",
+      "exporter_version": "fixture-1",
+      "artifact": {
+        "sha256": "572d7ee77c54586c5a02f8e5d9c90381550a8c9cc7a047d153deff417059cf2c",
+        "byte_length": 304,
+        "media_type": "application/json",
+        "source_schema": "healtharchive-codable-json/0.1"
+      },
+      "coverage": {
+        "capture_kind": "full_file",
+        "backfill_start": "2001-01-01T00:00:00.000000Z",
+        "observed_start": "2001-01-01T00:00:00.000000Z",
+        "observed_end": "2001-01-01T00:00:01.000000Z",
+        "permissions": "unknown",
+        "completeness": "unknown"
+      },
+      "anchor_sha256": {
+        "HRV (SDNN)": "a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222"
+      },
+      "revisions": [
+        {
+          "native_id": "00000000-0000-4000-8000-000000000001",
+          "operation": "upsert",
+          "observation": {
+            "channel": "hrv_sdnn",
+            "original_value": "42.0",
+            "original_unit": "ms",
+            "value": "42",
+            "unit": "ms",
+            "original_start": "0.0000005",
+            "original_end": "1",
+            "original_received_at": "9",
+            "event_start": "2001-01-01T00:00:00.000000Z",
+            "event_end": "2001-01-01T00:00:01.000000Z",
+            "collector_received_at": "2001-01-01T00:00:09.000000Z",
+            "source_name": "Synthetic µ",
+            "bundle_id": "test.synthetic",
+            "epistemic_type": "vendor_derived",
+            "classification_basis": "healthkit_sdnn",
+            "classification_evidence_sha256": null,
+            "device_id": null,
+            "calibration_id": null,
+            "source_available_at": null
+          },
+          "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+          "locators": [
+            "/readings/0"
+          ]
+        },
+        {
+          "native_id": "00000000-0000-4000-8000-000000000002",
+          "operation": "delete",
+          "deleted_at": "2001-01-01T00:00:03.000000Z",
+          "original_deleted_at": [
+            "3"
+          ],
+          "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+          "locators": [
+            "/tombstones/00000000-0000-4000-8000-000000000002"
+          ]
+        }
+      ],
+      "losses": [
+        {
+          "field": "event_start",
+          "reason": "microsecond_rounding",
+          "locator": "/readings/0/start"
+        }
+      ]
+    },
+    "later_receipt": {
+      "schema_version": "mse.ingest-receipt/0.2",
+      "scope": {
+        "subject_id": "synthetic-atlas",
+        "source_system": "healthkit",
+        "source_instance": "fixture-store",
+        "collection": "healtharchive"
+      },
+      "archive_id": "synthetic-archive",
+      "batch_id": "batch-2",
+      "artifact_sha256": "572d7ee77c54586c5a02f8e5d9c90381550a8c9cc7a047d153deff417059cf2c",
+      "byte_length": 304,
+      "source_schema": "healtharchive-codable-json/0.1",
+      "export_sha256": "24962ce960c2a570251d66200484c83971f51579c75c62011db5eb6cf57b7b9f",
+      "receipt_id": "c8fa0a3f02879c86305c31284e1dc0b128b9ed9fbc940618bc03a197c8c7d58e",
+      "status": "normalized",
+      "mother_received_at": "2001-01-01T00:00:10.000000Z",
+      "committed_at": "2001-01-01T00:00:12.000000Z",
+      "commit_sequence": 4,
+      "pf001_run_id": "synthetic-run-2",
+      "reason_code": null
+    },
+    "sightings": [
+      {
+        "normalizer_version": "fixture-1",
+        "observation": {
+          "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+          "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+          "commit_sequence": 2,
+          "committed_at": "2001-01-01T00:00:06.000000Z",
+          "mother_received_at": "2001-01-01T00:00:04.000000Z",
+          "pf001_revision_id": "synthetic-upsert",
+          "source_revision": {
+            "native_id": "00000000-0000-4000-8000-000000000001",
+            "operation": "upsert",
+            "observation": {
+              "channel": "hrv_sdnn",
+              "original_value": "4.20e1",
+              "original_unit": "ms",
+              "value": "42",
+              "unit": "ms",
+              "original_start": "0.0000005",
+              "original_end": "1",
+              "original_received_at": "2",
+              "event_start": "2001-01-01T00:00:00.000000Z",
+              "event_end": "2001-01-01T00:00:01.000000Z",
+              "collector_received_at": "2001-01-01T00:00:02.000000Z",
+              "source_name": "Synthetic µ",
+              "bundle_id": "test.synthetic",
+              "epistemic_type": "vendor_derived",
+              "classification_basis": "healthkit_sdnn",
+              "classification_evidence_sha256": null,
+              "device_id": null,
+              "calibration_id": null,
+              "source_available_at": null
+            },
+            "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+            "locators": [
+              "/readings/0"
+            ]
+          },
+          "processing_revision_sha256": "10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104"
+        },
+        "tombstone": {
+          "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+          "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+          "commit_sequence": 2,
+          "committed_at": "2001-01-01T00:00:06.000000Z",
+          "mother_received_at": "2001-01-01T00:00:04.000000Z",
+          "pf001_revision_id": "synthetic-delete",
+          "source_revision": {
+            "native_id": "00000000-0000-4000-8000-000000000002",
+            "operation": "delete",
+            "deleted_at": "2001-01-01T00:00:03.000000Z",
+            "original_deleted_at": [
+              "3"
+            ],
+            "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+            "locators": [
+              "/tombstones/00000000-0000-4000-8000-000000000002"
+            ]
+          }
+        }
+      },
+      {
+        "normalizer_version": "fixture-1",
+        "observation": {
+          "artifact_sha256": "572d7ee77c54586c5a02f8e5d9c90381550a8c9cc7a047d153deff417059cf2c",
+          "receipt_id": "c8fa0a3f02879c86305c31284e1dc0b128b9ed9fbc940618bc03a197c8c7d58e",
+          "commit_sequence": 4,
+          "committed_at": "2001-01-01T00:00:12.000000Z",
+          "mother_received_at": "2001-01-01T00:00:10.000000Z",
+          "pf001_revision_id": "synthetic-upsert",
+          "source_revision": {
+            "native_id": "00000000-0000-4000-8000-000000000001",
+            "operation": "upsert",
+            "observation": {
+              "channel": "hrv_sdnn",
+              "original_value": "42.0",
+              "original_unit": "ms",
+              "value": "42",
+              "unit": "ms",
+              "original_start": "0.0000005",
+              "original_end": "1",
+              "original_received_at": "9",
+              "event_start": "2001-01-01T00:00:00.000000Z",
+              "event_end": "2001-01-01T00:00:01.000000Z",
+              "collector_received_at": "2001-01-01T00:00:09.000000Z",
+              "source_name": "Synthetic µ",
+              "bundle_id": "test.synthetic",
+              "epistemic_type": "vendor_derived",
+              "classification_basis": "healthkit_sdnn",
+              "classification_evidence_sha256": null,
+              "device_id": null,
+              "calibration_id": null,
+              "source_available_at": null
+            },
+            "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+            "locators": [
+              "/readings/0"
+            ]
+          },
+          "processing_revision_sha256": "10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104"
+        },
+        "tombstone": {
+          "artifact_sha256": "572d7ee77c54586c5a02f8e5d9c90381550a8c9cc7a047d153deff417059cf2c",
+          "receipt_id": "c8fa0a3f02879c86305c31284e1dc0b128b9ed9fbc940618bc03a197c8c7d58e",
+          "commit_sequence": 4,
+          "committed_at": "2001-01-01T00:00:12.000000Z",
+          "mother_received_at": "2001-01-01T00:00:10.000000Z",
+          "pf001_revision_id": "synthetic-delete",
+          "source_revision": {
+            "native_id": "00000000-0000-4000-8000-000000000002",
+            "operation": "delete",
+            "deleted_at": "2001-01-01T00:00:03.000000Z",
+            "original_deleted_at": [
+              "3"
+            ],
+            "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+            "locators": [
+              "/tombstones/00000000-0000-4000-8000-000000000002"
+            ]
+          }
+        }
+      }
+    ],
+    "cases": [
+      {
+        "name": "historical-before-second-receipt",
+        "input_order": [
+          0
+        ],
+        "cutoff": 2,
+        "expected": {
+          "schema_version": "mse.evidence-snapshot/0.2",
+          "scope": {
+            "subject_id": "synthetic-atlas",
+            "source_system": "healthkit",
+            "source_instance": "fixture-store",
+            "collection": "healtharchive"
+          },
+          "archive_id": "synthetic-archive",
+          "purpose": "offline_synthetic_replay",
+          "measurement_start": "2001-01-01T00:00:00.000000Z",
+          "measurement_end": "2001-01-01T00:00:02.000000Z",
+          "knowledge_cutoff_sequence": 2,
+          "normalizer_version": "fixture-1",
+          "coverage": {
+            "capture_kind": "full_file",
+            "backfill_start": "2001-01-01T00:00:00.000000Z",
+            "observed_start": "2001-01-01T00:00:00.000000Z",
+            "observed_end": "2001-01-01T00:00:01.000000Z",
+            "permissions": "unknown",
+            "completeness": "unknown"
+          },
+          "observations": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-upsert",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000001",
+                "operation": "upsert",
+                "observation": {
+                  "channel": "hrv_sdnn",
+                  "original_value": "4.20e1",
+                  "original_unit": "ms",
+                  "value": "42",
+                  "unit": "ms",
+                  "original_start": "0.0000005",
+                  "original_end": "1",
+                  "original_received_at": "2",
+                  "event_start": "2001-01-01T00:00:00.000000Z",
+                  "event_end": "2001-01-01T00:00:01.000000Z",
+                  "collector_received_at": "2001-01-01T00:00:02.000000Z",
+                  "source_name": "Synthetic µ",
+                  "bundle_id": "test.synthetic",
+                  "epistemic_type": "vendor_derived",
+                  "classification_basis": "healthkit_sdnn",
+                  "classification_evidence_sha256": null,
+                  "device_id": null,
+                  "calibration_id": null,
+                  "source_available_at": null
+                },
+                "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+                "locators": [
+                  "/readings/0"
+                ]
+              },
+              "processing_revision_sha256": "10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104"
+            }
+          ],
+          "tombstones": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-delete",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000002",
+                "operation": "delete",
+                "deleted_at": "2001-01-01T00:00:03.000000Z",
+                "original_deleted_at": [
+                  "3"
+                ],
+                "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+                "locators": [
+                  "/tombstones/00000000-0000-4000-8000-000000000002"
+                ]
+              }
+            }
+          ],
+          "losses": [
+            {
+              "field": "event_start",
+              "reason": "microsecond_rounding",
+              "locator": "/readings/0/start"
+            }
+          ],
+          "snapshot_sha256": "e62bf1383cb72dff2fdd1114e0feceafb0e5f582d89ba2f436f8dfb67c6fcea7"
+        }
+      },
+      {
+        "name": "historical-after-second-receipt",
+        "input_order": [
+          1,
+          0
+        ],
+        "cutoff": 2,
+        "expected": {
+          "schema_version": "mse.evidence-snapshot/0.2",
+          "scope": {
+            "subject_id": "synthetic-atlas",
+            "source_system": "healthkit",
+            "source_instance": "fixture-store",
+            "collection": "healtharchive"
+          },
+          "archive_id": "synthetic-archive",
+          "purpose": "offline_synthetic_replay",
+          "measurement_start": "2001-01-01T00:00:00.000000Z",
+          "measurement_end": "2001-01-01T00:00:02.000000Z",
+          "knowledge_cutoff_sequence": 2,
+          "normalizer_version": "fixture-1",
+          "coverage": {
+            "capture_kind": "full_file",
+            "backfill_start": "2001-01-01T00:00:00.000000Z",
+            "observed_start": "2001-01-01T00:00:00.000000Z",
+            "observed_end": "2001-01-01T00:00:01.000000Z",
+            "permissions": "unknown",
+            "completeness": "unknown"
+          },
+          "observations": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-upsert",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000001",
+                "operation": "upsert",
+                "observation": {
+                  "channel": "hrv_sdnn",
+                  "original_value": "4.20e1",
+                  "original_unit": "ms",
+                  "value": "42",
+                  "unit": "ms",
+                  "original_start": "0.0000005",
+                  "original_end": "1",
+                  "original_received_at": "2",
+                  "event_start": "2001-01-01T00:00:00.000000Z",
+                  "event_end": "2001-01-01T00:00:01.000000Z",
+                  "collector_received_at": "2001-01-01T00:00:02.000000Z",
+                  "source_name": "Synthetic µ",
+                  "bundle_id": "test.synthetic",
+                  "epistemic_type": "vendor_derived",
+                  "classification_basis": "healthkit_sdnn",
+                  "classification_evidence_sha256": null,
+                  "device_id": null,
+                  "calibration_id": null,
+                  "source_available_at": null
+                },
+                "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+                "locators": [
+                  "/readings/0"
+                ]
+              },
+              "processing_revision_sha256": "10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104"
+            }
+          ],
+          "tombstones": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-delete",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000002",
+                "operation": "delete",
+                "deleted_at": "2001-01-01T00:00:03.000000Z",
+                "original_deleted_at": [
+                  "3"
+                ],
+                "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+                "locators": [
+                  "/tombstones/00000000-0000-4000-8000-000000000002"
+                ]
+              }
+            }
+          ],
+          "losses": [
+            {
+              "field": "event_start",
+              "reason": "microsecond_rounding",
+              "locator": "/readings/0/start"
+            }
+          ],
+          "snapshot_sha256": "e62bf1383cb72dff2fdd1114e0feceafb0e5f582d89ba2f436f8dfb67c6fcea7"
+        }
+      },
+      {
+        "name": "both-receipts-chronological",
+        "input_order": [
+          0,
+          1
+        ],
+        "cutoff": 4,
+        "expected": {
+          "schema_version": "mse.evidence-snapshot/0.2",
+          "scope": {
+            "subject_id": "synthetic-atlas",
+            "source_system": "healthkit",
+            "source_instance": "fixture-store",
+            "collection": "healtharchive"
+          },
+          "archive_id": "synthetic-archive",
+          "purpose": "offline_synthetic_replay",
+          "measurement_start": "2001-01-01T00:00:00.000000Z",
+          "measurement_end": "2001-01-01T00:00:02.000000Z",
+          "knowledge_cutoff_sequence": 4,
+          "normalizer_version": "fixture-1",
+          "coverage": {
+            "capture_kind": "full_file",
+            "backfill_start": "2001-01-01T00:00:00.000000Z",
+            "observed_start": "2001-01-01T00:00:00.000000Z",
+            "observed_end": "2001-01-01T00:00:01.000000Z",
+            "permissions": "unknown",
+            "completeness": "unknown"
+          },
+          "observations": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-upsert",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000001",
+                "operation": "upsert",
+                "observation": {
+                  "channel": "hrv_sdnn",
+                  "original_value": "4.20e1",
+                  "original_unit": "ms",
+                  "value": "42",
+                  "unit": "ms",
+                  "original_start": "0.0000005",
+                  "original_end": "1",
+                  "original_received_at": "2",
+                  "event_start": "2001-01-01T00:00:00.000000Z",
+                  "event_end": "2001-01-01T00:00:01.000000Z",
+                  "collector_received_at": "2001-01-01T00:00:02.000000Z",
+                  "source_name": "Synthetic µ",
+                  "bundle_id": "test.synthetic",
+                  "epistemic_type": "vendor_derived",
+                  "classification_basis": "healthkit_sdnn",
+                  "classification_evidence_sha256": null,
+                  "device_id": null,
+                  "calibration_id": null,
+                  "source_available_at": null
+                },
+                "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+                "locators": [
+                  "/readings/0"
+                ]
+              },
+              "processing_revision_sha256": "10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104"
+            }
+          ],
+          "tombstones": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-delete",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000002",
+                "operation": "delete",
+                "deleted_at": "2001-01-01T00:00:03.000000Z",
+                "original_deleted_at": [
+                  "3"
+                ],
+                "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+                "locators": [
+                  "/tombstones/00000000-0000-4000-8000-000000000002"
+                ]
+              }
+            }
+          ],
+          "losses": [
+            {
+              "field": "event_start",
+              "reason": "microsecond_rounding",
+              "locator": "/readings/0/start"
+            }
+          ],
+          "snapshot_sha256": "aa8855d1332aa48fdc416ade3b86d30471fe6148f10ab5bb9fd8fdadc6d95961"
+        }
+      },
+      {
+        "name": "both-receipts-reverse-order",
+        "input_order": [
+          1,
+          0
+        ],
+        "cutoff": 4,
+        "expected": {
+          "schema_version": "mse.evidence-snapshot/0.2",
+          "scope": {
+            "subject_id": "synthetic-atlas",
+            "source_system": "healthkit",
+            "source_instance": "fixture-store",
+            "collection": "healtharchive"
+          },
+          "archive_id": "synthetic-archive",
+          "purpose": "offline_synthetic_replay",
+          "measurement_start": "2001-01-01T00:00:00.000000Z",
+          "measurement_end": "2001-01-01T00:00:02.000000Z",
+          "knowledge_cutoff_sequence": 4,
+          "normalizer_version": "fixture-1",
+          "coverage": {
+            "capture_kind": "full_file",
+            "backfill_start": "2001-01-01T00:00:00.000000Z",
+            "observed_start": "2001-01-01T00:00:00.000000Z",
+            "observed_end": "2001-01-01T00:00:01.000000Z",
+            "permissions": "unknown",
+            "completeness": "unknown"
+          },
+          "observations": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-upsert",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000001",
+                "operation": "upsert",
+                "observation": {
+                  "channel": "hrv_sdnn",
+                  "original_value": "4.20e1",
+                  "original_unit": "ms",
+                  "value": "42",
+                  "unit": "ms",
+                  "original_start": "0.0000005",
+                  "original_end": "1",
+                  "original_received_at": "2",
+                  "event_start": "2001-01-01T00:00:00.000000Z",
+                  "event_end": "2001-01-01T00:00:01.000000Z",
+                  "collector_received_at": "2001-01-01T00:00:02.000000Z",
+                  "source_name": "Synthetic µ",
+                  "bundle_id": "test.synthetic",
+                  "epistemic_type": "vendor_derived",
+                  "classification_basis": "healthkit_sdnn",
+                  "classification_evidence_sha256": null,
+                  "device_id": null,
+                  "calibration_id": null,
+                  "source_available_at": null
+                },
+                "revision_sha256": "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f",
+                "locators": [
+                  "/readings/0"
+                ]
+              },
+              "processing_revision_sha256": "10bc987943832d071a4c199855367ee506e7643a67055fa33f9497c3bc397104"
+            }
+          ],
+          "tombstones": [
+            {
+              "artifact_sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+              "receipt_id": "0b98931d1817fc8fa742d896b578105782a827cbdaf10ca7d1ed552704b34080",
+              "commit_sequence": 2,
+              "committed_at": "2001-01-01T00:00:06.000000Z",
+              "mother_received_at": "2001-01-01T00:00:04.000000Z",
+              "pf001_revision_id": "synthetic-delete",
+              "source_revision": {
+                "native_id": "00000000-0000-4000-8000-000000000002",
+                "operation": "delete",
+                "deleted_at": "2001-01-01T00:00:03.000000Z",
+                "original_deleted_at": [
+                  "3"
+                ],
+                "revision_sha256": "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82",
+                "locators": [
+                  "/tombstones/00000000-0000-4000-8000-000000000002"
+                ]
+              }
+            }
+          ],
+          "losses": [
+            {
+              "field": "event_start",
+              "reason": "microsecond_rounding",
+              "locator": "/readings/0/start"
+            }
+          ],
+          "snapshot_sha256": "aa8855d1332aa48fdc416ade3b86d30471fe6148f10ab5bb9fd8fdadc6d95961"
+        }
+      }
+    ],
+    "expected_native_projection_sha256": "2dd8a65f9b041c5b5f6c7fd831bbcccdac968237b6e35d3a23f037c9e8eef115"
+  }
 }
