@@ -3,8 +3,8 @@ import hashlib
 import json
 import unittest
 
-from integrations.healthbridge.capture import CaptureError, parse_capture
-from integrations.healthbridge.export import canonical_json, normalize_capture
+from integrations.healthbridge.capture import CaptureError, CaptureLimits, parse_capture
+from integrations.healthbridge.export import canonical_json, export_sha256, normalize_capture
 
 HR = "a0000000-0000-4000-8000-000000000001"
 SDNN = "a0000000-0000-4000-8000-000000000002"
@@ -32,7 +32,7 @@ def capture(readings=None, tombstones=None, **changes):
 
 def normalize(raw, **changes):
     scope = {"subject_id": "synthetic-a", "source_instance": "test-store",
-             "batch_id": "test-batch", "capture_kind": "partial"}
+             "batch_id": "test-batch", "capture_kind": "partial", "capture_id": "capture-1"}
     return normalize_capture(raw, **(scope | changes))
 
 
@@ -41,18 +41,18 @@ class CaptureTests(unittest.TestCase):
         raw = capture([reading()], extension={"ignored": True})
         output = normalize(raw)
         self.assertEqual(output, normalize(raw))
-        self.assertEqual(output["capture_id"], hashlib.sha256(raw).hexdigest())
+        self.assertEqual(output["artifact"]["sha256"], hashlib.sha256(raw).hexdigest())
         self.assertEqual(output["artifact"]["byte_length"], len(raw))
         self.assertEqual(output["coverage"]["backfill_start"],
                          "2000-12-31T23:59:59.000000Z")
         self.assertEqual(output["coverage"]["permissions"], "unknown")
-        self.assertEqual(output["anchor_sha256"]["heartRate"],
+        self.assertEqual(output["anchor_sha256"]["Heart rate"],
                          hashlib.sha256(bytes([1, 2])).hexdigest())
         self.assertIn("Synthetic Δ".encode(), canonical_json(output))
         self.assertIn({"field": "source_extension", "reason": "retained_in_original_only",
                        "locator": "/extension"}, output["losses"])
         changed_whitespace = normalize(raw + b"\n")
-        self.assertNotEqual(output["capture_id"], changed_whitespace["capture_id"])
+        self.assertNotEqual(output["artifact"]["sha256"], changed_whitespace["artifact"]["sha256"])
         self.assertEqual(output["revisions"], changed_whitespace["revisions"])
 
     def test_swift_epoch_precision_and_original_numeric_lexeme(self):
@@ -70,7 +70,7 @@ class CaptureTests(unittest.TestCase):
         self.assertEqual(item["epistemic_type"], "unknown")
         self.assertIsNone(item["device_id"])
         self.assertEqual({loss["locator"] for loss in output["losses"]
-                          if loss["field"] == "timestamp"},
+                          if loss["reason"] == "microsecond_rounding"},
                          {"/readings/0/start", "/readings/0/end", "/readings/0/receivedAt"})
 
     def test_sdnn_retains_vendor_derivation(self):
@@ -93,6 +93,7 @@ class CaptureTests(unittest.TestCase):
         output = normalize(capture([reading(deletedAt=2.0)], {HR.upper(): 2}))
         facts = [row for row in output["revisions"] if row["operation"] == "delete"]
         self.assertEqual(len(facts), 1)
+        self.assertEqual(facts[0]["original_deleted_at"], ["2", "2.0"])
         self.assertEqual(facts[0]["locators"],
                          ["/readings/0/deletedAt", f"/tombstones/{HR.upper()}"])
 
@@ -128,6 +129,53 @@ class CaptureTests(unittest.TestCase):
         for raw in invalid:
             with self.subTest(raw=raw), self.assertRaises(CaptureError):
                 parse_capture(raw)
+
+    def test_atlas_02_golden_export_and_source_revisions(self):
+        # Source vector and expected digests from #28 at 928a60b.
+        raw = (
+            '{"readings":[{"id":"00000000-0000-4000-8000-000000000001",'
+            '"kind":"HRV (SDNN)","value":4.20e1,"unit":"ms","start":0.0000005,'
+            '"end":1,"source":"Synthetic µ","bundleID":"test.synthetic",'
+            '"receivedAt":2}],"anchors":{"HRV (SDNN)":"AQI="},'
+            '"tombstones":{"00000000-0000-4000-8000-000000000002":3},'
+            '"backfillStart":0}'
+        ).encode()
+        options = dict(subject_id="synthetic-atlas", source_instance="fixture-store",
+                       batch_id="batch-1", capture_kind="full_file",
+                       capture_id="capture-1", exporter_version="fixture-1")
+        output = normalize_capture(raw, **options)
+        self.assertEqual(export_sha256(output),
+                         "54bc62e4c8e16e47a7ba114dfd27ada7fa8bfddb165500a6a663626b3daab6a4")
+        upsert, delete = output["revisions"]
+        self.assertEqual(upsert["revision_sha256"],
+                         "422024522216229dfd02903cc548d549759829c4b4b3f328006c908b214fef6f")
+        self.assertEqual(delete["revision_sha256"],
+                         "1a0e130c30b61c22ddf510bc2aac9d87e15b17440b9ca2c8df41d4ff5e53cb82")
+        drifted = raw.replace(b"4.20e1", b"42.0").replace(b'"receivedAt":2', b'"receivedAt":9')
+        drifted_output = normalize_capture(drifted, **options)
+        self.assertEqual(drifted_output["revisions"][0]["revision_sha256"],
+                         upsert["revision_sha256"])
+        self.assertNotEqual(export_sha256(drifted_output), export_sha256(output))
+
+    def test_limits_reject_entire_capture(self):
+        raw = capture([reading()], {UNKNOWN: 4}, extension={"string": "[{]"})
+        for limits in (
+            CaptureLimits(byte_length=len(raw) - 1),
+            CaptureLimits(records=1),
+            CaptureLimits(depth=2),
+            CaptureLimits(numeric_token_length=1),
+        ):
+            with self.subTest(limits=limits), self.assertRaises(CaptureError):
+                parse_capture(raw, limits=limits)
+        parse_capture(raw, limits=CaptureLimits(byte_length=len(raw), records=2, depth=3))
+
+    def test_zero_stays_canonical_but_outside_reference_domain(self):
+        raw = capture([reading()]).replace(b'"value": 70', b'"value": -0.00')
+        output = normalize(raw)
+        observation = output["revisions"][0]["observation"]
+        self.assertEqual((observation["original_value"], observation["value"]), ("-0.00", "0"))
+        self.assertIn({"field": "value", "reason": "outside_reference_positive_domain",
+                       "locator": "/readings/0/value"}, output["losses"])
 
     def test_explicit_scope_changes_revision_identity(self):
         raw = capture([reading()])

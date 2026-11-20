@@ -10,7 +10,21 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_EVEN, localcontext
 from uuid import UUID
 
-MAX_CAPTURE_BYTES = 4 * 1024 * 1024
+ANCHOR_KEYS = {"heartRate": "Heart rate", "hrvSDNN": "HRV (SDNN)",
+               "Heart rate": "Heart rate", "HRV (SDNN)": "HRV (SDNN)"}
+
+
+@dataclass(frozen=True)
+class CaptureLimits:
+    byte_length: int = 4 * 1024 * 1024
+    records: int = 20_000
+    depth: int = 32
+    numeric_token_length: int = 256
+
+    def __post_init__(self) -> None:
+        for limit in (self.byte_length, self.records, self.depth, self.numeric_token_length):
+            if type(limit) is not int or limit <= 0:
+                raise CaptureError("Capture limits must be positive integers")
 SWIFT_EPOCH = datetime(2001, 1, 1, tzinfo=timezone.utc)
 METRICS = {"Heart rate": ("heart_rate", "bpm", "unknown"),
            "HRV (SDNN)": ("hrv_sdnn", "ms", "vendor_derived")}
@@ -91,8 +105,7 @@ def _pointer(base: str, field: str) -> str:
 
 def _loss(losses: list[dict], field: str, reason: str, locator: str | None = None) -> None:
     finding = {"field": field, "reason": reason}
-    if locator is not None:
-        finding["locator"] = locator
+    finding["locator"] = locator
     losses.append(finding)
 
 
@@ -102,7 +115,7 @@ def _unknown_fields(value: dict, known: set[str], base: str, losses: list[dict])
         _loss(losses, "source_extension", "retained_in_original_only", _pointer(base, key))
 
 
-def _date(value: object, locator: str, losses: list[dict]) -> tuple[str, Decimal]:
+def _date(value: object, field: str, locator: str, losses: list[dict]) -> tuple[str, Decimal]:
     seconds = _number(value).decimal()
     with localcontext() as context:
         context.prec = 270
@@ -115,11 +128,13 @@ def _date(value: object, locator: str, losses: list[dict]) -> tuple[str, Decimal
     except OverflowError as exc:
         raise CaptureError("Date outside supported UTC range") from exc
     if micros != rounded:
-        _loss(losses, "timestamp", "rounded_to_microseconds_ties_even", locator)
+        _loss(losses, field, "microsecond_rounding", locator)
     return instant.isoformat(timespec="microseconds").replace("+00:00", "Z"), seconds
 
 
 def _decimal_text(value: Decimal) -> str:
+    if not value:
+        return "0"
     digits = format(value, "f")
     return digits.rstrip("0").rstrip(".") if "." in digits else digits
 
@@ -137,38 +152,74 @@ class Capture:
     losses: list[dict]
 
 
-def parse_capture(original: bytes) -> Capture:
+def _check_depth(text: str, limit: int) -> None:
+    depth = 0
+    quoted = escaped = False
+    for character in text:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif character == chr(92):
+                escaped = True
+            elif character == '"':
+                quoted = False
+        elif character == '"':
+            quoted = True
+        elif character in "[{":
+            depth += 1
+            if depth > limit:
+                raise CaptureError("Capture nesting exceeds local limit")
+        elif character in "]}":
+            depth -= 1
+
+
+def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -> Capture:
     """Parse caller-owned, coherent bytes. Locators refer to these exact bytes."""
-    if not isinstance(original, bytes) or not 0 < len(original) <= MAX_CAPTURE_BYTES:
+    if not isinstance(original, bytes) or not 0 < len(original) <= limits.byte_length:
         raise CaptureError("Expected bounded immutable capture bytes")
+    def number_token(lexeme: str) -> Number:
+        if len(lexeme) > limits.numeric_token_length:
+            raise CaptureError("Number exceeds caller capture limit")
+        return Number(lexeme)
+
     try:
+        text = original.decode("utf-8")
+        _check_depth(text, limits.depth)
         archive = _object(json.loads(
-            original.decode("utf-8"), object_pairs_hook=_unique_object,
-            parse_int=Number, parse_float=Number, parse_constant=_reject_constant,
+            text, object_pairs_hook=_unique_object,
+            parse_int=number_token, parse_float=number_token, parse_constant=_reject_constant,
         ))
     except (UnicodeDecodeError, json.JSONDecodeError, RecursionError):
         raise CaptureError("Invalid UTF-8 JSON capture") from None
     if not ARCHIVE_KEYS <= archive.keys() or not isinstance(archive["readings"], list):
         raise CaptureError("Missing or malformed HealthArchive fields")
 
+    tombstones = _object(archive["tombstones"])
+    if len(archive["readings"]) + len(tombstones) > limits.records:
+        raise CaptureError("Capture record count exceeds local limit")
     losses: list[dict] = []
     _unknown_fields(archive, ARCHIVE_KEYS, "", losses)
-    backfill, _ = _date(archive["backfillStart"], "/backfillStart", losses)
+    backfill, _ = _date(archive["backfillStart"], "backfill_start", "/backfillStart", losses)
     anchors = {}
     for metric, encoded in sorted(_object(archive["anchors"]).items()):
         try:
             opaque = base64.b64decode(_text(encoded), validate=True)
         except (ValueError, binascii.Error):
             raise CaptureError("Malformed opaque anchor encoding") from None
-        anchors[_text(metric)] = hashlib.sha256(opaque).hexdigest()
+        label = ANCHOR_KEYS.get(metric)
+        if label is None or label in anchors:
+            raise CaptureError("Unsupported or ambiguous opaque anchor key")
+        anchors[label] = hashlib.sha256(opaque).hexdigest()
 
     upserts: dict = {}
     deletions: dict = {}
 
     def record_delete(native: str, value: object, locator: str) -> None:
-        date, exact = _date(value, locator, losses)
+        date, exact = _date(value, "deleted_at", locator, losses)
         facts = deletions.setdefault(native, {})
-        facts.setdefault(exact, (date, []))[1].append(locator)
+        _, locators, lexemes = facts.setdefault(exact, (date, [], set()))
+        locators.append(locator)
+        lexemes.add(_number(value).lexeme)
 
     for index, item in enumerate(archive["readings"]):
         row = _object(item)
@@ -183,32 +234,44 @@ def parse_capture(original: bytes) -> Capture:
         channel, unit, epistemic_type = metric
         number = _number(row["value"])
         value = number.decimal()
-        start, exact_start = _date(row["start"], path + "/start", losses)
-        end, exact_end = _date(row["end"], path + "/end", losses)
+        if value < 0:
+            raise CaptureError("Negative metric is outside draft 0.2 value schema")
+        start, exact_start = _date(row["start"], "event_start", path + "/start", losses)
+        end, exact_end = _date(row["end"], "event_end", path + "/end", losses)
         if exact_end < exact_start:
             raise CaptureError("Reversed original measurement interval")
-        received, exact_received = _date(row["receivedAt"], path + "/receivedAt", losses)
+        received, _ = _date(row["receivedAt"], "collector_received_at", path + "/receivedAt", losses)
         observation = {
             "channel": channel, "original_value": number.lexeme, "original_unit": unit,
             "value": _decimal_text(value), "unit": unit, "event_start": start,
             "event_end": end, "collector_received_at": received,
+            "original_start": _number(row["start"]).lexeme,
+            "original_end": _number(row["end"]).lexeme,
+            "original_received_at": _number(row["receivedAt"]).lexeme,
             "source_name": _text(row["source"]), "bundle_id": _text(row["bundleID"]),
             "epistemic_type": epistemic_type, "device_id": None,
             "calibration_id": None, "source_available_at": None,
+            "classification_basis": "healthkit_sdnn" if channel == "hrv_sdnn"
+                                    else "capture_derivation_unavailable",
+            "classification_evidence_sha256": None,
         }
-        exact_times = tuple(map(_decimal_text, (exact_start, exact_end, exact_received)))
-        previous = upserts.setdefault(native, (observation, exact_times, []))
-        if previous[:2] != (observation, exact_times):
+        fact = {
+            "channel": channel, "unit": unit, "value": observation["value"],
+            "start": _decimal_text(exact_start), "end": _decimal_text(exact_end),
+            "source_name": observation["source_name"], "bundle_id": observation["bundle_id"],
+        }
+        previous = upserts.setdefault(native, (observation, fact, []))
+        if previous[1] != fact:
             raise CaptureError("Ambiguous same-UUID upserts")
+        if previous[0] != observation:
+            _loss(losses, "source_sighting", "alternate_sighting_retained_in_original", path)
         previous[2].append(path)
-        for field in ("device_id", "calibration_id", "source_available_at", "source_revision"):
-            _loss(losses, field, "not_recorded_by_source", path)
-        if epistemic_type == "unknown":
-            _loss(losses, "epistemic_type", "acquisition_method_unavailable", path)
+        if not value:
+            _loss(losses, "value", "outside_reference_positive_domain", path + "/value")
         if row.get("deletedAt") is not None:
             record_delete(native, row["deletedAt"], path + "/deletedAt")
 
-    for raw_id, value in sorted(_object(archive["tombstones"]).items()):
+    for raw_id, value in sorted(tombstones.items()):
         record_delete(_uuid(raw_id), value, _pointer("/tombstones", raw_id))
 
     return Capture(
