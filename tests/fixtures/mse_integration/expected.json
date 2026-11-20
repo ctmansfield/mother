@@ -162,5 +162,51 @@
     },
     "late_id": "C0DE0000-0000-4000-8000-000000000005",
     "late_not_visible_at_baseline_cutoff": true
-  }
+  },
+  "provisional_edges": {
+    "repeated-delete": {
+      "file": "repeated-delete.json",
+      "sha256": "9b2343ec7878fbd98b4678df0b165a23b5cebd33dde6e7f6ae7287a9e313c43c",
+      "delete_facts": {
+        "C0DE0000-0000-4000-8000-000000000003": [
+          785000020,
+          785000031
+        ],
+        "C0DE0000-0000-4000-8000-000000000004": [
+          785000021
+        ]
+      },
+      "locators_by_fact": [
+        1,
+        1,
+        1
+      ]
+    },
+    "numeric-time": {
+      "file": "numeric-time.json",
+      "sha256": "02879abada7b578ffb7a801347e012a643374c4fcb47ca4f1311953c90965c60",
+      "value_lexeme": "6.42500e1",
+      "decimal_value": "64.25",
+      "start_utc": "2001-01-01T00:00:00.000000Z",
+      "end_utc": "2001-01-01T00:00:00.000002Z",
+      "time_rounding_loss": true
+    },
+    "reversed-interval": {
+      "file": "reversed-interval.json",
+      "sha256": "ae215244c7034e9dd02f4c661dc43328d09ad3ad9b0c39a38247ca18a2fef99f",
+      "disposition": "reject_or_quarantine"
+    },
+    "duplicate-json-key": {
+      "file": "duplicate-json-key.json",
+      "sha256": "c338743578728190264f020327ae3b5138c4d461e6800c42d7f1639d8af67ea3",
+      "disposition": "reject_or_quarantine"
+    }
+  },
+  "provisional_receipt_mismatches": [
+    "subject_id",
+    "source_instance",
+    "batch_id",
+    "artifact_sha256",
+    "export_sha256"
+  ]
 }

@@ -31,3 +31,9 @@ python3 -m unittest discover -s tests/acceptance/mse_integration -v
 - Recovery: record the fault boundary and reopened state using the combined pinned implementation. Do not count specification-only cases as runtime passes.
 
 Source baseline `c05f38096406965496d7d4a09edf4b3575235311`. Requirements and plan `91d67e387e91d93a7a60aec03c8164c11c7aa994`. Open PF-001 dependency PR #18 `b4e70b7123689ec164ba09e2974645ae36b184a2`. The fixture checks are standalone. Adapter, ledger, recovery and MSE executions await the exact author heads and frozen interfaces.
+
+## Candidate 0.1 edge coverage (r2)
+
+ATLAS PR #28 candidate `a732adda92cc79659bf2413c7d45891cf2d13264` is provisional. The edge pack exercises repeated delete timestamps in both source locations, an unknown UUID deletion, ambiguous upserts, duplicate JSON keys, reversed intervals, and exponent-form measurement lexemes and half-even Date ties. A fixed UTF-8 canonical JSON digest vector checks encoding independently of an adapter. It does not bind a receipt, revision or snapshot schema.
+
+The exact receipt tests will mutate one binding at a time: subject, source instance, batch, artifact digest and export digest. Each mutation must fail without acceptance or checkpoint advancement. The test suite will consume the schema-specific golden preimages when ATLAS publishes them. Combined author-head runs remain pending. [r2 assignment](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041572809)
