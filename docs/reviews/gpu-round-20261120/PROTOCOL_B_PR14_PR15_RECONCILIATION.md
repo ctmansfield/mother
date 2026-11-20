@@ -23,6 +23,6 @@ git fetch origin integration/protocol-b-pr14-pr15-20261120
 git worktree add -b integration/protocol-b-pr14-pr15-20261120 /home/chad/protocol-b-reconcile-20261120 origin/integration/protocol-b-pr14-pr15-20261120
 python3 -B /home/chad/protocol-b-reconcile-20261120/docs/reviews/gpu-round-20261120/scientific/verify_and_post.py
 ```
-The last command performs offline tests only and posts a compact receipt to PR #19; it does not update hash manifests or qualify the full source tree. The branch must remain clean when invoking it.
+The last command performs offline tests only and posts a compact receipt to PR #20; it does not update hash manifests or qualify the full source tree. The branch must remain clean when invoking it.
 
 **Future Protocol B:** Never edit or reuse the original held campaign directory. A fresh comparison requires new reviewed design/authorization, preserved source pins, and a new exclusive state directory; `done_reason=length` is not evidence of answer completeness. No silent resumption of ordinal 14.
