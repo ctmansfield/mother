@@ -176,6 +176,32 @@ Direct `ingest_export` currently checks structure, canonical digests, scope, art
 
 The older missing-API and finite-negative rejection findings are superseded by the current author runs. No final combined independent acceptance or destination GO follows. Next: NICKY/SENTINEL exact candidate run, PHOENIX current public-entry paired restore, PROVENANCE manifest audit and FORGE source-boundary disposition. GADGET coordinates acceptance.
 
+## Round 6 source-integrity regressions and acceptance
+
+[Round 6 directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7045523829). The passing [#34 acceptance](https://github.com/ctmansfield/mother/pull/23#issuecomment-7045415129) stands at commit `877eeb66ae2c26ab8ee2144d34adeba87c988e8f`, tree `6dadd8cd94ffb4a0091f76624fdd0afd7baad507`: 84 checks with zero skips and six genuine replay invocations as reported by NICKY. The [FORGE exact-candidate reproduction](https://github.com/ctmansfield/mother/pull/31#issuecomment-7045493261) passed four public acceptance and four paired restore cases. These establish existing synthetic coverage and recovery for that tree. Corrected source-integrity evidence is separate. Frozen normative 0.2 at `769a0966da251da4d08633cc7663af9869da70e6` is unchanged.
+
+### Exact test inputs and invariants
+
+[Source-integrity fixtures](R6_SOURCE_INTEGRITY_CASES.json) provide exact UTF-8 text, artifact hashes and byte lengths. They are separate from the frozen vectors and old acceptance fixtures. Each binding case provides a valid original capture and a separate valid alternate capture covering one semantic difference. Use the trusted parser to produce independent expected views for each. Keep both inputs valid so mismatch assertions exercise the semantic comparison boundary separately from malformed input or digest checks.
+
+- **Original/export binding.** The trusted verifier derives the complete export from retained bytes using the configured expected scope, pinned exporter/version and bounded capture parsing. Compare canonical exports, including revisions, values, type/unit, interval, source/bundle, collector clocks, deletion facts, coverage, losses and all locators. Test matched pairs positively and cross-pairs defensively at the verifier. Vary scope and exporter policy independently. The boundary must fail closed before creating a durable or normalized acceptance for a mismatch. Verify no new run, source revision, normalized observation, authoritative receipt or cutoff-visible change. Preserve an already accepted matching batch and its receipt unchanged. Caller code cannot override verification or relax parser limits. If an explicitly separate failed-attempt record exists, it must convey rejection without acceptance.
+- **Per-field numerical fidelity.** For every PF-001 binary64 write, compare its represented value with the exact decimal source, independently for `original_value` and `value`. For Python binary64, use `Decimal.from_float(stored)` for the comparison. Decimal display from `str(stored)` can round back to the original spelling and mask a changed value. Use exact-binary controls `4.20e1` and `42.125`, ordinary inexact `42.1`, the adjacent integer `9007199254740993`, and signed zero. These are synthetic representation checks, not biological plausibility claims. Under a declared policy that rejects extreme magnitude, the large integer may be a source-only exclusion with an explicit reason. Finite positive values that round to zero or overflow must be explicitly excluded or rejected under the configured rules, never persisted as eligible zero/infinity.
+- Keep source artifact and revision digests, original lexemes and exact normalized decimal. Record a deterministic finding for each affected PF-001 field with original pointer, target representation and stable reason, or an explicit source-only exclusion. Distinguish PF-001 conversion rounding from parser/date rounding and from source-only nonpositive handling. Exact fields produce no conversion-loss finding. If both persisted fields round, report both. Reopened observation, snapshot loss and derived lineage must resolve to the same evidence after retry or restore. Do not relabel prior records or rewrite existing receipts. If a mapping changes stored record shape or identity, use a reviewed processing version and explicit compatibility statement.
+
+### Release coverage overlay
+
+All other rows retain the round 5 dispositions, with current #34 independent public-entry and restore evidence replacing the pending exact-assembly qualification for the checks actually run.
+
+| Requirement | Established on #34 or its pinned constituents | R6 requirement for source-integrity acceptance |
+| --- | --- | --- |
+| ACQ-02 / ACQ-03 | Exact capture retention, deterministic artifact identity, source facts and locators in normal public ingest. | Prove the direct boundary binds all exported source facts and pointers to the trusted rederived export. |
+| ING-04 / ING-06 / ING-07 | Scoped receipt and reopen, retry/conflict, corruption rejection and paired recovery for qualifying synthetic input. | Reject semantic mismatch before authoritative acceptance, including omitted deletion, without changing prior runs or receipts. |
+| STO-02 / STO-04 | Immutable source and processing IDs, exact source lexemes, signed-zero/negative source-only coverage. | Prove both PF-001 numerical fields report actual conversion loss or a typed exclusion, with exact values and source IDs preserved. |
+| STO-07 | Exact #34 paired public-entry restore passed on the original test cases. | Recheck restore/replay for newly supported precision-loss findings and corrected original/export verification. |
+| LLM-02 / LLM-04 | Whole-snapshot cutoff verification, exact input/result lineage and genuine MSE replay. | Carry affected conversion findings through accepted snapshot and derived result lineage. Reject claims unsupported by reopened custody. |
+
+There is no runtime or destination readiness inference. FORGE/ORACLE own the fixes. NICKY/SENTINEL own independent regressions and corrected immutable-candidate evidence. PROVENANCE checks loss lineage, and PHOENIX owns paired restore. GADGET owns any compatibility decision.
+
 ## Decision register
 
 | ID | Offline choice for review | Production owner / remaining decision |
