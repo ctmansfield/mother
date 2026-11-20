@@ -136,6 +136,43 @@ class ConnectedReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "differs from verified replay"):
             verify(altered)
 
+    def test_synthetic_exact_manifests_keep_join_keys_across_custody_domains(self):
+        other_archive = "independent-synthetic-custody"
+        other = ConnectedIngest(
+            self.root / "second-custody", archive_id=other_archive,
+            scope=Scope(**self.scope), schema=self.schema,
+        )
+        accepted = ingest_capture(
+            other, self.original, batch_id="separate-batch",
+            capture_kind="full_file", capture_id="separate-capture",
+        ).receipt
+        reopened = ConnectedIngest(
+            self.root / "second-custody", archive_id=other_archive,
+            scope=Scope(**self.scope), schema=self.schema,
+        )
+        request = {field: self.snapshot[field] for field in ("measurement_start", "measurement_end", "normalizer_version")}
+        snapshot = reopened.build_snapshot(
+            **request, knowledge_cutoff_sequence=accepted["commit_sequence"]
+        )
+        first = self.replay(self.snapshot)
+        second = replay_ledger_snapshot(
+            canonical(snapshot).encode(), ledger=reopened,
+            expected_scope=self.scope, expected_archive_id=other_archive,
+            max_bytes=64_000, max_members=128,
+        )
+        self.assertNotEqual(first["result_id"], second["result_id"])
+        self.assertNotEqual(self.receipt["receipt_id"], accepted["receipt_id"])
+        self.assertEqual(self.receipt["artifact_sha256"], accepted["artifact_sha256"])
+        first_row, second_row = (result["lineage"]["observation_revisions"][0] for result in (first, second))
+        for key in ("revision_sha256", "processing_revision_sha256", "native_id"):
+            self.assertEqual(first_row[key], second_row[key])
+        self.assertEqual(
+            first["reference_result"]["states"][0]["supporting_observation_ids"],
+            second["reference_result"]["states"][0]["supporting_observation_ids"],
+        )
+        self.assertNotIn(str(self.root), canonical(first))
+        self.assertNotIn(str(self.root), canonical(second))
+
     def test_direct_ingest_rejects_self_consistent_invented_source_facts(self):
         original_artifact = self.export["artifact"]
         variants = {
