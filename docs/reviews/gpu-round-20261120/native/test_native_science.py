@@ -20,7 +20,7 @@ class NativeBoundaryTests(unittest.TestCase):
         snapshot = repo / "snapshots" / revision
         snapshot.mkdir(parents=True)
         (snapshot / "config.json").write_text('{"model_type":"bert"}')
-        (snapshot / "tokenizer.json").write_text('{}')
+        (snapshot / "tokenizer.json").write_text("{}")
         (snapshot / "model.safetensors").write_bytes(b"fixture-only-not-real-weights")
         return repo, snapshot
 
@@ -41,8 +41,11 @@ class NativeBoundaryTests(unittest.TestCase):
     def test_missing_shard_refused_before_runtime_load(self):
         with tempfile.TemporaryDirectory() as temporary:
             _, snapshot = self.cache(temporary)
-            (snapshot / "model.safetensors.index.json").write_text(json.dumps({
-                "weight_map": {"layer": "model-00001-of-00002.safetensors"}}))
+            (snapshot / "model.safetensors.index.json").write_text(
+                json.dumps(
+                    {"weight_map": {"layer": "model-00001-of-00002.safetensors"}}
+                )
+            )
             with self.assertRaises(FileNotFoundError):
                 n.asset_layout(snapshot)
 
@@ -71,8 +74,9 @@ class NativeBoundaryTests(unittest.TestCase):
     def test_weight_index_path_traversal_refused(self):
         with tempfile.TemporaryDirectory() as temporary:
             _, snapshot = self.cache(temporary)
-            (snapshot / "model.safetensors.index.json").write_text(json.dumps({
-                "weight_map": {"layer": "../../other.safetensors"}}))
+            (snapshot / "model.safetensors.index.json").write_text(
+                json.dumps({"weight_map": {"layer": "../../other.safetensors"}})
+            )
             with self.assertRaisesRegex(ValueError, "unsafe weight shard"):
                 n.asset_layout(snapshot)
 
@@ -126,15 +130,26 @@ class NativeBoundaryTests(unittest.TestCase):
             n.retrieval_scores(self.fixture, [[float("nan")] * 8] * 4)
 
     def test_cuda_evidence_rejects_cpu_parameters(self):
-        tensor = lambda device: types.SimpleNamespace(device=device)
-        cuda = types.SimpleNamespace(synchronize=lambda _: None, max_memory_allocated=lambda _: 50,
-                                     max_memory_reserved=lambda _: 100)
+        def tensor(device):
+            return types.SimpleNamespace(device=device)
+
+        cuda = types.SimpleNamespace(
+            synchronize=lambda _: None,
+            max_memory_allocated=lambda _: 50,
+            max_memory_reserved=lambda _: 100,
+        )
         torch = types.SimpleNamespace(cuda=cuda)
-        model = types.SimpleNamespace(parameters=lambda: [tensor("cpu")], buffers=lambda: [])
+        model = types.SimpleNamespace(
+            parameters=lambda: [tensor("cpu")], buffers=lambda: []
+        )
         with self.assertRaisesRegex(ValueError, "CUDA tensor placement"):
-            n.cuda_evidence(torch, model, {"input_ids": tensor("cuda:0")}, tensor("cuda:0"))
+            n.cuda_evidence(
+                torch, model, {"input_ids": tensor("cuda:0")}, tensor("cuda:0")
+            )
         model.parameters = lambda: [tensor("cuda:0")]
-        result = n.cuda_evidence(torch, model, {"input_ids": tensor("cuda:0")}, tensor("cuda:0"))
+        result = n.cuda_evidence(
+            torch, model, {"input_ids": tensor("cuda:0")}, tensor("cuda:0")
+        )
         self.assertEqual(result["evidence"], "CUDA_PARAMETERS_INPUTS_OUTPUTS_OBSERVED")
 
     def test_unknown_gpu_process_output_is_not_treated_as_idle(self):
@@ -144,12 +159,18 @@ class NativeBoundaryTests(unittest.TestCase):
 
     def test_inspection_performs_no_cuda_or_model_calls(self):
         with tempfile.TemporaryDirectory() as temporary:
-            args = types.SimpleNamespace(hf_cache=Path(temporary), boltz_cache=Path(temporary) / "boltz")
-            with patch.object(n, "gpu_snapshot", side_effect=AssertionError("must not touch CUDA")):
+            args = types.SimpleNamespace(
+                hf_cache=Path(temporary), boltz_cache=Path(temporary) / "boltz"
+            )
+            with patch.object(
+                n, "gpu_snapshot", side_effect=AssertionError("must not touch CUDA")
+            ):
                 with contextlib.redirect_stdout(io.StringIO()) as output:
                     n.inspect_local(args)
             result = json.loads(output.getvalue())
-            self.assertEqual(result["status"], "READINESS_ONLY_NO_MODEL_LOAD_NO_CUDA_INFERENCE")
+            self.assertEqual(
+                result["status"], "READINESS_ONLY_NO_MODEL_LOAD_NO_CUDA_INFERENCE"
+            )
             self.assertEqual(result["boltz2"]["readiness"], "NOT_VALIDATED")
 
     def test_native_source_pin_not_substitutable(self):
@@ -160,25 +181,39 @@ class NativeBoundaryTests(unittest.TestCase):
 
     def test_same_head_with_modified_checkout_is_refused(self):
         with tempfile.TemporaryDirectory() as temporary:
-            with patch.object(n, "command", side_effect=[n.SOURCE_PIN, " M packages/fw00412/broker.py"]):
+            with patch.object(
+                n,
+                "command",
+                side_effect=[n.SOURCE_PIN, " M packages/fw00412/broker.py"],
+            ):
                 with self.assertRaisesRegex(ValueError, "checkout must be clean"):
                     n.verify_source(Path(temporary))
 
     def test_explicit_offline_loader_parameters(self):
-        self.assertEqual(n.load_kwargs({"weight_format": "safetensors"}), {
-            "local_files_only": True, "trust_remote_code": False, "use_safetensors": True})
+        self.assertEqual(
+            n.load_kwargs({"weight_format": "safetensors"}),
+            {
+                "local_files_only": True,
+                "trust_remote_code": False,
+                "use_safetensors": True,
+            },
+        )
         with patch.object(n.importlib.metadata, "version", return_value="2.5.1"):
             with self.assertRaisesRegex(ValueError, "torch >= 2.6"):
                 n.load_kwargs({"weight_format": "bin"})
 
     def test_owned_worker_exit_race_is_already_stopped(self):
-        process = types.SimpleNamespace(pid=12345, poll=lambda: None, wait=lambda timeout: 0)
+        process = types.SimpleNamespace(
+            pid=12345, poll=lambda: None, wait=lambda timeout: 0
+        )
         with patch.object(n.os, "killpg", side_effect=ProcessLookupError):
             n.stop_owned(process)
 
     def test_idle_check_refuses_redirects(self):
         with self.assertRaisesRegex(ValueError, "redirects are refused"):
-            n.RejectRedirect().redirect_request(None, None, 302, "Found", {}, "https://example.invalid")
+            n.RejectRedirect().redirect_request(
+                None, None, 302, "Found", {}, "https://example.invalid"
+            )
 
 
 if __name__ == "__main__":

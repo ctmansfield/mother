@@ -29,6 +29,10 @@ import behavior_compare as bc  # noqa: E402
 CANDIDATES = ("deepseek-r1:14b", "medgemma:27b", "medgemma1.5:4b")
 MARKER = "RESEARCH INPUT (UNTRUSTED SOURCE TEXT):\n"
 BUDGET_SECONDS = 8000
+# Baseline A used scientific_compare.py from 5ac059346c3e03c0081effbf262df7684ab80673.
+BASELINE_A_WRAPPER_SHA256 = (
+    "edebd9bb6dd82333b6fdf36eb0befa48474d3eccc1748bc078f267afbb396e8f"
+)
 
 
 def digest(data):
@@ -44,7 +48,11 @@ def revised_prompt(original, graph, sources, task):
         raise ValueError("FW00412 original prompt template changed")
     heading, raw = old.split(MARKER, 1)
     evidence = sc.unique_json(raw)
-    if not isinstance(evidence, dict) or set(evidence) != {"edge", "source", "question"}:
+    if not isinstance(evidence, dict) or set(evidence) != {
+        "edge",
+        "source",
+        "question",
+    }:
         raise ValueError("FW00412 source input envelope changed")
     evidence["assigned_specialist_role"] = role
     replacement = (
@@ -55,8 +63,15 @@ def revised_prompt(original, graph, sources, task):
         "Only this role identity instruction is revised. Every original "
         "evidence, quotation, retraction, causality and abstention constraint remains."
     )
-    result = heading.replace(intro, replacement) + MARKER + json.dumps(evidence, sort_keys=True, ensure_ascii=False)
-    if any(item in result for item in ('"expected_decision"', '"expected_quote"', '"expected_polarity"')):
+    result = (
+        heading.replace(intro, replacement)
+        + MARKER
+        + json.dumps(evidence, sort_keys=True, ensure_ascii=False)
+    )
+    if any(
+        item in result
+        for item in ('"expected_decision"', '"expected_quote"', '"expected_polarity"')
+    ):
         raise ValueError("protected answer leaked into protocol B input")
     if len(result) > 14000:
         raise ValueError("protocol B prompt exceeds original length budget")
@@ -67,26 +82,41 @@ def source_gate():
     head = sc.command(["git", "-C", str(ROOT), "rev-parse", "HEAD"])
     if not re.fullmatch("[a-f0-9]{40}", head):
         raise ValueError("immutable MOTHER source pin required")
-    if sc.command(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=all"]):
+    if sc.command(
+        ["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=all"]
+    ):
         raise ValueError("MOTHER source checkout dirty")
     for line in (HERE / "SHA256SUMS").read_text().splitlines():
         expected, name = line.split(None, 1)
         file = HERE / name.lstrip(" *")
-        if file.is_symlink() or not file.resolve().is_relative_to(HERE.resolve()) or digest(file.read_bytes()) != expected:
+        if (
+            file.is_symlink()
+            or not file.resolve().is_relative_to(HERE.resolve())
+            or digest(file.read_bytes()) != expected
+        ):
             raise ValueError("Protocol B manifest mismatch: " + name)
     return head
 
 
 def source_and_baseline(baseline, framework):
     sc.check_source(framework)
-    sc.check_offline(Path.home() / ".local/state/mother-fw00412" / ("offline-" + sc.PIN[:12]))
-    proof = bc.check_scientific_predecessor(baseline / "results")
-    if proof["validated_generate_requests"] != 75 or proof["validated_gpu_residency_observations"] != 75:
+    sc.check_offline(
+        Path.home() / ".local/state/mother-fw00412" / ("offline-" + sc.PIN[:12])
+    )
+    proof = bc.check_scientific_predecessor(
+        baseline / "results", wrapper_sha256=BASELINE_A_WRAPPER_SHA256
+    )
+    if (
+        proof["validated_generate_requests"] != 75
+        or proof["validated_gpu_residency_observations"] != 75
+    ):
         raise ValueError("Baseline A must have 75 matched GPU observations")
     sys.path.insert(0, str(framework / "packages/fw00412"))
     broker = importlib.import_module("broker")
     all_models = sc.freeze_models(sc.local_api())
-    selected = [next((m for m in all_models if m["name"] == name), None) for name in CANDIDATES]
+    selected = [
+        next((m for m in all_models if m["name"] == name), None) for name in CANDIDATES
+    ]
     if any(m is None for m in selected):
         raise ValueError("a frozen Protocol B candidate is not installed")
     previous = {m["name"]: m for m in proof["models"]}
@@ -107,7 +137,8 @@ def main(argv=None):
     sys.dont_write_bytecode = True
     commit = source_gate()
     broker, models, prior = source_and_baseline(
-        args.baseline.expanduser().absolute(), args.framework.expanduser().absolute())
+        args.baseline.expanduser().absolute(), args.framework.expanduser().absolute()
+    )
     graph, sources, _, _ = broker.checked_environment()
     tasks = broker.fixtures.cases()
     if len(tasks) != 15:
@@ -118,19 +149,19 @@ def main(argv=None):
     api = sc.local_api()
     first_gpu = sc.idle_snapshot(api)
     preliminary = {
-        "schema":"fw00412.protocol-b-preflight.v1",
-        "prompt":"B_EXPLICIT_ASSIGNED_SPECIALIST_ROLE",
-        "grader":"UNCHANGED_FW00412",
-        "original_tasks":"UNCHANGED_15",
-        "mother_source":commit,
-        "framework_source":sc.PIN,
-        "baseline_proof":prior,
-        "models":models,
-        "planned_requests":45,
-        "initial_gpu":first_gpu,
-        "protocol_b_code_sha256":digest(Path(__file__).read_bytes()),
-        "inference_calls_preflight":0,
-        "approval":"EXPERIMENT_ONLY_NO_ROLE_ASSIGNMENT"
+        "schema": "fw00412.protocol-b-preflight.v1",
+        "prompt": "B_EXPLICIT_ASSIGNED_SPECIALIST_ROLE",
+        "grader": "UNCHANGED_FW00412",
+        "original_tasks": "UNCHANGED_15",
+        "mother_source": commit,
+        "framework_source": sc.PIN,
+        "baseline_proof": prior,
+        "models": models,
+        "planned_requests": 45,
+        "initial_gpu": first_gpu,
+        "protocol_b_code_sha256": digest(Path(__file__).read_bytes()),
+        "inference_calls_preflight": 0,
+        "approval": "EXPERIMENT_ONLY_NO_ROLE_ASSIGNMENT",
     }
     print(json.dumps(preliminary, sort_keys=True, indent=2), flush=True)
     if not args.live:
@@ -144,7 +175,9 @@ def main(argv=None):
     sc.private_state_parent(state.parent)
     locker = Path.home() / ".local/state/mother-fw00412"
     sc.private_state_parent(locker)
-    fd = os.open(locker / "scientific-gpu.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    fd = os.open(
+        locker / "scientific-gpu.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600
+    )
     deadline = time.monotonic() + 8000
     with os.fdopen(fd, "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -155,18 +188,18 @@ def main(argv=None):
         state.mkdir(mode=0o700)
         sc.write_json(state / "preflight.json", preliminary)
         outcome = {
-            "schema":"fw00412.protocol-b-comparison.v1",
-            "status":"RUNNING",
-            "prompt":"B_EXPLICIT_ASSIGNED_SPECIALIST_ROLE",
-            "grader":"UNCHANGED_FW00412",
-            "mother_source":commit,
-            "framework_source":sc.PIN,
-            "baseline_comparison_sha256":prior["comparison_sha256"],
-            "planned_requests":45,
-            "models":[],
-            "scientific_truth":"NOT_ESTABLISHED",
-            "role_assignment":"NOT_ASSIGNED",
-            "publication":"NOT_PUBLISHED"
+            "schema": "fw00412.protocol-b-comparison.v1",
+            "status": "RUNNING",
+            "prompt": "B_EXPLICIT_ASSIGNED_SPECIALIST_ROLE",
+            "grader": "UNCHANGED_FW00412",
+            "mother_source": commit,
+            "framework_source": sc.PIN,
+            "baseline_comparison_sha256": prior["comparison_sha256"],
+            "planned_requests": 45,
+            "models": [],
+            "scientific_truth": "NOT_ESTABLISHED",
+            "role_assignment": "NOT_ASSIGNED",
+            "publication": "NOT_PUBLISHED",
         }
         active = None
         observer = None
@@ -182,9 +215,14 @@ def main(argv=None):
                 folder = state / ("model-%02d" % index)
                 folder.mkdir(mode=0o700)
                 (folder / "source-pin.txt").write_text(sc.PIN + "\n")
-                observer = sc.ObservedAPI(api, model["name"], model["digest"],
+                observer = sc.ObservedAPI(
+                    api,
+                    model["name"],
+                    model["digest"],
                     state / ("telemetry-%02d.jsonl" % index),
-                    max_requests=15, deadline=deadline)
+                    max_requests=15,
+                    deadline=deadline,
+                )
                 active = model
                 roster = sc.roster_for(broker, model)
                 print("START PROTOCOL B %d/3 %s" % (index, model["name"]), flush=True)
@@ -195,19 +233,23 @@ def main(argv=None):
                     broker.s.prompt = original
                 entry = {
                     **model,
-                    "actual_requests":len(observer.records),
-                    "task_slots":report["model_requests"],
-                    "roles":report["roles"],
-                    "gpu_evidence_counts":dict(Counter(r["gpu_evidence"] for r in observer.records)),
-                    "raw_log_sha256":report["raw_log_sha256"],
-                    "hold":observer.hold
+                    "actual_requests": len(observer.records),
+                    "task_slots": report["model_requests"],
+                    "roles": report["roles"],
+                    "gpu_evidence_counts": dict(
+                        Counter(r["gpu_evidence"] for r in observer.records)
+                    ),
+                    "raw_log_sha256": report["raw_log_sha256"],
+                    "hold": observer.hold,
                 }
                 outcome["models"].append(entry)
                 print(json.dumps(entry, sort_keys=True), flush=True)
                 active = None
                 preceding = model
                 if observer.hold:
-                    raise ValueError("GPU/HTTP observer held campaign: " + observer.hold)
+                    raise ValueError(
+                        "GPU/HTTP observer held campaign: " + observer.hold
+                    )
             sc.settle_idle(api, sc.nvidia_snapshot, preceding, seconds=12)
             outcome["status"] = "COMPLETED_STRICT_SCORED_NO_PROMOTION"
         except (Exception, KeyboardInterrupt) as error:
@@ -215,21 +257,38 @@ def main(argv=None):
             outcome["status"] = "HELD_KEEP_ALL_EVIDENCE"
             outcome["failure"] = failure[:400]
             if active is not None:
-                outcome["models"].append({
-                    **active, "status":"INCOMPLETE",
-                    "actual_requests":len(observer.records) if observer else 0,
-                    "gpu_evidence_counts":dict(Counter(
-                        r.get("gpu_evidence","UNOBSERVED") for r in observer.records)) if observer else {}
-                })
+                outcome["models"].append(
+                    {
+                        **active,
+                        "status": "INCOMPLETE",
+                        "actual_requests": len(observer.records) if observer else 0,
+                        "gpu_evidence_counts": (
+                            dict(
+                                Counter(
+                                    r.get("gpu_evidence", "UNOBSERVED")
+                                    for r in observer.records
+                                )
+                            )
+                            if observer
+                            else {}
+                        ),
+                    }
+                )
         finally:
             broker.s.prompt = original
-        outcome["actual_requests"] = sum(m["actual_requests"] for m in outcome["models"])
-        outcome["gpu_evidence_counts"] = dict(sum((
-            Counter(m["gpu_evidence_counts"]) for m in outcome["models"]
-        ), Counter()))
+        outcome["actual_requests"] = sum(
+            m["actual_requests"] for m in outcome["models"]
+        )
+        outcome["gpu_evidence_counts"] = dict(
+            sum(
+                (Counter(m["gpu_evidence_counts"]) for m in outcome["models"]),
+                Counter(),
+            )
+        )
         outcome["all_gpu_observed"] = (
-            outcome["actual_requests"] == 45 and
-            outcome["gpu_evidence_counts"].get("GPU_RESIDENT_OBSERVED") == 45)
+            outcome["actual_requests"] == 45
+            and outcome["gpu_evidence_counts"].get("GPU_RESIDENT_OBSERVED") == 45
+        )
         if failure is None and not outcome["all_gpu_observed"]:
             outcome["status"] = "COMPLETED_GPU_EVIDENCE_INCOMPLETE"
         sc.write_json(state / "comparison.json", outcome)

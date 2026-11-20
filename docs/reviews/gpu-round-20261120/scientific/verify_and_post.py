@@ -17,16 +17,27 @@ REPO = "ctmansfield/mother"
 TARGET = "docs/reviews/gpu-round-20261120/scientific"
 ROOT = Path(__file__).resolve().parents[4]
 
+
 def run(args, cwd=None, env=None):
     try:
-        return subprocess.run(args, cwd=cwd, env=env, capture_output=True,
-                              text=True, timeout=180, check=False)
+        return subprocess.run(
+            args,
+            cwd=cwd,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
+
         class Result:
             returncode = 125
             stdout = ""
             stderr = str(exc)
+
         return Result()
+
 
 def main():
     repo = ROOT
@@ -38,7 +49,10 @@ def main():
     if sha.returncode != 0 or branch.returncode != 0 or dirty.returncode != 0:
         print("REFUSED: repository revision/status unavailable")
         return 2
-    if branch.stdout.strip() != "integration/protocol-b-pr14-pr15-20261120" or dirty.stdout.strip():
+    if (
+        branch.stdout.strip() != "integration/protocol-b-pr14-pr15-20261120"
+        or dirty.stdout.strip()
+    ):
         print("REFUSED: expected review branch with clean working tree")
         return 2
     if not tests.is_file():
@@ -46,8 +60,11 @@ def main():
         return 2
     env = dict(os.environ)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
-    completed = run([sys.executable, "-B", "-m", "unittest", "-v",
-                     "test_scientific_compare"], cwd=target, env=env)
+    completed = run(
+        [sys.executable, "-B", "-m", "unittest", "-v", "test_scientific_compare"],
+        cwd=target,
+        env=env,
+    )
     log = completed.stdout + completed.stderr
     stamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     receipt = {
@@ -71,14 +88,21 @@ def main():
     print("LOCAL RECEIPT:", path)
     print("TEST STATUS:", completed.returncode, "LOG SHA:", receipt["test_log_sha256"])
     print(log[-2500:])
-    message = "### Automated host offline qualification\n\n```json\n" + json.dumps(receipt, indent=2, sort_keys=True) + "\n```"
-    posted = run(["gh", "pr", "comment", PR, "--repo", REPO, "--body", message], cwd=repo)
+    message = (
+        "### Automated host offline qualification\n\n```json\n"
+        + json.dumps(receipt, indent=2, sort_keys=True)
+        + "\n```"
+    )
+    posted = run(
+        ["gh", "pr", "comment", PR, "--repo", REPO, "--body", message], cwd=repo
+    )
     if posted.returncode != 0:
         print("GITHUB RECEIPT NOT POSTED:", posted.stderr.strip()[:500])
         print("Host tests were executed; local receipt preserved.")
         return 3 if completed.returncode == 0 else 4
     print("GITHUB RECEIPT POSTED:", "https://github.com/ctmansfield/mother/pull/20")
     return 0 if completed.returncode == 0 else 4
+
 
 if __name__ == "__main__":
     sys.exit(main())
