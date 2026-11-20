@@ -20,11 +20,9 @@ from mother.physiology.archive import Archive
 class ConnectedTests(unittest.TestCase):
     def setUp(self):
         dependencies = Path(os.environ["MSE_R3_DEPENDENCY_ROOT"])
+        self.contracts = dependencies / "docs/mse/integration/contracts"
         self.schema = json.loads(
-            (
-                dependencies
-                / "docs/mse/integration/contracts/offline-integration.schema.json"
-            ).read_bytes()
+            (self.contracts / "offline-integration.schema.json").read_bytes()
         )
         self.fixtures = (
             dependencies / "tests/fixtures/mse_integration/source-compatible"
@@ -201,36 +199,84 @@ class ConnectedTests(unittest.TestCase):
             reopened.verify_membership(reopened.archive_id, self.scope.fields(), member)
         )
 
-    def test_source_only_zero_and_first_equal_sighting(self):
-        capture = json.loads((self.fixtures / "baseline.json").read_bytes())
-        sdnn = capture["readings"][1]
-        sdnn["value"] = 0
-        duplicate = dict(sdnn, receivedAt=sdnn["receivedAt"] - 10)
-        capture["readings"].append(duplicate)
-        original, export = self.capture(
-            "baseline", "zero", original=json.dumps(capture).encode()
-        )
-        fact = next(
-            item
-            for item in export["revisions"]
-            if item["native_id"] == sdnn["id"].lower() and item["operation"] == "upsert"
-        )
-        self.assertEqual(
-            fact["observation"]["original_received_at"], str(sdnn["receivedAt"])
-        )
-        self.assertEqual(fact["locators"], ["/readings/1", "/readings/3"])
-        receipt = self.open().ingest_export(original, export)
-        snapshot = self.snapshot(receipt["commit_sequence"])
-        self.assertTrue(self.open().verify_snapshot(snapshot))
-        self.assertEqual(len(snapshot["observations"]), 1)
-        self.assertTrue(
-            any(
-                loss["reason"] == "outside_reference_positive_domain"
-                for loss in snapshot["losses"]
-            )
-        )
-        with Archive(self.root / "physiology.sqlite3") as archive:
-            self.assertEqual(archive.records(current=False), [])
-            self.assertIn(
-                fact["native_id"], {row["native_id"] for row in archive.revisions()}
-            )
+    def test_public_entry_replays_atlas_capture_edge_vectors(self):
+        from integrations.healthbridge.ingest import ingest_capture
+        from integrations.mse_snapshot.ledger import replay_ledger_snapshot
+
+        vectors = json.loads((self.contracts / "golden-vectors.json").read_bytes())
+        edges = vectors["capture_edge_cases"]
+        cases = [("repeated", edges["repeated_upsert"])] + [
+            (case["name"], case) for case in edges["nonpositive"]
+        ]
+        for name, vector in cases:
+            with self.subTest(name=name):
+                expected = vector["expected_export"]
+                scope = Scope(**expected["scope"])
+                root = self.root / name
+                ledger = ConnectedIngest(
+                    root,
+                    archive_id="forge-public-trial",
+                    scope=scope,
+                    schema=self.schema,
+                )
+                delivery = ingest_capture(
+                    ledger,
+                    vector["source_utf8"].encode("utf-8"),
+                    batch_id=expected["batch_id"],
+                    capture_id=expected["capture_id"],
+                    capture_kind=expected["coverage"]["capture_kind"],
+                )
+                self.assertEqual(
+                    dict(
+                        delivery.export, exporter_version=expected["exporter_version"]
+                    ),
+                    expected,
+                )
+                self.assertEqual(
+                    digest("mse.export/0.2", delivery.export),
+                    delivery.receipt["export_sha256"],
+                )
+                reopened = ConnectedIngest(
+                    root, archive_id=ledger.archive_id, scope=scope, schema=self.schema
+                )
+                self.assertEqual(
+                    reopened.verify_receipt(delivery.receipt), delivery.receipt
+                )
+                snapshot = reopened.build_snapshot(
+                    measurement_start="2001-01-01T00:00:00Z",
+                    measurement_end="2001-01-01T00:00:02Z",
+                    knowledge_cutoff_sequence=delivery.receipt["commit_sequence"],
+                    normalizer_version=NORMALIZER_VERSION,
+                )
+                self.assertEqual(len(snapshot["tombstones"]), 1)
+                with Archive(root / "physiology.sqlite3") as archive:
+                    retained_upserts = [
+                        row
+                        for row in archive.revisions()
+                        if row["disposition"] == "accepted"
+                    ]
+                    self.assertEqual(len(retained_upserts), 1)
+                    self.assertEqual(
+                        len(archive.records(current=False)), int(name == "repeated")
+                    )
+                result = replay_ledger_snapshot(
+                    json.dumps(snapshot).encode(),
+                    ledger=reopened,
+                    expected_scope=scope.fields(),
+                    expected_archive_id=ledger.archive_id,
+                    max_bytes=65_536,
+                    max_members=100,
+                )
+                self.assertEqual(result["epistemic_class"], "derived")
+                self.assertEqual(len(snapshot["observations"]), int(name == "repeated"))
+                if name == "repeated":
+                    source = snapshot["observations"][0]["source_revision"]
+                    self.assertEqual(source["observation"]["original_received_at"], "2")
+                    self.assertEqual(source["locators"], ["/readings/0", "/readings/1"])
+                else:
+                    self.assertTrue(
+                        any(
+                            loss["reason"] == "outside_reference_positive_domain"
+                            for loss in result["input_losses"]
+                        )
+                    )

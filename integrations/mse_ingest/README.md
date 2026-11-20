@@ -120,3 +120,9 @@ that tree, set `MSE_ATLAS_CONTRACT_DIR` to its contracts directory, and put the
 tree and the unchanged reference prototype on `PYTHONPATH`. Then run the
 unittest discovery command above. Only the sibling-dependent cases skip
 when their respective fixture roots are absent.
+
+The round 4 public-entry check uses ORACLE #30
+`7825b02093d280321af34af88aed96da44b33594`, ATLAS #28
+`769a0966da251da4d08633cc7663af9869da70e6`, PROVENANCE #27
+`7be9ea31c6c68643573afdf37ccfa0a41901a368`, and the NICKY #25 source fixtures
+at `13d2e19825aa872c04cf174cd8adef1bc8d40756`.
