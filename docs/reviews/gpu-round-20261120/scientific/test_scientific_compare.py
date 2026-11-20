@@ -167,6 +167,37 @@ class LauncherTests(unittest.TestCase):
             self.assertEqual(len(observer.records), 1)
             self.assertIn("ambiguous", observer.hold)
 
+    def test_gpu_runner_identity_and_unattributed_fail_closed(self):
+        def proc(name, pid="3791544", uuid="test-gpu"):
+            return {"process_name": name, "pid": pid, "gpu_uuid": uuid}
+        known = proc("/usr/local/lib/ollama/llama-server")
+        self.assertFalse(c.unattributed_processes([known]))
+        self.assertFalse(c.unattributed_processes([proc("/usr/bin/ollama")]))
+        self.assertTrue(c.unattributed_processes([proc("[No data]")]))
+        self.assertTrue(c.unattributed_processes([proc("python")]))
+        self.assertTrue(c.unattributed_processes([proc("/tmp/ollama-malicious")]))
+        self.assertTrue(c.unattributed_processes([known, proc("python", "999")]))
+        self.assertTrue(c.unattributed_processes([known, proc("[No data]", "999")]))
+
+    def test_nvidia_record_marks_http_boundary(self):
+        # Deterministic seam: snapshot completes after the generator's HTTP
+        # event is set; raw sample must record the boundary explicitly.
+        with tempfile.TemporaryDirectory() as temp:
+            fake = FakeAPI()
+            sampled = threading.Event()
+            def gpu():
+                if fake.active:
+                    time.sleep(0.025)
+                    sampled.set()
+                    return {"gpus": [], "compute_processes": []}
+                return idle_gpu()
+            observer = c.ObservedAPI(fake, c.TAGS[0], "1" * 64,
+                                    Path(temp) / "telemetry.jsonl", gpu, 0.001)
+            observer("/api/generate", request(), timeout=1)
+            self.assertTrue(sampled.is_set())
+            self.assertTrue(any(s["http_completed_at_sample_end"]
+                                for s in observer.records[0]["nvidia_samples"]))
+
     def test_foreign_gpu_process_refuses_before_generate(self):
         with tempfile.TemporaryDirectory() as temp:
             fake = FakeAPI()
