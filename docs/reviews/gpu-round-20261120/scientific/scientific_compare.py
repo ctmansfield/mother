@@ -301,6 +301,9 @@ class ObservedAPI:
                 try:
                     snap = self.nvidia()
                     snap["elapsed_seconds"] = round(time.monotonic() - started, 3)
+                    # NVIDIA sampling may straddle HTTP completion. Preserve
+                    # timing context without bypassing any process HOLD.
+                    snap["http_completed_at_sample_end"] = event.is_set()
                     rec["nvidia_samples"].append(snap)
                     if unattributed_processes(snap["compute_processes"]):
                         self.hold = "unattributed or multiple GPU compute processes observed; future requests held"
