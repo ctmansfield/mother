@@ -58,3 +58,20 @@ A later authorized synthetic run must use the exact tested source and destinatio
 5. **Field parity.** For HR (`bpm`) and HRV SDNN (`ms`), match the native UUID, metric, original value/unit and numeric lexeme or lossless locator, interval start/end, source name/bundle, and collector receipt time. Reconcile embedded `deletedAt` and UUID tombstone values separately, preserving distinct times, unknown-UUID deletions and source locators. Preserve opaque anchors and backfill metadata as capture provenance. Check decimal and timestamp conversions for recorded loss. Keep missing device, calibration, source revision and permissions unknown. Keep collector receipt, MOTHER receipt and durable commit clocks separate.
 
 Use PHOENIX's **NOT READY** or **READY FOR SYNTHETIC QUALIFICATION** disposition with exact gaps and owners. This checklist supplies no production or real-data qualification.
+
+## ATLAS 0.2 compatibility check
+
+Fetch `git fetch origin pull/28/head` and ensure the exact object
+`928a60b704c342c091eabd25ba41c8eb84d562de` is available. The acceptance
+suite independently reconstructs the nine candidate golden preimages and
+binds raw artifact length/digest and decoded anchor digests. Receipt mutation
+checks cover lookup scope, archive and batch, and show why a stable lookup ID
+alone cannot establish the unchanged artifact/export binding. These are
+digest checks. JSON Schema validation, authoritative receipt rejection and
+combined implementation execution remain separate.
+
+Candidate implications for the fixture oracle: count distinct deletion facts
+at exact source times even if display UTC ties, and deduplicate equivalent
+facts while retaining all locators. Unknown-derivation HR must survive in the
+physiological snapshot but be excluded from the native MSE projection. The
+current fixtures contain no independently verified measured-HR evidence.
