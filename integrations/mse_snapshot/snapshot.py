@@ -286,7 +286,8 @@ def _project(snapshot):
     if start >= end or type(cutoff) is not int or not 0 <= cutoff <= SAFE_INTEGER:
         raise ContractError("Invalid snapshot interval or cutoff")
 
-    receipts, revisions, tombstones, active, losses = {}, set(), {}, [], []
+    receipts, sequences, revisions = {}, {}, set()
+    tombstones, active, losses = {}, [], []
     seen_active, deleted_keys = set(), set()
     for field, operation in (("tombstones", "delete"), ("observations", "upsert")):
         previous = None
@@ -301,6 +302,8 @@ def _project(snapshot):
                 raise ContractError("Repeated PF-001 revision identity")
             revisions.add(pf_id)
             binding = {k: member[k] for k in COMMIT_FIELDS}
+            if sequences.setdefault(member["commit_sequence"], member["receipt_id"]) != member["receipt_id"]:
+                raise ContractError("Conflicting snapshot commitment sequence")
             if receipts.setdefault(member["receipt_id"], binding) != binding:
                 raise ContractError("Conflicting snapshot receipt identity")
             if operation == "delete":
@@ -324,37 +327,51 @@ def _project(snapshot):
     }, losses
 
 
-def select_fact_sighting(sightings, cutoff):
-    """Select the earliest eligible custody sighting for one source/processing fact.
+def select_fact_sighting(sightings, cutoff, *, normalizer_version):
+    """Select one fact from reopened (normalizer_version, member) pairs at cutoff.
 
-    The snapshot producer supplies reopened accepted sightings. The provisional
-    tie-break is stable across input order and will follow the shared freeze.
+    A missing eligible representative returns None. For an eligible upsert with
+    no requested materialization, the producer records normalizer_unavailable.
     """
     if type(cutoff) is not int or not 0 <= cutoff <= SAFE_INTEGER:
         raise ContractError("Invalid sighting cutoff")
+    _token(normalizer_version)
 
     identity = None
+    materializations = {}
+    by_sequence = {}
+    processing = set()
     eligible = []
-    for member in sightings:
+    for version, member in sightings:
+        sequence = member["commit_sequence"]
+        if type(sequence) is not int or not 1 <= sequence <= SAFE_INTEGER:
+            raise ContractError("Invalid sighting commitment")
+        if sequence > cutoff:
+            continue
+
         revision = member["source_revision"]
-        fact = (revision["native_id"], revision["revision_sha256"],
-                member.get("processing_revision_sha256"))
+        fact = (revision["native_id"], revision["operation"], revision["revision_sha256"])
         if identity is None:
             identity = fact
         if fact != identity:
             raise ContractError("Cannot merge sightings of distinct revisions")
-        sequence = member["commit_sequence"]
-        if type(sequence) is not int or not 1 <= sequence <= SAFE_INTEGER:
-            raise ContractError("Invalid sighting commitment")
-        if sequence <= cutoff:
-            eligible.append(member)
+        receipt_id = member["receipt_id"]
+        if by_sequence.setdefault(sequence, receipt_id) != receipt_id:
+            raise ContractError("Conflicting sighting commitment sequence")
 
-    return min(
-        eligible,
-        key=lambda member: (member["commit_sequence"], member["receipt_id"],
-                            member["artifact_sha256"], canonical(member)),
-        default=None,
-    )
+        upsert = revision["operation"] == "upsert"
+        if upsert and version != normalizer_version:
+            continue
+        encoded = canonical(member)
+        if materializations.setdefault(sequence, encoded) != encoded:
+            raise ContractError("Unequal sightings under one receipt")
+        if upsert:
+            processing.add(member["processing_revision_sha256"])
+        eligible.append(member)
+
+    if len(processing) > 1:
+        raise ContractError("Ambiguous processing revisions for requested normalizer")
+    return min(eligible, key=lambda member: member["commit_sequence"], default=None)
 
 
 def replay_snapshot(

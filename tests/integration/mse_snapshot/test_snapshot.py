@@ -188,12 +188,27 @@ class SnapshotTests(unittest.TestCase):
     def test_repeated_fact_selection_is_permutation_and_cutoff_stable(self):
         first = revision(1)
         later = dict(first, receipt_id="c" * 64, artifact_sha256="d" * 64, commit_sequence=5)
-        self.assertIsNone(select_fact_sighting([later, first], 2))
+        def select(members, cutoff):
+            return select_fact_sighting(members, cutoff, normalizer_version="fixture-1")
+
+        a, b = ("fixture-1", first), ("fixture-1", later)
+        self.assertIsNone(select([b, a], 2))
+        self.assertIsNone(select([("other-normalizer", first)], 3))
         for cutoff in (3, 4, 5, 20):
-            self.assertEqual(select_fact_sighting([later, first], cutoff), first)
-            self.assertEqual(select_fact_sighting([first, later], cutoff), first)
+            self.assertEqual(select([b, a], cutoff), first)
+            self.assertEqual(select([a, b, a], cutoff), first)
+        same_sequence = dict(later, commit_sequence=3)
+        with self.assertRaisesRegex(ContractError, "commitment sequence"):
+            select([a, ("fixture-1", same_sequence)], 5)
+        unequal_same_receipt = dict(first, artifact_sha256="f" * 64)
+        with self.assertRaisesRegex(ContractError, "Unequal sightings"):
+            select([a, ("fixture-1", unequal_same_receipt)], 5)
+        variant = dict(later, processing_revision_sha256="e" * 64)
+        self.assertEqual(select([a, ("fixture-1", variant)], 3), first)
+        with self.assertRaisesRegex(ContractError, "Ambiguous processing"):
+            select([a, ("fixture-1", variant)], 5)
         with self.assertRaisesRegex(ContractError, "distinct revisions"):
-            select_fact_sighting([first, revision(2)], 5)
+            select([a, ("fixture-1", revision(2))], 5)
 
     def test_unknown_hr_only_is_unavailable(self):
         result = replay_fixture(encode(snapshot([revision(2, hr=True)])))
