@@ -9,7 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 
-PIN = "928a60b704c342c091eabd25ba41c8eb84d562de"
+PIN = "3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c"
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACT = "docs/mse/integration/contracts/"
 
@@ -133,3 +133,69 @@ class AtlasCandidateVectors(unittest.TestCase):
                 changed = {**receipt, field: "0" * 64}
                 self.assertEqual(original_digest, changed["receipt_id"])
                 self.assertNotEqual(canonical(receipt), canonical(changed))
+
+    def test_schema_negative_vectors_reject_tampering(self):
+        try:
+            from jsonschema import Draft202012Validator
+        except ImportError:
+            self.skipTest("reuse an environment with PF-001 jsonschema installed")
+        from copy import deepcopy
+
+        schema = json.loads(atlas_file("offline-integration.schema.json"))
+        Draft202012Validator.check_schema(schema)
+        validators = {
+            target: Draft202012Validator({"$defs": schema["$defs"], "$ref": f"#/$defs/{target}"})
+            for target in ("receipt", "snapshot", "export")
+        }
+        for target, validator in validators.items():
+            validator.validate(self.vectors[target])
+        for variant in self.vectors["valid_receipt_variants"].values():
+            validators["receipt"].validate(variant)
+        for case in self.vectors["negative_cases"]:
+            if case["stage"] != "schema":
+                continue
+            with self.subTest(case=case["name"]):
+                target = case["target"]
+                instance = deepcopy(self.vectors[target])
+                for pointer, replacement in case["replace"].items():
+                    *parts, field = pointer.split("/")[1:]
+                    parent = instance
+                    for part in parts:
+                        parent = parent[int(part)] if isinstance(parent, list) else parent[part]
+                    parent[field] = replacement
+                self.assertFalse(validators[target].is_valid(instance))
+
+    def test_rehashed_snapshot_and_projection_tamper_remain_semantically_invalid(self):
+        from copy import deepcopy
+
+        v = self.vectors
+        snapshot = deepcopy(v["snapshot"])
+        old = snapshot.pop("snapshot_sha256")
+        snapshot["knowledge_cutoff_sequence"] = 1
+        self.assertNotEqual(sha(canonical(["mse.snapshot/0.2", snapshot])), old)
+        self.assertTrue(any(member["commit_sequence"] > snapshot["knowledge_cutoff_sequence"]
+                            for member in snapshot["observations"]))
+        projection = deepcopy(v["native_projection"])
+        projection["observations"][0]["value"] = "43"
+        self.assertNotEqual(
+            sha(canonical(["mse.native-projection/0.2", projection])),
+            v["digests"]["projected_envelope"]["sha256"],
+        )
+        self.assertNotEqual(projection, v["native_projection"])
+
+    def test_two_receipt_repeated_fact_orders_and_cutoffs(self):
+        from itertools import permutations
+
+        v = self.vectors
+        first, = v["snapshot"]["observations"]
+        repeated = {**first, "receipt_id": "f" * 64, "commit_sequence": 5,
+                    "artifact_sha256": "a" * 64, "source_revision": v["fact_cases"][0]["revision"]}
+        self.assertEqual(first["source_revision"]["revision_sha256"],
+                         repeated["source_revision"]["revision_sha256"])
+        self.assertNotEqual(first["source_revision"], repeated["source_revision"])
+        for order in permutations((first, repeated)):
+            for cutoff, expected in ((1, None), (2, first), (4, first), (5, first)):
+                with self.subTest(order=order[0]["commit_sequence"], cutoff=cutoff):
+                    eligible = [member for member in order if member["commit_sequence"] <= cutoff]
+                    self.assertEqual(min(eligible, key=lambda item: item["commit_sequence"], default=None),
+                                     expected)
