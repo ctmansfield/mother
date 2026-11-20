@@ -1,0 +1,183 @@
+{
+  "contract_version": "0.1.0",
+  "contract_status": "proposal",
+  "id": "urn:mse:example:receptor-availability",
+  "revision": 1,
+  "created_at": "2026-11-13T00:00:00Z",
+  "record_origin": "synthetic_example",
+  "provenance": {
+    "author_or_model_id": "synthetic-fixture",
+    "method_version": "0.1.0",
+    "source_record_refs": [],
+    "notes": [
+      "Synthetic contract example; no individual data or efficacy result."
+    ]
+  },
+  "extensions": {},
+  "snapshot": {
+    "id": "urn:mse:example:snapshot",
+    "sha256": "d2707c8b4b7ddcec3ca2ec922e6c543e61bba715401787f526525458f4d0e8c3",
+    "canonicalization": "Exact UTF-8 file bytes, LF line endings; no self-referential hash."
+  },
+  "claim_text": "An increase in ligand can coexist with a decrease in its occupied surface receptor amount when receptor availability falls or competition increases.",
+  "claim_type": "receptor_binding",
+  "assertion_status": "hypothesis",
+  "participants": [
+    {
+      "entity": {
+        "id": "urn:mse:example:ligand-concentration",
+        "label": "ligand concentration",
+        "namespace": "mse-example"
+      },
+      "role": "ligand",
+      "stoichiometric_coefficient": null,
+      "compartment_id": "urn:mse:example:surface-compartment"
+    },
+    {
+      "entity": {
+        "id": "urn:mse:example:surface-receptor",
+        "label": "surface receptor",
+        "namespace": "mse-example"
+      },
+      "role": "receptor",
+      "stoichiometric_coefficient": null,
+      "compartment_id": "urn:mse:example:surface-compartment"
+    },
+    {
+      "entity": {
+        "id": "urn:mse:example:occupied-surface-receptors",
+        "label": "occupied surface receptors",
+        "namespace": "mse-example"
+      },
+      "role": "state",
+      "stoichiometric_coefficient": null,
+      "compartment_id": "urn:mse:example:surface-compartment"
+    }
+  ],
+  "scope": {
+    "species": [],
+    "strains": [],
+    "tissues": [],
+    "cell_types": [],
+    "compartments": [
+      {
+        "id": "urn:mse:example:surface-compartment",
+        "label": "surface compartment",
+        "namespace": "mse-example"
+      }
+    ],
+    "context_description": "Illustrative receptor model with no species-specific fitted parameters.",
+    "valid_from": null,
+    "valid_until": null,
+    "scope_status": "partial"
+  },
+  "conditions": {
+    "op": "all_of",
+    "terms": [
+      {
+        "op": "compare",
+        "variable": "single_independent_binding_site",
+        "comparator": "eq",
+        "expected": true,
+        "unit": null,
+        "missing_result": "unknown"
+      },
+      {
+        "op": "compare",
+        "variable": "near_equilibrium",
+        "comparator": "eq",
+        "expected": true,
+        "unit": null,
+        "missing_result": "unknown"
+      },
+      {
+        "op": "any_of",
+        "terms": [
+          {
+            "op": "compare",
+            "variable": "surface_receptor_reduction",
+            "comparator": "eq",
+            "expected": true,
+            "unit": null,
+            "missing_result": "unknown"
+          },
+          {
+            "op": "compare",
+            "variable": "competitor_increase",
+            "comparator": "eq",
+            "expected": true,
+            "unit": null,
+            "missing_result": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  "effect": {
+    "target_entity_id": "urn:mse:example:occupied-surface-receptors",
+    "direction": "context_dependent",
+    "delay": {
+      "earliest_seconds": null,
+      "latest_seconds": null,
+      "distribution": null,
+      "basis": "Unknown in this synthetic example"
+    },
+    "functional_form": "occupied_surface_receptors = Rs * (L/Kd)/(1 + L/Kd + sum(Cj/Kj))"
+  },
+  "physical_constraints": {
+    "element_balance": "not_applicable",
+    "charge_balance": "not_applicable",
+    "electron_balance": "not_applicable",
+    "thermodynamic_status": "unknown",
+    "parameters": [],
+    "notes": [
+      "Concentration binding equilibrium is distinct from signaling and biochemical flux."
+    ]
+  },
+  "receptor_model": {
+    "ligand_concentration_node_ids": [
+      "urn:mse:example:ligand-concentration"
+    ],
+    "surface_receptor_node_ids": [
+      "urn:mse:example:surface-receptor"
+    ],
+    "occupancy_node_ids": [
+      "urn:mse:example:occupancy-fraction"
+    ],
+    "signaling_node_ids": [
+      "urn:mse:example:downstream-signal"
+    ],
+    "internalized_receptor_node_ids": [
+      "urn:mse:example:internalized-receptors"
+    ],
+    "parameters": [
+      {
+        "name": "Kd",
+        "value": null,
+        "unit": "mol/L",
+        "status": "unknown",
+        "interval": null,
+        "assumptions": [
+          "Must be affinity measured in the relevant assay; EC50 is not substituted."
+        ]
+      }
+    ],
+    "binding_model": "Competitive single-site equilibrium; no cooperativity or allostery.",
+    "transduction_model": null,
+    "assumptions": [
+      "Ligand availability in the receptor compartment is known in a simulation.",
+      "Downstream signaling is not established from occupancy alone."
+    ]
+  },
+  "evidence": [],
+  "uncertainty": {
+    "status": "unknown",
+    "description": "Illustrative hypothesis, not a fitted biological mechanism.",
+    "sources": [
+      "model",
+      "parameter"
+    ]
+  },
+  "supersedes": null,
+  "contradicted_claim_refs": []
+}

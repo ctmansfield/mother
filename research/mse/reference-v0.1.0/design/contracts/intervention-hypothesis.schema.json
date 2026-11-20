@@ -1,0 +1,300 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/intervention-hypothesis.schema.json",
+  "title": "intervention-hypothesis",
+  "description": "Proposed data-only intervention hypothesis. Has no dosing, treatment or actuator command fields. Recorded outcomes are not efficacy claims.",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "0.1.0"
+    },
+    "contract_status": {
+      "const": "proposal"
+    },
+    "id": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_origin": {
+      "enum": [
+        "synthetic_example",
+        "curated_research",
+        "runtime",
+        "manual"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
+    },
+    "extensions": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "enum": [
+        "observation",
+        "simulation",
+        "hypothesis_test"
+      ]
+    },
+    "target_state_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 1
+    },
+    "mechanism_claim_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 1
+    },
+    "mechanism_snapshot": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/snapshot_ref"
+    },
+    "proposed_mechanism": {
+      "type": "string",
+      "minLength": 1
+    },
+    "preconditions": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
+    },
+    "exclusions": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
+    },
+    "unknown_condition_policy": {
+      "const": "do_not_recommend"
+    },
+    "expected_effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "state_or_outcome_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "direction": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/direction"
+          },
+          "delay": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
+          },
+          "uncertainty": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/uncertainty"
+          }
+        },
+        "required": [
+          "state_or_outcome_id",
+          "direction",
+          "delay",
+          "uncertainty"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "measurable_outcomes": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/outcome_spec"
+      },
+      "minItems": 1
+    },
+    "adverse_response_outcome_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
+      },
+      "minItems": 0
+    },
+    "confounders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "temporal_role": {
+            "enum": [
+              "pre_exposure",
+              "time_varying",
+              "possible_mediator"
+            ]
+          },
+          "measurement_status": {
+            "enum": [
+              "available",
+              "planned",
+              "unknown"
+            ]
+          },
+          "handling_plan": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "name",
+          "temporal_role",
+          "measurement_status",
+          "handling_plan"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "competing_explanations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/evidence"
+      },
+      "minItems": 0
+    },
+    "individual_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "analysis_ref": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+          },
+          "context_applicability": {
+            "enum": [
+              "matched",
+              "partial",
+              "not_matched",
+              "unknown"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uncertainty": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/uncertainty"
+          }
+        },
+        "required": [
+          "analysis_ref",
+          "context_applicability",
+          "summary",
+          "uncertainty"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "n_of_1_protocol_ref": {
+      "anyOf": [
+        {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "recorded_exposure_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    },
+    "observed_outcome_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    },
+    "causal_analysis_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "eligible_for_review",
+        "observation_only",
+        "withheld",
+        "retired"
+      ]
+    },
+    "withholding_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "requires_human_review": {
+      "const": true
+    },
+    "execution_authority": {
+      "const": "none"
+    }
+  },
+  "required": [
+    "contract_version",
+    "contract_status",
+    "id",
+    "revision",
+    "created_at",
+    "record_origin",
+    "provenance",
+    "extensions",
+    "title",
+    "mode",
+    "target_state_refs",
+    "mechanism_claim_refs",
+    "mechanism_snapshot",
+    "proposed_mechanism",
+    "preconditions",
+    "exclusions",
+    "unknown_condition_policy",
+    "expected_effects",
+    "measurable_outcomes",
+    "adverse_response_outcome_ids",
+    "confounders",
+    "competing_explanations",
+    "evidence",
+    "individual_history",
+    "n_of_1_protocol_ref",
+    "recorded_exposure_refs",
+    "observed_outcome_refs",
+    "causal_analysis_refs",
+    "status",
+    "withholding_reasons",
+    "requires_human_review",
+    "execution_authority"
+  ],
+  "additionalProperties": false
+}

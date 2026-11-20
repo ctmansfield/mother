@@ -1,0 +1,113 @@
+{
+  "contract_version": "0.1.0",
+  "status": "passed",
+  "checks_passed": 25,
+  "checks_total": 25,
+  "checks": [
+    {
+      "check": "schema_and_semantics:mechanism-claim",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "check": "schema_and_semantics:intervention-hypothesis",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "check": "schema_and_semantics:causal-analysis",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "check": "schema_and_semantics:measurement-request",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "check": "snapshot_digest:mechanism-claim",
+      "passed": true
+    },
+    {
+      "check": "snapshot_digest:intervention-hypothesis",
+      "passed": true
+    },
+    {
+      "check": "snapshot_digest:measurement-request",
+      "passed": true
+    },
+    {
+      "check": "reject_autonomous_mode",
+      "passed": true
+    },
+    {
+      "check": "reject_executable_dose_field",
+      "passed": true
+    },
+    {
+      "check": "reject_unreviewed_execution_authority",
+      "passed": true
+    },
+    {
+      "check": "reject_unbacked_established_claim",
+      "passed": true
+    },
+    {
+      "check": "reject_false_default_for_missing",
+      "passed": true
+    },
+    {
+      "check": "reject_unestimated_individual_effect",
+      "passed": true
+    },
+    {
+      "check": "reject_simulation_as_observed_association",
+      "passed": true
+    },
+    {
+      "check": "reject_unverified_numeric_eig",
+      "passed": true
+    },
+    {
+      "check": "reject_reversed_delay",
+      "passed": true
+    },
+    {
+      "check": "kleene_truth_table:0",
+      "passed": true
+    },
+    {
+      "check": "kleene_truth_table:1",
+      "passed": true
+    },
+    {
+      "check": "kleene_truth_table:2",
+      "passed": true
+    },
+    {
+      "check": "kleene_truth_table:3",
+      "passed": true
+    },
+    {
+      "check": "kleene_truth_table:4",
+      "passed": true
+    },
+    {
+      "check": "missing_leaf_is_unknown",
+      "passed": true
+    },
+    {
+      "check": "no_bool_numeric_coercion",
+      "passed": true
+    },
+    {
+      "check": "no_implicit_unit_conversion",
+      "passed": true
+    },
+    {
+      "check": "unknown_conditions_withhold_review",
+      "passed": true
+    }
+  ],
+  "scope": "Schema/fixture/logic software verification only; not biological, causal, clinical or device validation."
+}

@@ -1,5 +1,10 @@
 {
   "schema": "context-projection-index",
-  "tasks": {},
+  "tasks": {
+    "MSE-001-publication": {
+      "path": "tasks/MSE-001-publication-r1.json",
+      "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
+    }
+  },
   "version": 1
 }

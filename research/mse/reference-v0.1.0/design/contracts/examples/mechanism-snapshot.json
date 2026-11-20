@@ -1,0 +1,19 @@
+{
+  "id": "urn:mse:example:snapshot",
+  "revision": 1,
+  "content": "Synthetic immutable mechanism catalog fixture, not a published evidence map.",
+  "claim_refs": [
+    {
+      "id": "urn:mse:example:receptor-availability",
+      "revision": 1
+    },
+    {
+      "id": "urn:mse:example:respiratory-context",
+      "revision": 1
+    },
+    {
+      "id": "urn:mse:example:general-activation",
+      "revision": 1
+    }
+  ]
+}

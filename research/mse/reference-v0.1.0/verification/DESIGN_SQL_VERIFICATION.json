@@ -1,0 +1,36 @@
+{
+  "schema": "MSE-001-proposed-sql",
+  "checks": [
+    {
+      "name": "10 proposed tables and current-state view created",
+      "passed": true
+    },
+    {
+      "name": "strict availability requires cutoff",
+      "passed": true
+    },
+    {
+      "name": "unknown state requires reason",
+      "passed": true
+    },
+    {
+      "name": "unknown state cannot carry numeric posterior",
+      "passed": true
+    },
+    {
+      "name": "state requires existing model run",
+      "passed": true
+    },
+    {
+      "name": "source correction excludes current view while retaining history",
+      "passed": true
+    },
+    {
+      "name": "measurement request grants no execution authority",
+      "passed": true
+    }
+  ],
+  "passed": 7,
+  "failed": 0,
+  "scope": "in-memory SQL software invariants only; no biology or production migration"
+}

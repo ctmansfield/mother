@@ -1,0 +1,612 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/causal-analysis.schema.json",
+  "title": "causal-analysis",
+  "description": "Proposed outcome-effect analysis record independent of exposures and mechanisms. A supported outcome effect does not itself establish a biochemical mechanism.",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "0.1.0"
+    },
+    "contract_status": {
+      "const": "proposal"
+    },
+    "id": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_origin": {
+      "enum": [
+        "synthetic_example",
+        "curated_research",
+        "runtime",
+        "manual"
+      ]
+    },
+    "provenance": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/provenance"
+    },
+    "extensions": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/extensions"
+    },
+    "hypothesis_ref": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+    },
+    "protocol_ref": {
+      "anyOf": [
+        {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "estimand": {
+      "type": "object",
+      "properties": {
+        "subject_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intervention_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "comparator_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome_id": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/stable_id"
+        },
+        "contrast": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_context": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/predicate"
+        },
+        "horizon": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/delay"
+        },
+        "analysis_population": {
+          "enum": [
+            "assignment_based",
+            "adherent_periods",
+            "exposure_based",
+            "observational"
+          ]
+        }
+      },
+      "required": [
+        "subject_id",
+        "intervention_description",
+        "comparator_description",
+        "outcome_id",
+        "contrast",
+        "unit",
+        "target_context",
+        "horizon",
+        "analysis_population"
+      ],
+      "additionalProperties": false
+    },
+    "design": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "randomized_n_of_1",
+            "randomized_series",
+            "observational_longitudinal",
+            "within_person_nonrandomized",
+            "simulation"
+          ]
+        },
+        "randomization_description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "blinding_description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "prespecified_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "periods_planned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "periods_analyzed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replication_analysis_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "type",
+        "randomization_description",
+        "blinding_description",
+        "prespecified_at",
+        "periods_planned",
+        "periods_analyzed",
+        "replication_analysis_refs"
+      ],
+      "additionalProperties": false
+    },
+    "assignment_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    },
+    "actual_exposure_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    },
+    "outcome_lineage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "outcome_ref": {
+            "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+          },
+          "raw_observation_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+            },
+            "minItems": 1
+          },
+          "feature_definition_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input_manifest_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "outcome_ref",
+          "raw_observation_refs",
+          "feature_definition_version",
+          "input_manifest_sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "covariate_plan": {
+      "type": "object",
+      "properties": {
+        "pre_exposure_covariates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "time_varying_covariates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "mediators_excluded_from_total_effect_adjustment": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "unmeasured_confounding_assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "pre_exposure_covariates",
+        "time_varying_covariates",
+        "mediators_excluded_from_total_effect_adjustment",
+        "unmeasured_confounding_assumptions"
+      ],
+      "additionalProperties": false
+    },
+    "missingness": {
+      "type": "object",
+      "properties": {
+        "missing_periods": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "handling": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sensitivity_analysis": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "missing_periods",
+        "reasons",
+        "handling",
+        "sensitivity_analysis"
+      ],
+      "additionalProperties": false
+    },
+    "carryover": {
+      "type": "object",
+      "properties": {
+        "assumption": {
+          "type": "string",
+          "minLength": 1
+        },
+        "washout_description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "assessment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "residual_carryover_status": {
+          "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/truth_value"
+        }
+      },
+      "required": [
+        "assumption",
+        "washout_description",
+        "assessment",
+        "residual_carryover_status"
+      ],
+      "additionalProperties": false
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "software_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "autocorrelation_handling": {
+          "type": "string",
+          "minLength": 1
+        },
+        "multiplicity_handling": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sensitivity_analyses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "deviations_from_protocol": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "method",
+        "software_version",
+        "code_sha256",
+        "autocorrelation_handling",
+        "multiplicity_handling",
+        "sensitivity_analyses",
+        "deviations_from_protocol"
+      ],
+      "additionalProperties": false
+    },
+    "effect_estimate": {
+      "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/quantity_estimate"
+    },
+    "result": {
+      "enum": [
+        "beneficial",
+        "adverse",
+        "null_within_precision",
+        "mixed",
+        "inconclusive",
+        "failed_analysis"
+      ]
+    },
+    "validity_status": {
+      "enum": [
+        "association_only",
+        "individual_effect_supported",
+        "individual_effect_replicated",
+        "simulation_only",
+        "inconclusive",
+        "invalid"
+      ]
+    },
+    "validity_rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "criteria_met": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "criteria_not_met": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "mechanism_established": {
+      "const": false
+    },
+    "mechanism_followup_claim_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+      },
+      "minItems": 0
+    },
+    "retention": {
+      "type": "object",
+      "properties": {
+        "preserve_null_failed_and_adverse_results": {
+          "const": true
+        },
+        "supersedes_analysis_ref": {
+          "anyOf": [
+            {
+              "$ref": "https://schemas.mothercoach.invalid/proposals/mse/v0.1.0/common.schema.json#/$defs/record_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "preserve_null_failed_and_adverse_results",
+        "supersedes_analysis_ref"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version",
+    "contract_status",
+    "id",
+    "revision",
+    "created_at",
+    "record_origin",
+    "provenance",
+    "extensions",
+    "hypothesis_ref",
+    "protocol_ref",
+    "estimand",
+    "design",
+    "assignment_refs",
+    "actual_exposure_refs",
+    "outcome_lineage",
+    "covariate_plan",
+    "missingness",
+    "carryover",
+    "analysis",
+    "effect_estimate",
+    "result",
+    "validity_status",
+    "validity_rationale",
+    "criteria_met",
+    "criteria_not_met",
+    "mechanism_established",
+    "mechanism_followup_claim_refs",
+    "retention"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "design": {
+            "properties": {
+              "type": {
+                "const": "simulation"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "validity_status": {
+            "const": "simulation_only"
+          },
+          "effect_estimate": {
+            "properties": {
+              "epistemic_status": {
+                "enum": [
+                  "simulated",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "design": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "randomized_n_of_1",
+                  "randomized_series"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "assignment_refs": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "validity_status": {
+            "const": "individual_effect_replicated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "design": {
+            "properties": {
+              "replication_analysis_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "validity_status": {
+            "enum": [
+              "individual_effect_supported",
+              "individual_effect_replicated"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "criteria_met": {
+            "minItems": 1
+          },
+          "analysis": {
+            "properties": {
+              "code_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "outcome_lineage": {
+            "items": {
+              "properties": {
+                "input_manifest_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          },
+          "effect_estimate": {
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "interval": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

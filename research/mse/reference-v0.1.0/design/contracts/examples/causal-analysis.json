@@ -1,0 +1,143 @@
+{
+  "contract_version": "0.1.0",
+  "contract_status": "proposal",
+  "id": "urn:mse:example:rest-comparison-analysis",
+  "revision": 1,
+  "created_at": "2026-11-13T00:00:00Z",
+  "record_origin": "synthetic_example",
+  "provenance": {
+    "author_or_model_id": "synthetic-fixture",
+    "method_version": "0.1.0",
+    "source_record_refs": [],
+    "notes": [
+      "Synthetic contract example; no individual data or efficacy result."
+    ]
+  },
+  "extensions": {},
+  "hypothesis_ref": {
+    "id": "urn:mse:example:standardized-rest-context",
+    "revision": 1
+  },
+  "protocol_ref": null,
+  "estimand": {
+    "subject_id": "urn:mse:example:person",
+    "intervention_description": "Recorded comparable rest condition",
+    "comparator_description": "Earlier nonstandardized acquisition condition",
+    "outcome_id": "urn:mse:example:resting-sdnn",
+    "contrast": "Mean difference in SDNN under observed contexts",
+    "unit": "ms",
+    "target_context": {
+      "op": "compare",
+      "variable": "same_measurement_method",
+      "comparator": "eq",
+      "expected": true,
+      "unit": null,
+      "missing_result": "unknown"
+    },
+    "horizon": {
+      "earliest_seconds": 0,
+      "latest_seconds": 300,
+      "distribution": null,
+      "basis": "Illustrative observation interval."
+    },
+    "analysis_population": "observational"
+  },
+  "design": {
+    "type": "within_person_nonrandomized",
+    "randomization_description": null,
+    "blinding_description": null,
+    "prespecified_at": null,
+    "periods_planned": 0,
+    "periods_analyzed": 0,
+    "replication_analysis_refs": []
+  },
+  "assignment_refs": [],
+  "actual_exposure_refs": [
+    {
+      "id": "urn:mse:example:rest-exposure",
+      "revision": 1
+    }
+  ],
+  "outcome_lineage": [
+    {
+      "outcome_ref": {
+        "id": "urn:mse:example:outcome-series",
+        "revision": 1
+      },
+      "raw_observation_refs": [
+        {
+          "id": "urn:mse:example:observation-series",
+          "revision": 1
+        }
+      ],
+      "feature_definition_version": "proposed-comparable-rest-v0.1.0",
+      "input_manifest_sha256": null
+    }
+  ],
+  "covariate_plan": {
+    "pre_exposure_covariates": [
+      "activity",
+      "time_of_day"
+    ],
+    "time_varying_covariates": [
+      "respiration"
+    ],
+    "mediators_excluded_from_total_effect_adjustment": [],
+    "unmeasured_confounding_assumptions": [
+      "Cannot establish exchangeability from these observations."
+    ]
+  },
+  "missingness": {
+    "missing_periods": 0,
+    "reasons": [
+      "No actual trial observations in this synthetic fixture."
+    ],
+    "handling": "Do not impute outcomes.",
+    "sensitivity_analysis": "Not performed."
+  },
+  "carryover": {
+    "assumption": "Unknown",
+    "washout_description": null,
+    "assessment": "Not performed.",
+    "residual_carryover_status": "unknown"
+  },
+  "analysis": {
+    "method": "No analysis executed; illustrative association-only record.",
+    "software_version": "none",
+    "code_sha256": null,
+    "autocorrelation_handling": "Would require period-aware analysis.",
+    "multiplicity_handling": "No claims tested.",
+    "sensitivity_analyses": [],
+    "deviations_from_protocol": []
+  },
+  "effect_estimate": {
+    "quantity_id": "urn:mse:example:sdnn-difference",
+    "value": null,
+    "unit": "ms",
+    "interval": null,
+    "epistemic_status": "unknown",
+    "uncertainty": {
+      "status": "unknown",
+      "description": "No actual observations or estimated effect.",
+      "sources": [
+        "model",
+        "parameter"
+      ]
+    }
+  },
+  "result": "inconclusive",
+  "validity_status": "association_only",
+  "validity_rationale": "Observational context difference would not establish an intervention effect.",
+  "criteria_met": [],
+  "criteria_not_met": [
+    "No randomization",
+    "No estimate",
+    "No replication"
+  ],
+  "mechanism_established": false,
+  "mechanism_followup_claim_refs": [],
+  "retention": {
+    "preserve_null_failed_and_adverse_results": true,
+    "supersedes_analysis_ref": null
+  }
+}

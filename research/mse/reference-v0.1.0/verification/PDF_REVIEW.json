@@ -1,0 +1,28 @@
+{
+  "pdf": "MSE_Architecture_v0.1.0.pdf",
+  "sha256": "944a3c02347c38d5400df20f3554d32068d47ec2e71dce0c059d2eb9d9178746",
+  "pages": 28,
+  "all_pages_rendered": true,
+  "all_pages_reviewed_in_contact_sheets": true,
+  "detail_review_pages": [
+    7,
+    8,
+    12,
+    15,
+    16,
+    18,
+    20,
+    24,
+    25,
+    28
+  ],
+  "checks": [
+    "diagram labels and arrow paths readable",
+    "equation rendering visible",
+    "table text contained within cells",
+    "no clipped page content observed",
+    "balanced intervention and validation sections",
+    "source links and reference section present"
+  ],
+  "scope": "Visual layout review only; not scientific validation"
+}

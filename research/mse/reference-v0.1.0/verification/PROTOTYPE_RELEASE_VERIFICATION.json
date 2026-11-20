@@ -1,0 +1,129 @@
+{
+  "code_sha256": "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1",
+  "commands": [
+    {
+      "argv": [
+        "bash",
+        "install.sh",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03"
+      ],
+      "cwd": "/workspace/scratch/d8b6cef2becf/mse-prototype-v0.1.0",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout": "{\"deployed\": false, \"directory\": \"/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03\", \"installed\": true, \"verified_files\": 22}\n",
+      "step": "reviewed-install-03"
+    },
+    {
+      "argv": [
+        "bash",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03/verify.sh"
+      ],
+      "cwd": "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03",
+      "returncode": 0,
+      "stderr_tail": "as_known_view) ... ok\ntest_unrecognized_existing_database_not_modified (test_mse.StorageTests.test_unrecognized_existing_database_not_modified) ... ok\n\n----------------------------------------------------------------------\nRan 56 tests in 0.069s\n\nOK\n",
+      "stdout": "{\"claim\": \"software tests only; no clinical or physiological validation\", \"release_files\": 22, \"verified\": true}\n",
+      "step": "reviewed-verify-03"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "mse",
+        "import-healthkit",
+        "examples/synthetic_healthkit_v03.json",
+        "--subject",
+        "synthetic-person",
+        "--source-instance",
+        "synthetic-healthkit",
+        "--db",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/reviewed-synthetic-run-03/evidence.sqlite"
+      ],
+      "cwd": "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout": "{\"added\":26,\"artifact_sha256\":\"c3677708f2245d279bccd651d0ca978ff061258d97795039cb8d8dc3789e80a3\",\"duplicates\":0,\"new_tombstones\":0,\"raw_artifact_retained\":true}\n",
+      "step": "reviewed-import-03"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "mse",
+        "import-healthkit",
+        "examples/synthetic_healthkit_v03.json",
+        "--subject",
+        "synthetic-person",
+        "--source-instance",
+        "synthetic-healthkit",
+        "--db",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/reviewed-synthetic-run-03/evidence.sqlite"
+      ],
+      "cwd": "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout": "{\"added\":0,\"artifact_sha256\":\"c3677708f2245d279bccd651d0ca978ff061258d97795039cb8d8dc3789e80a3\",\"duplicates\":26,\"new_tombstones\":0,\"raw_artifact_retained\":true}\n",
+      "step": "reviewed-reimport-03"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "mse",
+        "replay",
+        "--db",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/reviewed-synthetic-run-03/evidence.sqlite",
+        "--output",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/reviewed-synthetic-run-03/states.json"
+      ],
+      "cwd": "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout": "{\"active_observations\":26,\"output_written\":true,\"run_id\":\"run:2bc95da1d8a97242a3ea2be041cf19c2a25b8114364cf874d9259a3cd021ac67\",\"state_estimates\":26,\"uncertainty_status\":\"uncalibrated_reference_model\"}\n",
+      "step": "reviewed-replay-03"
+    },
+    {
+      "argv": [
+        "bash",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03/rollback.sh",
+        "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03"
+      ],
+      "cwd": "/workspace/scratch/d8b6cef2becf/mse-prototype-v0.1.0",
+      "returncode": 0,
+      "stderr_tail": "",
+      "stdout": "{\"deleted\": false, \"retained_directory\": \"/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03.retired-20261113T001445Z-5e99f780\", \"retired\": true}\n",
+      "step": "reviewed-retire-03"
+    }
+  ],
+  "manifest_sha256": "9db2c87fcc940701c437e1e075eec568073ab860eaafb347a12530f24f3f5888",
+  "retired_directory": "/workspace/scratch/d8b6cef2becf/prototype_verification/p001-reviewed-install-03.retired-20261113T001445Z-5e99f780",
+  "retirement_preserved_file_hashes": {
+    "CHANGELOG.md": "78624a5dbd5ea818beb53c89d1d3f4177a61c33205ac98cfd957f76374491414",
+    "INSTALL_RECEIPT.json": "d7f3b25e321a76bfcf80930a29e663f97c176bb55034dc6434cf889c9e948f2b",
+    "README.md": "9ed5f593bfe1f55928c57748119ea2c41ae903518262e49cf8432b106fd28a8b",
+    "RELEASE_MANIFEST.json": "9db2c87fcc940701c437e1e075eec568073ab860eaafb347a12530f24f3f5888",
+    "RELEASE_NOTES.md": "8831585144e63c188f9fa606b3dc30f89c3fe33f102fc2fd84d3a43efd47c75a",
+    "VALIDATION.md": "c20baa5a84929b950534b80fcc6b528a0daffb0ae78a4076589a5ab16ade6712",
+    "examples/synthetic_healthkit_v03.json": "c3677708f2245d279bccd651d0ca978ff061258d97795039cb8d8dc3789e80a3",
+    "examples/synthetic_states.json": "678984d50a07eb3b06147e399cca43f4b25bab31468f24223ada6c3b18c5edab",
+    "examples/synthetic_summary.json": "08f7979a54ab684487850f950ae0c429e2278bc4f13ab9c4d96287e7b1e7af12",
+    "install.sh": "b4469f38414457079268a367b7a3efe6daa9f719de616a5aa591101f89aaa858",
+    "mse/__init__.py": "ab51120230692961ac41aa6b630be857f4ac16b600cd2fc68771e417f57c9169",
+    "mse/__main__.py": "4788e34ce19ee75e4e2c21a8bc0321e25a2961b42f80ac1fff2f3dd71c6f47fe",
+    "mse/adapters.py": "3c26afb8db389f30a472e6e7dc4b4071335bc06c6519755dfa5e40166f508d37",
+    "mse/contracts.py": "c291967cba8a1ee222c9b15ac3b95f1ba1b9fafcd588c3360e2e3e289d397ef6",
+    "mse/features.py": "3d8ad70f4cff2dcf1c8375b406eebdb09a750312e1908adffcff17a160c4defc",
+    "mse/model.py": "8471ddcc0c172ee185b6d4fa462e81b1f7828a2c879cdc55c2bcf69e0d88d948",
+    "mse/storage.py": "805f48bc964b38cf0ebc2d63ef43d8bf27d9a132e7e6824a71fba75107c1562b",
+    "pyproject.toml": "dd7287719ac3a787341844eee946cacf7b198e0840c01d04c5fd55660e2e191d",
+    "rollback.sh": "b3137e2264997d834cfe42b57e038b281c297a044126b44acc7ea8cfa451b985",
+    "tests/test_lifecycle.py": "cc1a4278e00d2e99c8b9ea8b46771c17932f84ef49828a89e62fb9f800676925",
+    "tests/test_mse.py": "dad5e14edfb90341615640fd90c0e5c65756e8d7d8fc83efa0b774f1ae918c73",
+    "tools/lifecycle.py": "cb52c8aeceed70126a6a83b8378915240dbf7bf6bd0645568e0f834ff48726de",
+    "tools/make_synthetic_example.py": "f31103934588b32a9613df738dc53dae073e1acba170c1c966368d229696d6b9",
+    "verify.sh": "0295f60d7f0e2a4a328ad71642e02aed6b6dfe376f0017113a03b37d51b0b231"
+  },
+  "synthetic_output_exact_match": true
+}

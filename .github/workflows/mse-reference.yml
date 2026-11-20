@@ -1,0 +1,31 @@
+name: MSE reference
+
+on:
+  pull_request:
+    paths:
+      - 'research/mse/**'
+      - 'docs/mse/**'
+      - 'tools/verify_mse_reference.py'
+      - '.github/workflows/mse-reference.yml'
+  push:
+    paths:
+      - 'research/mse/**'
+      - 'docs/mse/**'
+      - 'tools/verify_mse_reference.py'
+      - '.github/workflows/mse-reference.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install contract-verification dependency
+        run: python -m pip install -r research/mse/verification-requirements.txt
+      - name: Verify preserved release and existing offline checks
+        run: python -B tools/verify_mse_reference.py --all

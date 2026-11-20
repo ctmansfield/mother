@@ -1,0 +1,2 @@
+# Authoring/design verification only; the executable prototype is stdlib-only.
+jsonschema==4.26.0

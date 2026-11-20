@@ -1,0 +1,427 @@
+{
+  "repo": "ctmansfield/mother-health-bridge",
+  "ref": "b2baa2e6bd2d018b6e34a07c783b7c3523366374",
+  "kind": "connector_text_snapshot_not_git_checkout",
+  "files": [
+    {
+      "path": ".gitignore",
+      "blob_sha": "59a1db8596315738b3ce14ad8bd6fcb429ec6a95",
+      "expected_size": 356
+    },
+    {
+      "path": "AGENTS.md",
+      "blob_sha": "4f832cd4ff828ff67ffdb0535733b2ae96d07938",
+      "expected_size": 6196
+    },
+    {
+      "path": "MotherHealthBridge.xcodeproj/project.xcproj",
+      "blob_sha": "631e4c5bac476d4404b0362961a712e7b7b25548",
+      "expected_size": 5521
+    },
+    {
+      "path": "MotherHealthBridge.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+      "blob_sha": "919434a6254f0e9651f402737811be6634a03e9c",
+      "expected_size": 135
+    },
+    {
+      "path": "MotherHealthBridge/AcquisitionCoordinator.swift",
+      "blob_sha": "962bf5bfbbdd2b030fd55f952996ec926fab9b0b",
+      "expected_size": 12332
+    },
+    {
+      "path": "MotherHealthBridge/AcquisitionDiagnosticModel.swift",
+      "blob_sha": "11e7153b458e251c529e3eb0cb5416a31eba1a70",
+      "expected_size": 6075
+    },
+    {
+      "path": "MotherHealthBridge/AcquisitionDiagnosticView.swift",
+      "blob_sha": "3ac349ef4428d76b831fd95402d6c90e27b9e799",
+      "expected_size": 8841
+    },
+    {
+      "path": "MotherHealthBridge/Assets.xcassets/AccentColor.colorset/Contents.json",
+      "blob_sha": "eb8789700816459c1e1480e0b34781d9fb78a1ca",
+      "expected_size": 123
+    },
+    {
+      "path": "MotherHealthBridge/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "blob_sha": "2305880107db52fdcc2a49e2cd1cd14ced699c85",
+      "expected_size": 607
+    },
+    {
+      "path": "MotherHealthBridge/Assets.xcassets/Contents.json",
+      "blob_sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "expected_size": 63
+    },
+    {
+      "path": "MotherHealthBridge/CandidateArchiveBuilder.swift",
+      "blob_sha": "0d953860816a0ca106889f6a3c8418a4fae4b273",
+      "expected_size": 22496
+    },
+    {
+      "path": "MotherHealthBridge/CandidateArchiveView.swift",
+      "blob_sha": "39221795998214a8a4d023fb9d7a4d3b8d209267",
+      "expected_size": 2775
+    },
+    {
+      "path": "MotherHealthBridge/CollectorHandoffSeam.swift",
+      "blob_sha": "84113b1b3b07fe0eb2c77ce08f9f6ae35ae79875",
+      "expected_size": 10662
+    },
+    {
+      "path": "MotherHealthBridge/ContentView.swift",
+      "blob_sha": "618a45a537e6762f0b40598bca0dcb351329abb2",
+      "expected_size": 12185
+    },
+    {
+      "path": "MotherHealthBridge/DashboardFixtures.swift",
+      "blob_sha": "6234a60960c10e347da1603fbc3bbb9f4cbd00c7",
+      "expected_size": 993
+    },
+    {
+      "path": "MotherHealthBridge/DashboardIndex.swift",
+      "blob_sha": "51be9cad5a58a84d58e0fcb0025554d9acbfc855",
+      "expected_size": 3138
+    },
+    {
+      "path": "MotherHealthBridge/DeviceAcquisitionDiagnostic.swift",
+      "blob_sha": "13aadcd90e44e50c4891fdd243272c414b65ced0",
+      "expected_size": 1458
+    },
+    {
+      "path": "MotherHealthBridge/DiagnosticDatabaseStatus.swift",
+      "blob_sha": "cd7aac965ee9f2771cb6fb8ed9ae9dd6b8164b31",
+      "expected_size": 4580
+    },
+    {
+      "path": "MotherHealthBridge/DiagnosticDatabaseStatusView.swift",
+      "blob_sha": "51c798967623793bbc34a642848770f92591a7af",
+      "expected_size": 3054
+    },
+    {
+      "path": "MotherHealthBridge/DiagnosticSyntheticSource.swift",
+      "blob_sha": "08b567164a147bfe2ab1da9f82caaa456e9bf632",
+      "expected_size": 2329
+    },
+    {
+      "path": "MotherHealthBridge/HealthAcquisitionRepository.swift",
+      "blob_sha": "a96213193cd371ea90bf1c51816862cd47a7af80",
+      "expected_size": 993
+    },
+    {
+      "path": "MotherHealthBridge/HealthArchive.swift",
+      "blob_sha": "6d733496e143ec24a4de09d7407e483609e02fd1",
+      "expected_size": 718
+    },
+    {
+      "path": "MotherHealthBridge/HealthKitQueryDriver.swift",
+      "blob_sha": "63ef638a778e18cf462d2dfd5c38c158a0735339",
+      "expected_size": 6975
+    },
+    {
+      "path": "MotherHealthBridge/HealthSQLiteStore.swift",
+      "blob_sha": "f4a528be381ef5368e223d5a574ec7b6c9d7f849",
+      "expected_size": 20834
+    },
+    {
+      "path": "MotherHealthBridge/IncrementalCandidateRepository.swift",
+      "blob_sha": "766032f90224f8fdc269259164fc6bd97ab64a74",
+      "expected_size": 33845
+    },
+    {
+      "path": "MotherHealthBridge/ManualAcquisitionBridge.swift",
+      "blob_sha": "2eac670ac5fde1c062ea719911319fcd80748376",
+      "expected_size": 1037
+    },
+    {
+      "path": "MotherHealthBridge/MotherHealthBridge.entitlements",
+      "blob_sha": "e10f4302d524a2c6313dc968df134285905acfc8",
+      "expected_size": 239
+    },
+    {
+      "path": "MotherHealthBridge/MotherHealthBridgeApp.swift",
+      "blob_sha": "c71ca8e7c48ff0786721e7f6f3257960446c651b",
+      "expected_size": 570
+    },
+    {
+      "path": "MotherHealthBridge/OneShotHealthKitSource.swift",
+      "blob_sha": "a18d0c4ca125c072e867ae055fadff03fcde9f6d",
+      "expected_size": 5320
+    },
+    {
+      "path": "MotherHealthBridge/OrderedCallbackAdapter.swift",
+      "blob_sha": "a1751037e2534afece7b254ed84a1f9e26c3fffa",
+      "expected_size": 9938
+    },
+    {
+      "path": "MotherHealthBridge/PhysiologicalDashboard.swift",
+      "blob_sha": "2581b954626946ebe77b342d3cced9e99b7b25a8",
+      "expected_size": 11637
+    },
+    {
+      "path": "MotherHealthBridge/ReconciliationSQLite.swift",
+      "blob_sha": "3f52ccff85a4180b7b9cc209866d62f6c664a84d",
+      "expected_size": 7420
+    },
+    {
+      "path": "MotherHealthBridge/SQLiteHealthKitAdapter.swift",
+      "blob_sha": "7b67407c959d5fdfb84ecc8cf047b78918aebce8",
+      "expected_size": 15882
+    },
+    {
+      "path": "MotherHealthBridge/StorageReconciliation.swift",
+      "blob_sha": "7d37220db04570610ab9d77cf591ee38fbfc549a",
+      "expected_size": 28107
+    },
+    {
+      "path": "MotherHealthBridge/StorageReconciliationView.swift",
+      "blob_sha": "d2841f845a74693cd48708d38c33354e505ae914",
+      "expected_size": 3658
+    },
+    {
+      "path": "MotherHealthBridge/SyntheticCandidateWriter.swift",
+      "blob_sha": "e32263b4c476d5339511994c39a8cb2cb9cd1c21",
+      "expected_size": 12099
+    },
+    {
+      "path": "MotherHealthBridge/SyntheticCollectorHandoff.swift",
+      "blob_sha": "c08b49a6e2a5f64ec28e5cadafc4a9db97b466d1",
+      "expected_size": 13607
+    },
+    {
+      "path": "MotherHealthBridge/SyntheticCollectorIntegration.swift",
+      "blob_sha": "bab8ed814ed17b72c03beb786b9b94ba8f642feb",
+      "expected_size": 20094
+    },
+    {
+      "path": "MotherHealthBridge/SyntheticCrossFileHandoff.swift",
+      "blob_sha": "118ae88e4f8534ece6478224b2e0297f9b5917a2",
+      "expected_size": 19466
+    },
+    {
+      "path": "MotherHealthBridge/SyntheticIncrementalHandoff.swift",
+      "blob_sha": "60169339d038e032de19718e533b688531bf1694",
+      "expected_size": 5030
+    },
+    {
+      "path": "Package.swift",
+      "blob_sha": "e6997dbbab2214619664a3514183c0405952e606",
+      "expected_size": 1693
+    },
+    {
+      "path": "Tests/MigrationCoreTests/AcquisitionTests.swift",
+      "blob_sha": "63bd81d40ce3b4765357d29ab624b885c1b423fa",
+      "expected_size": 12825
+    },
+    {
+      "path": "Tests/MigrationCoreTests/BoundedCatchupTests.swift",
+      "blob_sha": "5c4253281977d7fa433923eeb4f55775564afb16",
+      "expected_size": 10122
+    },
+    {
+      "path": "Tests/MigrationCoreTests/CandidateBuilderTests.swift",
+      "blob_sha": "aade43c13cb053ed088f3d918d5aaf5262a4afa9",
+      "expected_size": 12336
+    },
+    {
+      "path": "Tests/MigrationCoreTests/CandidateWriterTests.swift",
+      "blob_sha": "e3179ca4a6345054aec3f2259cf986e5a5453ffd",
+      "expected_size": 11667
+    },
+    {
+      "path": "Tests/MigrationCoreTests/CollectorHandoffSeamTests.swift",
+      "blob_sha": "b89c6c6407261684b74274f683a1fb3f29da6035",
+      "expected_size": 13240
+    },
+    {
+      "path": "Tests/MigrationCoreTests/CollectorHandoffTests.swift",
+      "blob_sha": "67a25ba69c8943359d170e4179f839aed425301d",
+      "expected_size": 11703
+    },
+    {
+      "path": "Tests/MigrationCoreTests/CoordinatorTests.swift",
+      "blob_sha": "cd97e9c8e436cd83bd8f16e45ff8d5d2879d6385",
+      "expected_size": 17200
+    },
+    {
+      "path": "Tests/MigrationCoreTests/CrossFileHandoffTests.swift",
+      "blob_sha": "2c2b39843c66af2417aea4e55cc814df5fb16b61",
+      "expected_size": 12174
+    },
+    {
+      "path": "Tests/MigrationCoreTests/DashboardPerformanceTests.swift",
+      "blob_sha": "6e288a6d8702f1fac836089120cb65cddfcd811e",
+      "expected_size": 4353
+    },
+    {
+      "path": "Tests/MigrationCoreTests/DashboardTests.swift",
+      "blob_sha": "bb2cb303e7b257ee1289920c36b25aaca9934df9",
+      "expected_size": 7688
+    },
+    {
+      "path": "Tests/MigrationCoreTests/DiagnosticHarnessTests.swift",
+      "blob_sha": "20ec3f72f5605fde786f9b98de5df49b9a9ef396",
+      "expected_size": 9114
+    },
+    {
+      "path": "Tests/MigrationCoreTests/DiagnosticStatusTests.swift",
+      "blob_sha": "e81eede43b2eca85c947d27c45bd2346c540c65e",
+      "expected_size": 5702
+    },
+    {
+      "path": "Tests/MigrationCoreTests/HRVDiagnosticTests.swift",
+      "blob_sha": "cdb8754fb101dab6021fafeae7ea36066d93fbf4",
+      "expected_size": 10970
+    },
+    {
+      "path": "Tests/MigrationCoreTests/IncrementalHandoffTests.swift",
+      "blob_sha": "59f7f9588b8f46b66f8d2f21dd2c7c0319b359af",
+      "expected_size": 20845
+    },
+    {
+      "path": "Tests/MigrationCoreTests/IncrementalPerformanceTests.swift",
+      "blob_sha": "95ae057c01146785e31363958b88fa63a2929a78",
+      "expected_size": 4529
+    },
+    {
+      "path": "Tests/MigrationCoreTests/IncrementalRepositoryTests.swift",
+      "blob_sha": "6faa11d53af9b136361d8f6b23aff0423dd3cac0",
+      "expected_size": 16102
+    },
+    {
+      "path": "Tests/MigrationCoreTests/MigrationTests.swift",
+      "blob_sha": "492965d059ca6245d78c7a7f5e90bf09fbb0888d",
+      "expected_size": 12725
+    },
+    {
+      "path": "Tests/MigrationCoreTests/OrderedCallbackTests.swift",
+      "blob_sha": "b0f90009581b526259a7565d36143d4d11cda553",
+      "expected_size": 11186
+    },
+    {
+      "path": "Tests/MigrationCoreTests/QueryDriverTests.swift",
+      "blob_sha": "6b473d389d9451ee92295b2be1d47014886f6b98",
+      "expected_size": 12204
+    },
+    {
+      "path": "Tests/MigrationCoreTests/StorageReconciliationTests.swift",
+      "blob_sha": "1283f040a7e82a8ea64f10c1a747d08d303d3767",
+      "expected_size": 21109
+    },
+    {
+      "path": "Tests/MigrationCoreTests/SyntheticCollectorIntegrationTests.swift",
+      "blob_sha": "9d87b6ba50c4bf6f862f14dcbbfe572708e0e6c7",
+      "expected_size": 18419
+    },
+    {
+      "path": "docs/CHANGELOG.md",
+      "blob_sha": "a44483f70efbb2b2dbbfdd9a082cf59a422f6391",
+      "expected_size": 38261
+    },
+    {
+      "path": "docs/releases/v0.4-migration-patch-01.md",
+      "blob_sha": "429c82616be90258d4e5d3ac828d21ac7716f77e",
+      "expected_size": 2105
+    },
+    {
+      "path": "docs/reports/v0.4/acquisition-coordinator.md",
+      "blob_sha": "0073094005c68188ea414ed1515646f8d65ee4d0",
+      "expected_size": 14052
+    },
+    {
+      "path": "docs/reports/v0.4/bounded-catchup.md",
+      "blob_sha": "9c1fabe340db7a1c5fe90ba3fb1fe5d3269f0bb5",
+      "expected_size": 15971
+    },
+    {
+      "path": "docs/reports/v0.4/build-verification.md",
+      "blob_sha": "112bdd5dd56ed3caddc3a5670d79d6b54db3dd25",
+      "expected_size": 12925
+    },
+    {
+      "path": "docs/reports/v0.4/candidate-builder.md",
+      "blob_sha": "22af4dfc9e7e2c2bd5b62f3fd1d68f933fae3bb5",
+      "expected_size": 18199
+    },
+    {
+      "path": "docs/reports/v0.4/chart-dashboard.md",
+      "blob_sha": "b53d2ea30c813971bb7e17c97826e4dd740bd425",
+      "expected_size": 19978
+    },
+    {
+      "path": "docs/reports/v0.4/collector-handoff.md",
+      "blob_sha": "cc4d0028c81b2a87858b5bf31a3fc50780ecb862",
+      "expected_size": 19436
+    },
+    {
+      "path": "docs/reports/v0.4/cross-file-handoff.md",
+      "blob_sha": "a33110fe821ac3ea06c352585c2088da8a0b9747",
+      "expected_size": 16701
+    },
+    {
+      "path": "docs/reports/v0.4/cutover-readiness.md",
+      "blob_sha": "911194a65068173b2458083ac5931d5f1d504994",
+      "expected_size": 36812
+    },
+    {
+      "path": "docs/reports/v0.4/device-acquisition-harness.md",
+      "blob_sha": "3f8dcb8a6930d6d7bbce4ff5662844e83d4c545d",
+      "expected_size": 44641
+    },
+    {
+      "path": "docs/reports/v0.4/device-validation.md",
+      "blob_sha": "cd33ef49b6f50995e6d99831466196cbd2948603",
+      "expected_size": 11700
+    },
+    {
+      "path": "docs/reports/v0.4/healthkit-query-driver.md",
+      "blob_sha": "b36ed23e3bf5f01115686d9c15457172481501dc",
+      "expected_size": 15196
+    },
+    {
+      "path": "docs/reports/v0.4/incremental-authority-integration.md",
+      "blob_sha": "3ba5e07b88e90901610a108a053c13f9987b818e",
+      "expected_size": 12805
+    },
+    {
+      "path": "docs/reports/v0.4/incremental-repository.md",
+      "blob_sha": "7c110456a764ba7dbb930d4c0e593eb9e9b81e5d",
+      "expected_size": 21148
+    },
+    {
+      "path": "docs/reports/v0.4/migration-audit.md",
+      "blob_sha": "453e39d3776067fc3f7e922d23ca90c45d4bef16",
+      "expected_size": 9508
+    },
+    {
+      "path": "docs/reports/v0.4/one-shot-production-design.md",
+      "blob_sha": "0b829f1c946dea2369000415ec632e72bec13093",
+      "expected_size": 21476
+    },
+    {
+      "path": "docs/reports/v0.4/ordered-callback-adapter.md",
+      "blob_sha": "3636b22f0ef374f971dce3ff880d0ce1e436cb1a",
+      "expected_size": 15760
+    },
+    {
+      "path": "docs/reports/v0.4/production-collector-seam.md",
+      "blob_sha": "97c8665f8c3626075d9155433ac41900e9325f15",
+      "expected_size": 23033
+    },
+    {
+      "path": "docs/reports/v0.4/sqlite-acquisition.md",
+      "blob_sha": "e98c0bdfc3841e081fe5b9e8f673959b9f652a13",
+      "expected_size": 10119
+    },
+    {
+      "path": "docs/reports/v0.4/storage-reconciliation.md",
+      "blob_sha": "9ad1c5e72e0dfcced473e16a9916e9a9f50ae9f2",
+      "expected_size": 26188
+    },
+    {
+      "path": "docs/reports/v0.4/synthetic-collector-integration.md",
+      "blob_sha": "3414c08a56c8eded54d0da8db19a5c3524fa63c2",
+      "expected_size": 17406
+    }
+  ]
+}
