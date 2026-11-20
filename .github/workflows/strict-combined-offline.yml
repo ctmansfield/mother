@@ -83,7 +83,7 @@ jobs:
           test "$(git -C paired-coach rev-parse HEAD)" = "493ed9ca1f746546eb8c19a85c3e30643cc80ded"
       - name: Run five actual combined-source interface suites, reject skips
         env:
-          COACH_CHECKOUT: paired-coach
+          COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
           PYTHONPATH: .:paired-coach
           PYTHONDONTWRITEBYTECODE: '1'
           PYTHONNOUSERSITE: '1'
