@@ -10,6 +10,10 @@ Chad requested: “lets build a requirements doc on our side of it that we can p
 
 Current authorization covers requirements, repository documentation and a review branch/PR. Production placement, live ingestion, personal-data transfer, collector cutover, new credentials and service activation require a subsequent concrete decision. The prior temporary notification route is closed. Do not reuse its connection, certificate, grants, database or delivery cursor for health ingestion. No further phone-cleanup verification is required: Chad waived it after confirming cleanup.
 
+## Relationship to MSE
+
+This is an acquisition and storage requirements companion to the existing [MSE integration addendum](INTEGRATION_ADDENDUM_2026-11-19.md), especially its ownership, observation/revision, snapshot and implementation-sequence sections. Reconcile requirements there first. MSE consumes physiological evidence and owns its derived states; acquisition, authoritative archival commitment and model memory retain their separate responsibilities. The open decisions below complete the operational boundaries of that design rather than establish a competing architecture.
+
 ## Existing decisions and implementation boundaries
 
 | Area | Observed baseline | Implication for this increment |
@@ -122,7 +126,7 @@ For this document, completion means a reviewable requirements contribution and a
 
 Reviewed MOTHER main: `c05f38096406965496d7d4a09edf4b3575235311`. Links to main below are navigation aids; this pin identifies the reviewed document versions.
 
-- [MSE integration ownership, observation/snapshot contracts and proposed sequence](../mse/INTEGRATION_ADDENDUM_2026-11-19.md).
+- [MSE integration ownership, observation/snapshot contracts and proposed sequence](INTEGRATION_ADDENDUM_2026-11-19.md).
 - [Preserved HealthBridge source audit and acquisition/export gaps](../../research/mse/reference-v0.1.0/docs/HEALTH_BRIDGE_AUDIT.md). Historical audit pins are retained there; it is not a fresh device inventory.
 - [PF-001 source and immutable archive](https://github.com/ctmansfield/mother/pull/1), reviewed head `5a6f71a45dc64880bc06a0e1a50c7d05ff119cba`.
 - [Combined MOTHER integration](https://github.com/ctmansfield/mother/pull/18), observed open/unmerged at `b4e70b7123689ec164ba09e2974645ae36b184a2`; MotherHealthBridge is explicitly excluded from that PR.

@@ -1,0 +1,11 @@
+{
+  "report_id": "MHB-MOTHER-DATA-001-R1",
+  "status": "COMPLETED",
+  "document": "docs/mse/HEALTH_DATA_INGESTION_REQUIREMENTS.md",
+  "document_sha256": "5f2bd7b3e17c661a03fb18e7d35785521f765aea1528a19af6cdf5ba2242b59b",
+  "requirements": 30,
+  "decisions": 8,
+  "checks": "Unique IDs, eight decision rows, relative links resolved; documentation-only; no runtime tests.",
+  "next_action": "MOTHER maps requirements to implementation/evidence/gaps and resolves D-01 through D-08 in an ADR.",
+  "limitations": "Proposed requirements; no architecture selection, application changes, live transfer or deployment."
+}
