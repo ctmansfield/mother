@@ -22,6 +22,7 @@ ATLAS = "769a0966da251da4d08633cc7663af9869da70e6"
 ORACLE = "7825b02093d280321af34af88aed96da44b33594"
 PROVENANCE = "7be9ea31c6c68643573afdf37ccfa0a41901a368"
 REFERENCE = "research/mse/reference-v0.1.0/prototype"
+COMBINED = "877eeb66ae2c26ab8ee2144d34adeba87c988e8f"
 SOURCE_PINS = dict(atlas=ATLAS, forge=FORGE, oracle=ORACLE, provenance=PROVENANCE)
 CONTRACTS = "docs/mse/integration/contracts"
 MEMBERS = ("custody.sqlite3", "physiology.sqlite3", "original.json")
@@ -98,19 +99,23 @@ def load_siblings(checkout, directory):
     sys.path[:0] = [str(directory), str(directory / REFERENCE), str(checkout)]
 
 
-def run_rehearsal(checkout, directory):
+def run_rehearsal(checkout, directory, *, combined=False):
+    expected = COMBINED if combined else FORGE
     if (
-        git(checkout, "rev-parse", "HEAD").decode().strip() != FORGE
+        git(checkout, "rev-parse", "HEAD").decode().strip() != expected
         or git(checkout, "status", "--porcelain", "--untracked-files=all").strip()
     ):
-        raise SystemExit(f"Use a clean FORGE checkout at {FORGE}")
+        raise SystemExit(f"Use a clean dependency checkout at {expected}")
     schema = json.loads(
         git(checkout, "show", f"{ATLAS}:{CONTRACTS}/offline-integration.schema.json")
     )
     vectors = json.loads(
         git(checkout, "show", f"{ATLAS}:{CONTRACTS}/golden-vectors.json")
     )
-    load_siblings(checkout, directory)
+    if combined:
+        sys.path[:0] = [str(checkout), str(checkout / REFERENCE)]
+    else:
+        load_siblings(checkout, directory)
     from integrations.healthbridge.ingest import ingest_capture
     from integrations.mse_ingest import RecoveryError, Scope
     from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
@@ -271,9 +276,17 @@ if __name__ == "__main__":
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--plan", action="store_true")
     mode.add_argument("--forge-checkout", type=Path)
+    mode.add_argument("--combined-checkout", type=Path)
     args = parser.parse_args()
     if args.plan:
         print(json.dumps(LAYOUT, indent=2))
     else:
         with TemporaryDirectory(prefix="mse-pinned-source-") as source:
-            sys.exit(run_rehearsal(args.forge_checkout.resolve(), Path(source)))
+            checkout = args.combined_checkout or args.forge_checkout
+            sys.exit(
+                run_rehearsal(
+                    checkout.resolve(),
+                    Path(source),
+                    combined=args.combined_checkout is not None,
+                )
+            )

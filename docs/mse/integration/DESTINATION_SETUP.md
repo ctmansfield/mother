@@ -38,10 +38,10 @@ A later authorized operator must verify the approved mount identity and real par
 
 ```sh
 python3 -I -B tools/mse_integration/recovery/paired.py --plan
-python3 -I -B tools/mse_integration/recovery/paired.py --forge-checkout /path/to/clean-pinned-forge
+python3 -I -B tools/mse_integration/recovery/paired.py --combined-checkout /path/to/clean-pinned-nicky
 ```
 
-Use Python 3.12 with FORGE/PF-001's `jsonschema` dependency. The checkout must be clean and detached at [FORGE #31](https://github.com/ctmansfield/mother/pull/31) `ceeb92157f4d7179a3ad5cd3d4af9e9aa4ff6b4f`, with [PF-001 #18](https://github.com/ctmansfield/mother/pull/18) `b4e70b7123689ec164ba09e2974645ae36b184a2` as its physiology source. Fetch the sibling PR refs into the same Git object store and retain the following exact commits:
+Use Python 3.12 with FORGE/PF-001's `jsonschema` dependency. For direct reproduction use [NICKY candidate #34](https://github.com/ctmansfield/mother/pull/34) at `877eeb66ae2c26ab8ee2144d34adeba87c988e8f`, tree `6dadd8cd94ffb4a0091f76624fdd0afd7baad507`, in a clean detached checkout whose object store also contains the frozen ATLAS pin. The alternative `--forge-checkout /path/to/clean-pinned-forge` assembles exact sibling sources from the object store. That checkout must be clean and detached at [FORGE #31](https://github.com/ctmansfield/mother/pull/31) `ceeb92157f4d7179a3ad5cd3d4af9e9aa4ff6b4f`, with [PF-001 #18](https://github.com/ctmansfield/mother/pull/18) `b4e70b7123689ec164ba09e2974645ae36b184a2` as its physiology source. Fetch the sibling PR refs into the same Git object store and retain the following exact commits:
 
 | Component | Rehearsal pin |
 | --- | --- |
