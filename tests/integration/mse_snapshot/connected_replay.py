@@ -1,17 +1,22 @@
 """Opt-in tests against exact ORACLE, FORGE, PF-001 and ATLAS source heads."""
+from contextlib import closing
 from copy import deepcopy
 from hashlib import sha256
 import json
 import os
+import shutil
+import sqlite3
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from integrations.healthbridge.export import export_sha256, normalize_capture
+from integrations.healthbridge.export import export_sha256
+from integrations.healthbridge.ingest import ingest_capture
 from integrations.mse_ingest import RecoveryError, Scope
-from integrations.mse_ingest.connected import ConnectedIngest
-from integrations.mse_snapshot.ledger import replay_ledger_snapshot
+from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
+from integrations.mse_snapshot.ledger import replay_ledger_snapshot, verify_ledger_replay_manifest
+from mse import MODEL_VERSION, implementation_sha256
 from mse.contracts import ContractError, canonical, digest
 
 
@@ -23,19 +28,15 @@ class ConnectedReplayTests(unittest.TestCase):
         self.original = self.vectors["source_utf8"].encode()
         self.scope = self.vectors["snapshot"]["scope"]
         self.archive_id = self.vectors["snapshot"]["archive_id"]
-        self.normalizer_version = self.vectors["snapshot"]["normalizer_version"]
+        self.normalizer_version = NORMALIZER_VERSION
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
-        self.export = normalize_capture(
-            self.original, subject_id=self.scope["subject_id"],
-            source_instance=self.scope["source_instance"],
-            batch_id="batch-1", capture_kind="full_file", capture_id="capture-1",
-            exporter_version=self.vectors["export"]["exporter_version"],
+        delivery = ingest_capture(
+            self.ledger(), self.original, batch_id="batch-1",
+            capture_kind="full_file", capture_id="capture-1",
         )
-        self.receipt = self.ledger().ingest_export(
-            self.original, self.export, normalizer_version=self.normalizer_version
-        )
+        self.export, self.receipt = delivery.export, delivery.receipt
         self.assertEqual(self.receipt["status"], "normalized")
         self.reopened = self.ledger()
         self.snapshot = self.reopened.build_snapshot(
@@ -45,9 +46,9 @@ class ConnectedReplayTests(unittest.TestCase):
             normalizer_version=self.normalizer_version,
         )
 
-    def ledger(self):
+    def ledger(self, root=None):
         return ConnectedIngest(
-            self.root, archive_id=self.archive_id,
+            self.root if root is None else root, archive_id=self.archive_id,
             scope=Scope(**self.scope), schema=self.schema,
         )
 
@@ -81,9 +82,56 @@ class ConnectedReplayTests(unittest.TestCase):
         for field in ("pf001_revision_id", "processing_revision_sha256", "commit_sequence", "committed_at", "mother_received_at"):
             self.assertEqual(member[field], selected[field])
         self.assertEqual(result["lineage"]["snapshot_manifest_sha256"], self.snapshot["snapshot_sha256"])
-        self.assertEqual(
-            result["lineage"]["native_projection_sha256"], self.vectors["digests"]["projected_envelope"]["sha256"]
+        golden_projection = deepcopy(self.vectors["native_projection"])
+        observation = golden_projection["observations"][0]
+        processing_fields = (
+            "channel", "value", "unit", "event_start", "event_end", "epistemic_type",
+            "classification_basis", "classification_evidence_sha256",
         )
+        source = self.vectors["snapshot"]["observations"][0]["source_revision"]
+        processing = digest([
+            "mse.processing-revision/0.2", source["revision_sha256"], self.normalizer_version,
+            {key: source["observation"][key] for key in processing_fields},
+        ])
+        self.assertEqual(member["processing_revision_sha256"], processing)
+        observation["provenance"]["processing_revision_sha256"] = processing
+        self.assertEqual(result["lineage"]["native_projection_sha256"],
+                         digest(["mse.native-projection/0.2", golden_projection]))
+        run, lineage = result["reference_result"], result["lineage"]
+        self.assertEqual(lineage["reference_implementation_sha256"], implementation_sha256())
+        self.assertEqual(lineage["model_version"], MODEL_VERSION)
+        self.assertEqual(lineage["model_config_sha256"], digest(run["configuration"]))
+
+    def test_public_ingest_manifest_survives_paired_sqlite_restore(self):
+        original = self.replay(self.snapshot)
+        restored = self.root.parent / (self.root.name + "-restored")
+        restored.mkdir(mode=0o700)
+        self.addCleanup(shutil.rmtree, restored)
+        for source in (self.reopened.journal, self.reopened.archive):
+            destination = restored / source.name
+            with closing(sqlite3.connect(source.as_uri() + "?mode=ro", uri=True)) as reader:
+                with closing(sqlite3.connect(destination)) as writer:
+                    reader.backup(writer)
+                    self.assertEqual(writer.execute("PRAGMA integrity_check").fetchone(), ("ok",))
+                    self.assertIsNone(writer.execute("PRAGMA foreign_key_check").fetchone())
+            destination.chmod(0o600)
+
+        reopened = self.ledger(restored)
+        self.assertEqual(reopened.verify_receipt(self.receipt), self.receipt)
+
+        def verify(output):
+            return verify_ledger_replay_manifest(
+                canonical(self.snapshot).encode(), canonical(output).encode(),
+                ledger=reopened, expected_scope=self.scope, expected_archive_id=self.archive_id,
+                max_bytes=64_000, max_members=128, max_manifest_bytes=128_000,
+            )
+
+        self.assertEqual(verify(original), original)
+        altered = deepcopy(original)
+        altered["lineage"]["model_config_sha256"] = "e" * 64
+        altered["result_id"] = "derived:" + digest(altered["lineage"])
+        with self.assertRaisesRegex(ContractError, "differs from verified replay"):
+            verify(altered)
 
     def test_resigned_forged_or_incomplete_snapshot_fails_before_replay(self):
         changes = {
