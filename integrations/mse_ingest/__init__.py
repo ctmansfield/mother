@@ -64,6 +64,7 @@ class LocalIngest:
         if parent.resolve(strict=True) != parent:
             raise ValueError("Select a canonical ingest path without parent links")
         self._owner = os.geteuid()
+        self._validate_ancestors(parent)
         parent_status = parent.stat()
         if parent_status.st_uid != self._owner or parent_status.st_mode & 0o022:
             raise ValueError(
@@ -89,7 +90,16 @@ class LocalIngest:
         self._validate_paths()
         if self.archive.exists() and not self.journal.is_file():
             raise RecoveryError("PF-001 archive is missing its custody journal")
-        self.journal.touch(mode=0o600, exist_ok=True)
+        try:
+            descriptor = os.open(
+                self.journal,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_NONBLOCK,
+                0o600,
+            )
+        except FileExistsError:
+            pass
+        else:
+            os.close(descriptor)
         with closing(sqlite3.connect(self.journal, timeout=30)) as db:
             db.row_factory = sqlite3.Row
             db.execute("PRAGMA synchronous=FULL")
@@ -129,6 +139,10 @@ class LocalIngest:
             or parent_info.st_mode & 0o022
         ):
             raise RecoveryError("Custody root or trusted parent changed")
+        try:
+            self._validate_ancestors(parent)
+        except ValueError as error:
+            raise RecoveryError("Custody parent chain is no longer trusted") from error
         for database in (self.journal, self.archive):
             for suffix in ("", "-journal", "-wal", "-shm"):
                 path = database.with_name(database.name + suffix)
@@ -145,6 +159,20 @@ class LocalIngest:
                     raise RecoveryError(
                         "Store files and sidecars must be private, owned regular files"
                     )
+
+    def _validate_ancestors(self, parent):
+        # A writable sticky system ancestor can contain a private caller-owned
+        # parent: other users cannot rename entries owned by the caller or root.
+        for ancestor in parent.parents:
+            info = ancestor.lstat()
+            if (
+                not stat.S_ISDIR(info.st_mode)
+                or info.st_uid not in (0, self._owner)
+                or (info.st_mode & 0o022 and not info.st_mode & stat.S_ISVTX)
+            ):
+                raise ValueError(
+                    "Select an ingest path with trusted directory ancestors"
+                )
 
     def _checkpoint(self, phase):
         """Fault injection point for local tests."""

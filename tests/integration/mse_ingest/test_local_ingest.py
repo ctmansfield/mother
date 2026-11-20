@@ -4,9 +4,12 @@ import os
 import hashlib
 from pathlib import Path
 import sqlite3
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from integrations.mse_ingest import BatchConflict, LocalIngest, RecoveryError, Scope
 from mother.physiology.archive import Archive
@@ -206,7 +209,6 @@ class LocalIngestTests(unittest.TestCase):
             file = root / filename
             for make in (
                 lambda path: path.symlink_to(target),
-                lambda path: os.mkfifo(path, mode=0o600),
                 lambda path: os.link(target, path),
             ):
                 make(file)
@@ -219,6 +221,76 @@ class LocalIngestTests(unittest.TestCase):
         with self.assertRaisesRegex(RecoveryError, "owned regular files"):
             self.apply(service)
         self.assertEqual(target.read_bytes(), b"")
+
+    def test_fifo_and_directory_are_refused_with_a_bounded_child(self):
+        script = """
+from pathlib import Path
+import sys
+from integrations.mse_ingest import LocalIngest, RecoveryError
+try:
+    with LocalIngest(Path(sys.argv[1]))._write():
+        raise AssertionError("opened an unsafe store")
+except RecoveryError:
+    pass
+"""
+        for filename in (
+            "custody.sqlite3",
+            "physiology.sqlite3",
+            "custody.sqlite3-journal",
+            "custody.sqlite3-wal",
+            "physiology.sqlite3-shm",
+        ):
+            with self.subTest(filename=filename):
+                path = self.root / filename
+                for create in (lambda: os.mkfifo(path, 0o600), path.mkdir):
+                    create()
+                    result = subprocess.run(
+                        [sys.executable, "-B", "-c", script, str(self.root)],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    if path.is_dir():
+                        path.rmdir()
+                    else:
+                        path.unlink()
+
+    def test_untrusted_ancestor_and_replaced_root_are_refused(self):
+        ancestor = self.root / "ancestor"
+        parent = ancestor / "trusted-parent"
+        parent.mkdir(parents=True, mode=0o700)
+        root = parent / "store"
+        ancestor.chmod(0o777)
+        with self.assertRaisesRegex(ValueError, "trusted directory ancestors"):
+            LocalIngest(root)
+        self.assertFalse(root.exists())
+        ancestor.chmod(0o700)
+        service = LocalIngest(root)
+        root.rename(parent / "prior-store")
+        root.mkdir(mode=0o700)
+        with self.assertRaisesRegex(RecoveryError, "root or trusted parent changed"):
+            self.apply(service)
+        self.assertEqual(list(root.iterdir()), [])
+
+    def test_incompatible_existing_owner_is_refused_before_sqlite(self):
+        service = LocalIngest(self.root)
+        service.journal.touch(mode=0o600)
+        old_lstat = Path.lstat
+
+        def lstat(path):
+            info = old_lstat(path)
+            if path == service.journal:
+                # Ownership metadata only; no privileged chown is needed.
+                return SimpleNamespace(
+                    st_mode=info.st_mode, st_nlink=info.st_nlink, st_uid=info.st_uid + 1
+                )
+            return info
+
+        with patch.object(Path, "lstat", lstat), patch("sqlite3.connect") as connect:
+            with self.assertRaisesRegex(RecoveryError, "owned regular files"):
+                self.apply(service)
+            connect.assert_not_called()
 
     def test_concurrent_identical_retry_uses_one_run_and_receipt(self):
         with ThreadPoolExecutor(max_workers=2) as workers:

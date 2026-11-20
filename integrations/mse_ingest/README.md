@@ -105,8 +105,10 @@ For combined replay use the bridge's `replay_ledger_snapshot` with the trusted
 reopened ledger.
 
 The trial root must be canonical and mode 0700, with a caller-owned canonical
-parent that forbids group and other writes. For a fresh private temporary
-directory use `Path(root).resolve()`. Existing database and sidecar paths
+parent that forbids group and other writes. Ancestor directories must be
+owned by the caller or root; writable system ancestors need the sticky bit.
+The store pins the root and parent identity across operations. For a fresh
+private temporary directory use `Path(root).resolve()`. Existing database and sidecar paths
 must be singly linked, owned mode-0600 regular files. The trial assumes
 exclusive ownership and trusted local actors with the same UID. The checks
 are not a confinement boundary against another process with that UID.
