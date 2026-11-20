@@ -101,3 +101,24 @@ The first NICKY and opt-in PROVENANCE invocations produced three and two setup e
 **FORGE file boundary: GO for the documented trusted single-UID synthetic root.** Seven independent checks passed for parent alias and write-mode rejection, existing file permissions, a direct sidecar symlink, FIFO, directory and simulated foreign-owner metadata. No file was opened after failed validation. Path checks are scoped to the reviewed caller-owned, exclusive local directory contract.
 
 **Storage: local quiescent restore smoke GO. Destination NOT READY.** PHOENIX #29 `4d76cbb` passed four paired restore cases using its exact pinned older FORGE `c29f442` fixture-mapper dependency, zero failures/errors/skips. Separately, I used current `d244105` with the connected capture and reference: backed up both quiescent SQLite stores, checked both copy integrity results, reopened and verified the original receipt and replayed the exact snapshot to identical derived output. This is one local connected restore smoke check. The PHOENIX current connected recovery harness and interrupted paired fault qualification on current heads remain pending. No destination provisioning, intake or operational restore has been observed.
+
+## Revision 5 exact-pin independent acceptance
+
+[Revision 5 and PM freeze](https://github.com/ctmansfield/mother/pull/23#issuecomment-7045375231). **Contract GO, local synthetic pipeline GO, local paired fault restore GO. Destination NOT READY.** Normative 0.2 is frozen at `769a0966da251da4d08633cc7663af9869da70e6`. The contract tree matches the later `efad47c03c4f5e5183c28e274973278680e1d2f3` docs pin byte for byte.
+
+I independently assembled the r5 functional paths over detached PF-001 `b4e70b7123689ec164ba09e2974645ae36b184a2` as tree `ad529b063ddf557ba1e4f38003082abde72d9a47`. This is the independently assembled functional tree. NICKY's separately owned immutable release candidate was pending at this checkpoint. The reference subtree had an empty diff. Under Python 3.12.14, with the exact contract/fixture roots and a canonical private TMPDIR:
+
+| Scope | Pinned head | Result |
+| --- | --- | --- |
+| Adapter, public entry and finite nonpositive cases | #30 `7825b02093d280321af34af88aed96da44b33594` | 19 passed |
+| Ledger, connected flow and filesystem boundaries | #31 `ceeb92157f4d7179a3ad5cd3d4af9e9aa4ff6b4f` | 19 passed |
+| Standalone snapshot and opt-in connected replay | #27 `7be9ea31c6c68643573afdf37ccfa0a41901a368` | 17 plus two passed |
+| Independent fixtures, custody and connected pipeline | #25 `bf646a8e2f77c277717dc97b24b8957e9a380579` | 26 passed |
+
+All 83 suite checks passed, zero failures/errors/skips. A separate exact public-entry check called `ingest_capture`, reproduced the exact receipt on retry, reopened the ledger, rebuilt the cutoff snapshot and verified derived replay against the real reopened ledger. No membership callback or forged fixture receipt was used. The earlier negative-value rejection and missing-public-entry gap did not recur.
+
+**File boundary.** The exact #31 suite exercised actual parent aliases, unsafe ancestor mode, replaced root, existing file mode, symlink/hardlink rejection, and FIFO/directory refusals in bounded child processes. The foreign-member ownership case used simulated UID metadata and verified SQLite was never opened. No privileged ownership change was performed. GO is bounded to the documented trusted local single-UID trial.
+
+**Paired recovery.** #29 `1c8b56086b342ab201d80653ca01bef43de70c86` passed five standalone PF-001 checks and its four connected paired checks at the shipped older dependency pins. I reran the same four fault cases with only the dependency constants overridden in memory to r5 FORGE/ORACLE/PROVENANCE and kept the frozen ATLAS pin. All four passed, including interrupted archive-before-receipt recovery, stale archive refusal, exact retry and unrelated-original refusal. The recovery harness uses actual connected ingest, snapshot and replay after restore. No changes were made to its tracked code.
+
+**Destination.** No change to the NOT READY result. These local tests provide no allocated destination, scoped intake or writer identity, or verified operational backup and restore. GADGET owns final combined-tree reconciliation after NICKY's immutable relay.
