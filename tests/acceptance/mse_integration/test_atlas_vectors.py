@@ -199,3 +199,23 @@ class AtlasCandidateVectors(unittest.TestCase):
                     eligible = [member for member in order if member["commit_sequence"] <= cutoff]
                     self.assertEqual(min(eligible, key=lambda item: item["commit_sequence"], default=None),
                                      expected)
+
+    def test_actual_selector_matches_atlas_two_receipt_vectors(self):
+        try:
+            from integrations.mse_snapshot.snapshot import select_fact_sighting
+        except ModuleNotFoundError as error:
+            if error.name not in {"integrations", "integrations.mse_snapshot"}:
+                raise
+            self.skipTest("assemble the pinned snapshot selector candidate")
+
+        representative = self.vectors["representative_cases"]
+        for case in representative["cases"]:
+            expected = case["expected"]
+            for field, output in (("observation", "observations"), ("tombstone", "tombstones")):
+                with self.subTest(case=case["name"], fact=field):
+                    rows = [representative["sightings"][index] for index in case["input_order"]]
+                    selected = select_fact_sighting(
+                        [(row["normalizer_version"], row[field]) for row in rows],
+                        case["cutoff"], normalizer_version=expected["normalizer_version"],
+                    )
+                    self.assertEqual([selected], expected[output])

@@ -120,3 +120,32 @@ records. #31 emits provisional 0.1 receipts and #27 consumes a provisional
 receipt-backed PF-001 records, applies ATLAS 0.2 representative/cutoff rules,
 and feeds exact projected MSE input is not yet available. The independently
 green components do not count as an end-to-end execution.
+
+## Round 3 connected custody gate
+
+Repeat the detached assembly above with #30
+`0a0489ac05aed314f85316217fb92954034989f2`, #31
+`c29f4426c0e598d07ea9b1b5d019c48cd90253c9`, and #27
+`6a2c1bd02fc5b8b5063de866d1fbe719778e14e4`. Overlay ATLAS #28
+`3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c` from `c05f380` under
+`docs/mse/integration/contracts`. Export
+`MSE_ATLAS_CONTRACT_DIR="$PWD/docs/mse/integration/contracts"` for
+FORGE's candidate tests. Without that variable five ledger tests skip.
+
+The independent connected custody test passes real #30 output directly into
+#31's `IngestV02.ingest`. It deliberately throws at the required
+normalization callback. Reopen verifies durable custody, identical retry
+returns the original custody receipt, changed batch and scope/artifact
+substitution fail, and corruption of the retained artifact fails reopening.
+Three tests pass at this partial gate. No fake normalized records or
+membership predicate are supplied. The independent ATLAS vector tests also
+exercise the actual #27 selector against both sighting orders and historical
+cutoffs. That selector check starts from published golden members.
+
+Connected PF-001 normalization, snapshot member verification and MSE replay
+remain blocked on the public production mapper and ledger-backed snapshot
+builder/verifier. Replace the custody gate's intentional stop with a separate
+end-to-end test once those APIs arrive. Keep the custody interruption
+regression. End-to-end evidence must use actual accepted receipts and run
+membership, then test conflicts, unknown tombstones, late additions and
+cutoffs before invoking MSE. [r3 directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041939410)
