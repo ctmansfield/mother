@@ -14,7 +14,7 @@ class ConnectedPipeline(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            from integrations.healthbridge.export import normalize_capture
+            from integrations.healthbridge.ingest import ingest_capture
             from integrations.mse_ingest import BatchConflict, RecoveryError, Scope
             from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
             from integrations.mse_ingest.v02 import digest
@@ -24,7 +24,7 @@ class ConnectedPipeline(unittest.TestCase):
             if not error.name.startswith("integrations"):
                 raise
             raise unittest.SkipTest("assemble the pinned connected integration candidate")
-        cls.normalize = staticmethod(normalize_capture)
+        cls.ingest_capture = staticmethod(ingest_capture)
         cls.replay = staticmethod(replay_ledger_snapshot)
         cls.digest = staticmethod(digest)
         cls.ingest_class = ConnectedIngest
@@ -48,12 +48,12 @@ class ConnectedPipeline(unittest.TestCase):
         fixture = CASES[case]
         path = FIXTURES / fixture.get("source_compatible_file", fixture["file"])
         raw = path.read_bytes() if replacement is None else replacement
-        export = self.normalize(
-            raw, subject_id=self.scope.subject_id, source_instance=self.scope.source_instance,
+        delivery = self.ingest_capture(
+            self.ledger(), raw,
             batch_id=batch, capture_id=f"capture-{batch}",
             capture_kind="full_file" if case == "baseline" else "partial",
         )
-        return self.ledger().ingest_export(raw, export)
+        return delivery.receipt
 
     def snapshot(self, cutoff):
         return self.ledger().build_snapshot(
@@ -124,3 +124,57 @@ class ConnectedPipeline(unittest.TestCase):
                        (b"synthetic corruption", receipt["batch_id"]))
         with self.assertRaises(self.errors[1:]):
             self.verified_replay(snapshot)
+
+    def test_frozen_numeric_index_and_nonpositive_source_only_edges(self):
+        from mother.physiology.archive import Archive
+
+        vectors = json.loads(
+            Path("docs/mse/integration/contracts/golden-vectors.json").read_bytes()
+        )["capture_edge_cases"]
+        cases = [("reading-index-2-vs-10", vectors["repeated_upsert"])]
+        cases.extend((case["name"], case) for case in vectors["nonpositive"])
+        for name, case in cases:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                store = self.ingest_class(
+                    Path(directory).resolve(), scope=self.scope, archive_id="independent-r4",
+                    schema=self.schema,
+                )
+                expected = case["expected_export"]
+                delivery = self.ingest_capture(
+                    store, case["source_utf8"].encode(), batch_id=expected["batch_id"],
+                    capture_id=expected["capture_id"], capture_kind=expected["coverage"]["capture_kind"],
+                )
+                self.assertEqual(store.verify_receipt(delivery.receipt), delivery.receipt)
+                self.assertEqual(delivery.receipt["status"], "normalized")
+                actual_upserts = [row for row in delivery.export["revisions"] if row["operation"] == "upsert"]
+                expected_upserts = [row for row in expected["revisions"] if row["operation"] == "upsert"]
+                self.assertEqual(len(actual_upserts), len(expected_upserts))
+                for actual, target in zip(actual_upserts, expected_upserts):
+                    self.assertEqual(actual["locators"], target["locators"])
+                    self.assertEqual(actual["observation"], target["observation"])
+                with Archive(store.archive) as archive:
+                    run = archive.import_run(delivery.receipt["pf001_run_id"])
+                    self.assertTrue(run["counts"]["revisions"])
+                    if name != "reading-index-2-vs-10":
+                        self.assertEqual(run["counts"]["records"], {})
+                snapshot = store.build_snapshot(
+                    measurement_start="2000-01-01T00:00:00Z",
+                    measurement_end="2002-01-01T00:00:00Z",
+                    knowledge_cutoff_sequence=delivery.receipt["commit_sequence"],
+                    normalizer_version=self.version,
+                )
+                if name != "reading-index-2-vs-10":
+                    self.assertEqual(snapshot["observations"], [])
+                    self.assertTrue(any(loss["reason"] == "outside_reference_positive_domain"
+                                        for loss in snapshot["losses"]))
+                reopened = self.ingest_class(
+                    Path(directory).resolve(), scope=self.scope, archive_id="independent-r4",
+                    schema=self.schema,
+                )
+                result = self.replay(
+                    json.dumps(snapshot).encode(), ledger=reopened,
+                    expected_scope=self.scope.fields(), expected_archive_id="independent-r4",
+                    max_members=100, max_bytes=100_000,
+                )
+                self.assertEqual(result["lineage"]["snapshot_manifest_sha256"],
+                                 snapshot["snapshot_sha256"])
