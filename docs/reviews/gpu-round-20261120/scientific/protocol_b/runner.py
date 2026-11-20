@@ -78,6 +78,83 @@ def revised_prompt(original, graph, sources, task):
     return result
 
 
+def guarded_proposal(grader, raw, graph, sources, task):
+    try:
+        proposal = grader.parse_response(raw)
+    except (ValueError, TypeError, UnicodeError):
+        return raw, None
+    binding = ("role", "edge_id", "source_id")
+    if proposal["decision"] != "CANDIDATE" or any(
+        proposal[key] != task[key] for key in binding
+    ):
+        return raw, None
+    public_task = {
+        key: task[key] for key in ("id", *binding, "objective", "retraction_status")
+    }
+    edge, record = grader.check_input(graph, sources, public_task)
+    allowed, reason = grader.edge_claim_permission(edge, record, public_task)
+    if allowed or reason not in {"possible_retraction", "specialist_role_mismatch"}:
+        return raw, None
+    proposal.update(
+        decision="ABSTAIN",
+        quote=None,
+        polarity="none",
+        limitation="INSUFFICIENT_EVIDENCE",
+        rationale=f"Deterministic eligibility check: {reason}.",
+    )
+    return json.dumps(proposal, sort_keys=True), reason
+
+
+def score_guarded_responses(
+    broker, folder, evidence_path, graph, sources, tasks, records
+):
+    tasks_by_id = {task["id"]: task for task in tasks}
+    observed = {row["prompt_sha256"]: row for row in records}
+    counts = Counter()
+    for line in (folder / "raw-local.jsonl").read_bytes().splitlines():
+        row = sc.unique_json(line)
+        task = tasks_by_id[row["case_id"]]
+        original = row["response"]
+        raw_grade = row["grade"]
+        intervention = None
+        guarded_grade = raw_grade
+        guarded = original
+        prompt_hash = row["prompt_sha256"]
+        if row["error_class"] is None:
+            request = observed[prompt_hash]
+            if request["response"]["response"] != original:
+                raise ValueError(
+                    "strict ledger response differs from transmitted request telemetry"
+                )
+            scoped = broker.with_retraction(sources, task)
+            guarded, intervention = guarded_proposal(
+                broker.s, original, graph, scoped, task
+            )
+            if intervention:
+                guarded_grade = broker.s.judge(guarded, graph, scoped, task)
+        sc.append_json(
+            evidence_path,
+            {
+                "case_id": task["id"],
+                "transmitted_prompt_sha256": prompt_hash,
+                "raw_response_sha256": row["response_sha256"],
+                "raw_error_class": row["error_class"],
+                "raw_grade": raw_grade,
+                "intervention": intervention,
+                "guarded_grade": guarded_grade,
+                "replacement_response": guarded if intervention else None,
+            },
+        )
+        counts["cases"] += 1
+        counts["strict_correct"] += guarded_grade["task_correct"]
+        counts["false_candidates"] += guarded_grade["false_candidate"]
+        counts["unnecessary_abstentions"] += (
+            guarded_grade["reason"] == "unnecessary_abstention"
+        )
+        counts["interventions"] += intervention is not None
+    return dict(counts)
+
+
 def source_gate():
     head = sc.command(["git", "-C", str(ROOT), "rev-parse", "HEAD"])
     if not re.fullmatch("[a-f0-9]{40}", head):
@@ -130,6 +207,7 @@ def main(argv=None):
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--framework", type=Path, required=True)
     parser.add_argument("--state", type=Path)
+    parser.add_argument("--eligibility-guard", action="store_true")
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--gpu-idle-confirmed", action="store_true")
     args = parser.parse_args(argv)
@@ -153,6 +231,7 @@ def main(argv=None):
         "prompt": "B_EXPLICIT_ASSIGNED_SPECIALIST_ROLE",
         "grader": "UNCHANGED_FW00412",
         "original_tasks": "UNCHANGED_15",
+        "eligibility_guard": args.eligibility_guard,
         "mother_source": commit,
         "framework_source": sc.PIN,
         "baseline_proof": prior,
@@ -196,6 +275,7 @@ def main(argv=None):
             "framework_source": sc.PIN,
             "baseline_comparison_sha256": prior["comparison_sha256"],
             "planned_requests": 45,
+            "eligibility_guard": args.eligibility_guard,
             "models": [],
             "scientific_truth": "NOT_ESTABLISHED",
             "role_assignment": "NOT_ASSIGNED",
@@ -242,6 +322,18 @@ def main(argv=None):
                     "raw_log_sha256": report["raw_log_sha256"],
                     "hold": observer.hold,
                 }
+                if args.eligibility_guard:
+                    evidence_path = state / f"eligibility-{index:02d}.jsonl"
+                    entry["guarded_score"] = score_guarded_responses(
+                        broker,
+                        folder,
+                        evidence_path,
+                        graph,
+                        sources,
+                        tasks,
+                        observer.records,
+                    )
+                    entry["guarded_evidence"] = evidence_path.name
                 outcome["models"].append(entry)
                 print(json.dumps(entry, sort_keys=True), flush=True)
                 active = None

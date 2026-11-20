@@ -1,6 +1,7 @@
 import json
 import unittest
-from runner import revised_prompt, CANDIDATES, MARKER
+from unittest.mock import Mock
+from runner import revised_prompt, guarded_proposal, CANDIDATES, MARKER
 
 
 def original(g, s, task):
@@ -24,6 +25,44 @@ def original(g, s, task):
             sort_keys=True,
         )
     )
+
+
+class EligibilityGuardTests(unittest.TestCase):
+    def test_only_disqualified_bound_candidates_are_replaced(self):
+        task = dict(
+            id="case",
+            role="SOURCE",
+            edge_id="edge",
+            source_id="source",
+            objective="candidate-text",
+            retraction_status="flag",
+            expected_decision="ABSTAIN",
+        )
+        raw = "saved response"
+        grader = Mock()
+        grader.check_input.return_value = ("edge", "record")
+        for allowed, reason in (
+            (False, "possible_retraction"),
+            (False, "specialist_role_mismatch"),
+            (True, "text_anchor_only"),
+            (False, "edge_unbound_source"),
+        ):
+            with self.subTest(reason=reason):
+                grader.parse_response.return_value = {
+                    key: task[key] for key in ("role", "edge_id", "source_id")
+                } | {"decision": "CANDIDATE"}
+                grader.edge_claim_permission.return_value = (allowed, reason)
+                output, intervention = guarded_proposal(grader, raw, {}, {}, task)
+                if reason in {"possible_retraction", "specialist_role_mismatch"}:
+                    self.assertEqual(intervention, reason)
+                    self.assertEqual(json.loads(output)["decision"], "ABSTAIN")
+                else:
+                    self.assertEqual((output, intervention), (raw, None))
+                self.assertNotIn(
+                    "expected_decision", grader.check_input.call_args.args[2]
+                )
+        grader.parse_response.side_effect = ValueError("invalid schema")
+        self.assertEqual(guarded_proposal(grader, raw, {}, {}, task), (raw, None))
 
 
 class ProtocolBTests(unittest.TestCase):
