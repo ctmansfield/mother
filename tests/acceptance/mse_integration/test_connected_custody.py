@@ -21,16 +21,22 @@ class ConnectedCustody(unittest.TestCase):
         try:
             from integrations.healthbridge.export import normalize_capture
             from integrations.mse_ingest import BatchConflict, RecoveryError, Scope
-            from integrations.mse_ingest.v02 import IngestV02
+            from integrations.mse_ingest.connected import ConnectedIngest
         except ModuleNotFoundError as error:
             if error.name not in {"integrations", "integrations.healthbridge",
-                                  "integrations.mse_ingest", "integrations.mse_ingest.v02"}:
+                                  "integrations.mse_ingest", "integrations.mse_ingest.connected"}:
                 raise
             raise unittest.SkipTest("assemble the pinned 0.2 adapter and ledger")
         from test_atlas_vectors import atlas_file
 
         cls.normalize = staticmethod(normalize_capture)
-        cls.ingest_cls = IngestV02
+        class InterruptedIngest(ConnectedIngest):
+            def _checkpoint(self, phase):
+                if phase == "custody":
+                    raise StopBeforeMapping("intentional stop after durable custody")
+                super()._checkpoint(phase)
+
+        cls.ingest_cls = InterruptedIngest
         cls.conflict = BatchConflict
         cls.recovery_error = RecoveryError
         cls.scope = Scope("synthetic-acceptance", "healthkit", "synthetic-store", "healtharchive")
@@ -52,12 +58,7 @@ class ConnectedCustody(unittest.TestCase):
         )
 
     def ingest(self, ledger, raw, export):
-        def stop_before_mapping(*_):
-            raise StopBeforeMapping("intentional stop before PF-001 normalization")
-
-        return ledger.ingest(
-            raw, export, adapter_version=export["exporter_version"], normalize=stop_before_mapping
-        )
+        return ledger.ingest_export(raw, export)
 
     def test_real_export_survives_restart_at_custody_and_rejects_changed_batch(self):
         raw = (FIXTURES / CASES["baseline"]["source_compatible_file"]).read_bytes()
