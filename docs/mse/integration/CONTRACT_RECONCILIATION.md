@@ -76,6 +76,51 @@ A record revision digest binds source content independently of capture path or i
 | LLM-05 | Reference conservatively invalidates on new data; no auth-revocation serving layer. | Verify synthetic cutoff/correction/deletion changes current eligibility, preserves prior manifests; retraction/access enforcement later. |
 | LLM-06 | Offline invocation is separable from PF-001 writes; backlog/throughput unqualified. | FORGE/PROVENANCE show archive acceptance without model; Stage C/D define quotas and backlog state. |
 
+## Round 4 actual connected-test coverage
+
+[Round 4 directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7042142491). ATLAS independently ran the four [ConnectedIngest cases](https://github.com/ctmansfield/mother/blob/d2441050726f1b3f50c928d5f8205d5ea179276d/tests/integration/mse_ingest/test_connected.py) in an isolated local assembly. **4 passed, 0 failed, 0 skipped.** Log SHA-256 `e26a00970ca608e5996d72e1bec538d938817132cfd6c3432ddb96a3ad2812ff`. This is an independent execution of FORGE-authored tests, separate from NICKY's public-entry acceptance. Base PF-001 #18 `b4e70b7123689ec164ba09e2974645ae36b184a2` remains unmerged.
+
+Exact assembly: FORGE #31 `d2441050726f1b3f50c928d5f8205d5ea179276d`; ORACLE #30 `c26180c1cbf78a9d2e1915d0e83241b1d36cdac9`; PROVENANCE #27 `089e627bccf93513d52a04c7eb45d27800c0817e`; NICKY fixture source #25 `13d2e19825aa872c04cf174cd8adef1bc8d40756`; ATLAS contract #28 `769a0966da251da4d08633cc7663af9869da70e6`. The runner uses the real adapter export, real ledger/PF-001 and the real snapshot verifier/MSE bridge. It does not enter through ORACLE's public wrapper. The prior FORGE component total of 16 is owner-reported. [FORGE receipt](https://github.com/ctmansfield/mother/pull/31#issuecomment-7042102444)
+
+Evidence keys below name actual methods: **E1** `test_real_adapter_archive_and_reference_replay`, **E2** `test_retries_conflict_receipt_order_and_exact_processing_version`, **E3** `test_interrupted_archive_and_member_verification_after_restart`, and **E4** `test_source_only_zero_and_first_equal_sighting`. A row with a narrow synthetic result may still have unproved production requirements.
+
+| Requirement | Actual connected evidence | Remaining acceptance |
+| --- | --- | --- |
+| ACQ-01 | E1 uses a captured fixture and independent local inference. | Live collector continuity, coherent acquisition capture and network-outage behavior. |
+| ACQ-02 | E1 receipt reopens; E3 rejects tampered retained bytes. | Source authority and approved capture custody. |
+| ACQ-03 | E1 verifies normalized SDNN value and unknown HR exclusion; E4 verifies collector clock and locators. | Full field-by-field independent capture/export comparison and finite negative branch. |
+| ACQ-04 | E1 preserves two deletions including unknown UUID; E2 verifies historical cutoff stability. | Connected delete-before-add and partial-absence cases remain to be asserted explicitly. |
+| ACQ-05 | No connected checkpoint assertion. | Prove acquisition anchor, export progress and server checkpoint remain separate across restart. |
+| ACQ-06 | No connected pressure/limit assertion. | Bounded session, quotas and disk-full failure without cursor advance. |
+| ACQ-07 | Connected test labels full and partial inputs. | Assert coverage/permission unknown for sparse and empty fixture through public entry. |
+| ING-01 | No listener used. | Scoped HTTPS, hostname, redirects, authentication, placement and request-size qualification. |
+| ING-02 | E2 stable same-batch retry, changed-batch conflict and same-UUID content quarantine; E3 recovers same identity after interruption. | Concurrent/lost-response transport behavior and external caller scope. |
+| ING-03 | No outbox used. | Durable sender outbox and kill-before/after-send tests. |
+| ING-04 | E1 reopens receipt; E3 verifies reopened membership and rejects invalid linkage. | Independent external receipt acceptance/authorization. |
+| ING-05 | E2 sees quarantine; E3 distinguishes durable custody from normalized availability. | Connected malformed/rejected and client-facing state-transition evidence. |
+| ING-06 | E3 interrupts archive stage and recovers with stable custody; tampered bytes fail closed. | Remaining write boundaries, disk-full, orphan cleanup and independent paired restore. |
+| ING-07 | E2 quarantines conflicting source payload without modifying historical snapshot. | Unsupported schema, mixed validity, private retention and checkpoint protection through public entry. |
+| ING-08 | No grant lifecycle exercised. | Cancellation, expiry, remap and late response fencing. |
+| STO-01 | E1 observes normalized archive rows and separate derived replay output. | Selected placement, canonical locators and custodians. |
+| STO-02 | E1 retains tombstones; E2 protects earlier state and selects exact processing revision. | Authorized correction and explicit delete-before-add across batches. |
+| STO-03 | E2 exercises historical cutoff under repeat receipt and later addition; E4 verifies first collector receipt. | Historical online knowledge claim remains unproved; independently verify all clock fields. |
+| STO-04 | E1 checks normalized SDNN; E4 preserves zero source evidence. | Negative branch currently incompatible; unit/date/lexeme conversions have separate fixture checks. |
+| STO-05 | Only isolated synthetic inputs used here. | Identity/access denials, key custody, transport and at-rest protection. |
+| STO-06 | No live retention or quota exercised. | Capacity, quotas, retention, backup frequency and RPO/RTO. |
+| STO-07 | E3 reopens and detects corruption. | Restore from a separate paired artifact/ledger/archive backup and replay exact surviving state. |
+| STO-08 | E1 preserves explicit deletions. | Owner erasure policy across evidence, backups, projections and memory. |
+| STO-09 | Tests create and reopen disposable PF-001 storage. | Migration/rollback preserving accepted runs and historical evidence. |
+| LLM-01 | E1 uses expected scope/archive and trusted local verifier; E3 rejects forged member. | Cross-subject/purpose and bounded service denial on actual query interface. |
+| LLM-02 | E2 exact normalizer, old cutoff and repeated receipt selection; E3 rejects omitted member even after rehash. | Explicit query authorization, coverage and mixed pagination/snapshot-cursor tests. |
+| LLM-03 | E1 derives from archive-bound snapshot and no memory search. | Production evidence-reference resolution independent of semantic retrieval. |
+| LLM-04 | E1 validates derived class and exact snapshot manifest linkage. | Independent full result/configuration lineage and model-unavailable result checks. |
+| LLM-05 | E2 later evidence leaves historical explanation reproducible. | Correction/deletion and authorization revocation invalidate current serving without rewriting history. |
+| LLM-06 | E2/E3 accept and reconcile archive work without invoking inference. | Model-offline service behavior, backlog, concurrency limits and recovery. |
+
+### Narrow freeze disposition
+
+The exact contract candidate remains `769a0966da251da4d08633cc7663af9869da70e6`. E4 independently verifies intact first-row metadata and all locators in the pinned connected zero case. Contract golden vectors separately check numeric index 2 versus 10 and signed finite values. A direct probe with the finite-negative golden capture shows **the pinned ORACLE adapter rejects it before ledger**, so end-to-end negative compatibility is **open**. Probe log SHA-256 `579b474715ce83db0cb6e742d4fdde5f25a2324dbb1a44102f495b6893e968bf`. This reproduces the known pinned-version incompatibility without changing the contract. Require ORACLE's aligned candidate and a real FORGE ledger/snapshot probe showing retained negative source fact, typed loss and no normalized/native observation. SENTINEL must review that exact delta and GADGET owns freeze. Destination remains NOT READY.
+
 ## Decision register
 
 | ID | Offline choice for review | Production owner / remaining decision |
