@@ -1,0 +1,166 @@
+{
+  "fixture_format": 1,
+  "case_order": [
+    "baseline",
+    "partial",
+    "empty",
+    "late",
+    "conflicting-uuid",
+    "changed-batch",
+    "malformed"
+  ],
+  "cases": {
+    "baseline": {
+      "file": "baseline.json",
+      "sha256": "dd2a0ceada325cdde1a38439e31746591df3d8a56eec84477cb0cbaccea74da4",
+      "bytes": 1162,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-baseline",
+      "coverage": "unknown",
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000001",
+        "C0DE0000-0000-4000-8000-000000000002"
+      ],
+      "tombstone_ids": [
+        "C0DE0000-0000-4000-8000-000000000003",
+        "C0DE0000-0000-4000-8000-000000000004"
+      ],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000001",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000002",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000003",
+          1
+        ]
+      ],
+      "disposition": "accept"
+    },
+    "partial": {
+      "file": "partial.json",
+      "sha256": "f2cdd6420ebe605260f0b2bc19e7f2e76a9b1f319f846ec83b3bcc6b128b85ce",
+      "bytes": 430,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-partial",
+      "coverage": "partial",
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000002"
+      ],
+      "tombstone_ids": [],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000002",
+          1
+        ]
+      ],
+      "disposition": "accept"
+    },
+    "empty": {
+      "file": "empty.json",
+      "sha256": "4aeae68792ad2b1361c58f75bf4b208472162a2705686b7a4d5e81d0ee32cf9b",
+      "bytes": 135,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-empty",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "accept"
+    },
+    "late": {
+      "file": "late.json",
+      "sha256": "df0664d34f43dcaa07c0c0b911c38578ec2aa6e904e833e03d4c4e1b67cdd473",
+      "bytes": 432,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-late",
+      "coverage": "partial",
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000005"
+      ],
+      "tombstone_ids": [],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000005",
+          1
+        ]
+      ],
+      "disposition": "accept"
+    },
+    "conflicting-uuid": {
+      "file": "conflicting-uuid.json",
+      "sha256": "6855e820afeaf7918fe43ea9172c841afcb9b0504f067c3d6c65214ce1e2ca0e",
+      "bytes": 726,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-conflicting-uuid",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "reject_or_quarantine"
+    },
+    "changed-batch": {
+      "file": "changed-batch.json",
+      "sha256": "cc1926998d872755f497a3d35616f5721f27c71844f692897cfc3959d77ebc5f",
+      "bytes": 1161,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-baseline",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "delivery_conflict"
+    },
+    "malformed": {
+      "file": "malformed.json",
+      "sha256": "ca3d326c326936c47744c475cac987e3b2059a6428cf533fab6c231b8e128f8b",
+      "bytes": 15,
+      "scope": "synthetic-mse-acceptance",
+      "batch_id": "synthetic-malformed",
+      "coverage": "unknown",
+      "live_ids": [],
+      "tombstone_ids": [],
+      "observed_revisions": [],
+      "disposition": "reject_or_quarantine"
+    }
+  },
+  "replay": {
+    "baseline_retry": "same_receipt",
+    "changed_batch": "no_new_commit",
+    "after_baseline_partial_empty_late": {
+      "live_ids": [
+        "C0DE0000-0000-4000-8000-000000000001",
+        "C0DE0000-0000-4000-8000-000000000002",
+        "C0DE0000-0000-4000-8000-000000000005"
+      ],
+      "tombstone_ids": [
+        "C0DE0000-0000-4000-8000-000000000003",
+        "C0DE0000-0000-4000-8000-000000000004"
+      ],
+      "observed_revisions": [
+        [
+          "C0DE0000-0000-4000-8000-000000000001",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000002",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000003",
+          1
+        ],
+        [
+          "C0DE0000-0000-4000-8000-000000000005",
+          1
+        ]
+      ]
+    },
+    "late_id": "C0DE0000-0000-4000-8000-000000000005",
+    "late_not_visible_at_baseline_cutoff": true
+  }
+}
