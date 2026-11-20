@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "mse.analytics-view/0.1"
+    },
+    "view_id": {
+      "type": "string",
+      "pattern": "^av_[0-9a-f]{32}$"
+    },
+    "purpose": {
+      "const": "aggregate_hr_sdnn"
+    },
+    "policy_version": {
+      "const": "synthetic-aggregate-hr-sdnn/0.1"
+    },
+    "projection_version": {
+      "const": "relative-hour-mean/0.1"
+    },
+    "time_basis": {
+      "const": "relative_60_minute_bucket"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bucket_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "channel": {
+            "enum": [
+              "heart_rate",
+              "hrv_sdnn"
+            ]
+          },
+          "unit": {
+            "enum": [
+              "bpm",
+              "ms"
+            ]
+          },
+          "mean_value": {
+            "type": "string",
+            "pattern": "^(?:0\\.[1-9]|[1-9][0-9]*\\.[0-9])$"
+          }
+        },
+        "required": [
+          "bucket_index",
+          "channel",
+          "unit",
+          "mean_value"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "properties": {
+              "channel": {
+                "const": "heart_rate"
+              },
+              "unit": {
+                "const": "bpm"
+              }
+            }
+          },
+          {
+            "properties": {
+              "channel": {
+                "const": "hrv_sdnn"
+              },
+              "unit": {
+                "const": "ms"
+              }
+            }
+          }
+        ]
+      },
+      "maxItems": 48,
+      "uniqueItems": true
+    },
+    "projection_loss": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "coverage_unknown",
+          "cross_bucket_interval_assigned_by_start",
+          "relative_time_binning",
+          "some_inputs_excluded",
+          "some_outputs_suppressed",
+          "value_aggregation_and_rounding"
+        ]
+      },
+      "maxItems": 6,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "view_id",
+    "purpose",
+    "policy_version",
+    "projection_version",
+    "time_basis",
+    "rows",
+    "projection_loss"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MSE purpose-scoped synthetic analytical view 0.1"
+}
