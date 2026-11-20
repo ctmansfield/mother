@@ -75,3 +75,48 @@ at exact source times even if display UTC ties, and deduplicate equivalent
 facts while retaining all locators. Unknown-derivation HR must survive in the
 physiological snapshot but be excluded from the native MSE projection. The
 current fixtures contain no independently verified measured-HR evidence.
+
+## Local exact-head assembly checkpoint
+
+Latest representative-rule candidate: ATLAS #28 `3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c`.
+The two-receipt oracle covers both sighting orders and cutoffs 1, 2, 4 and 5,
+with the earliest eligible representative copied intact. This is an
+independent expected-value check, pending execution against a product
+snapshot selector. The schema checks reject ATLAS's three schema-targeted
+negative vectors. Rehashing a tampered cutoff or native projection does
+not satisfy the independent semantic checks.
+
+Use an existing local Python environment with PF-001's jsonschema
+dependency and fetch these PR objects. Create a detached worktree at the
+PF-001 pin. Overlay only the listed paths from each candidate with
+`git diff --binary <base> <head> -- <paths>` and `git apply --check` before
+`git apply` in the detached worktree.
+
+| Candidate | Exact head | Diff base | Paths |
+| --- | --- | --- | --- |
+| PF-001 #18 | `b4e70b7123689ec164ba09e2974645ae36b184a2` | Worktree starting point | Existing archive and original reference |
+| Adapter #30 | `b88d489b7ad55363720007ab06dc35eb6d8adb88` | `c05f380` | `integrations/healthbridge`, `tests/integration/healthbridge` |
+| Ledger #31 | `b32f30d0b2e42ce16ae1b21363feaef2006e15f7` | `b4e70b7` | `integrations/mse_ingest`, `tests/integration/mse_ingest` |
+| Snapshot #27 | `977222172bd8173d794358c2a5e5f397fc734793` | `c05f380` | `integrations/mse_snapshot`, `tests/integration/mse_snapshot` |
+| Acceptance #25 | Head under test | `c05f380` | `tests/acceptance/mse_integration`, `tests/fixtures/mse_integration` |
+
+Confirm the original reference diff is empty. From the worktree, use
+`PYTHONPATH=.:$PWD/research/mse/reference-v0.1.0/prototype` and run
+`python -B -m unittest discover -s <test-directory> -v` for each component
+directory and the acceptance directory.
+
+The initial independent accepted-case run found that our arbitrary
+`synthetic` anchor map key was incompatible. The collector writes
+`heartRate`; the companion source-compatible variants use that key and
+have separate digests. The existing fixture bytes stay intact. The first
+snapshot run also used the wrong reference import root. With the actual
+`prototype` root, the component suites and independent adapter checks pass.
+
+**Remaining end-to-end gaps.** #31 accepts an externally supplied export
+digest and PF-001 normalization callback. There is no pinned, independently
+validated bridge from the actual #30 export to those PF-001 revisions and
+records. #31 emits provisional 0.1 receipts and #27 consumes a provisional
+0.1 snapshot with inline receipt members. The actual producer that reopens
+receipt-backed PF-001 records, applies ATLAS 0.2 representative/cutoff rules,
+and feeds exact projected MSE input is not yet available. The independently
+green components do not count as an end-to-end execution.
