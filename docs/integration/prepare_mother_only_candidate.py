@@ -83,7 +83,6 @@ def main():
     dirty = git("status", "--porcelain")
     if current.returncode or current.stdout.strip() != BRANCH or dirty.returncode or dirty.stdout.strip():
         return stamp("REFUSED", "invoke from clean published candidate branch")
-    fetched = git("fetch", "origin", "main", *[ref for _, ref in SOURCES], timeout=180) if False else None
     # git supports ordinary positional refspecs; do not mutate source repositories.
     fetched = command(["git", "fetch", "origin", "main", *[ref for _, ref in SOURCES]], timeout=180)
     if fetched.returncode:
@@ -100,6 +99,15 @@ def main():
         seen = git("rev-parse", "--verify", target)
         if seen.returncode:
             return stamp("HELD_SOURCE_MISSING", name + ": " + target)
+        source_diff = git("diff", "--name-only", "origin/main..." + target, cwd=WORKTREE)
+        if source_diff.returncode:
+            receipt["blocked_at"] = name
+            return stamp("HELD_SOURCE_DIFF_FAILED", "cannot inspect source path scope")
+        forbidden_source = bridge_touched(source_diff.stdout.splitlines())
+        if forbidden_source:
+            receipt["blocked_at"] = name
+            receipt["forbidden_paths"] = forbidden_source
+            return stamp("HELD_BRIDGE_PATH_DETECTED", "source branch excluded before merge")
         merge = git("merge", "--no-ff", "--no-edit", "-m", "Integrate " + name + " for offline candidate", target, cwd=WORKTREE)
         if merge.returncode:
             git("merge", "--abort", cwd=WORKTREE)
