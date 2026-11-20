@@ -5,19 +5,24 @@ from __future__ import annotations
 import argparse
 from contextlib import closing
 import hashlib
-import importlib.util
+from io import BytesIO
 import json
 from pathlib import Path
 import shutil
 import sqlite3
 import subprocess
 import sys
+import tarfile
 from tempfile import TemporaryDirectory
 import unittest
 import uuid
 
-FORGE = "c29f4426c0e598d07ea9b1b5d019c48cd90253c9"
-ATLAS = "928a60b704c342c091eabd25ba41c8eb84d562de"
+FORGE = "d2441050726f1b3f50c928d5f8205d5ea179276d"
+ATLAS = "769a0966da251da4d08633cc7663af9869da70e6"
+ORACLE = "c26180c1cbf78a9d2e1915d0e83241b1d36cdac9"
+PROVENANCE = "089e627bccf93513d52a04c7eb45d27800c0817e"
+REFERENCE = "research/mse/reference-v0.1.0/prototype"
+SOURCE_PINS = dict(atlas=ATLAS, forge=FORGE, oracle=ORACLE, provenance=PROVENANCE)
 CONTRACTS = "docs/mse/integration/contracts"
 MEMBERS = ("custody.sqlite3", "physiology.sqlite3", "original.json")
 LAYOUT = {
@@ -51,8 +56,7 @@ def copy_sqlite(source, target):
 def seal(backup, receipt):
     manifest = {
         "receipt": receipt,
-        "forge": FORGE,
-        "atlas": ATLAS,
+        "source_pins": SOURCE_PINS,
         "members": {name: file_digest(backup / name) for name in MEMBERS},
     }
     (backup / "manifest.json").write_text(json.dumps(manifest))
@@ -60,7 +64,7 @@ def seal(backup, receipt):
 
 def restore(backup, destination, expected_original):
     manifest = json.loads((backup / "manifest.json").read_text())
-    if (manifest["forge"], manifest["atlas"]) != (FORGE, ATLAS):
+    if manifest["source_pins"] != SOURCE_PINS:
         raise ValueError("Unexpected backup source pins")
     if set(manifest["members"]) != set(MEMBERS):
         raise ValueError("Unexpected backup inventory")
@@ -83,7 +87,18 @@ def restore(backup, destination, expected_original):
     return manifest["receipt"]
 
 
-def run_rehearsal(checkout):
+def load_siblings(checkout, directory):
+    for commit, *paths in (
+        (ORACLE, "integrations/healthbridge"),
+        (PROVENANCE, "integrations/mse_snapshot", REFERENCE),
+    ):
+        data = git(checkout, "archive", commit, *paths)
+        with tarfile.open(fileobj=BytesIO(data)) as source:
+            source.extractall(directory, filter="data")
+    sys.path[:0] = [str(directory), str(directory / REFERENCE), str(checkout)]
+
+
+def run_rehearsal(checkout, directory):
     if (
         git(checkout, "rev-parse", "HEAD").decode().strip() != FORGE
         or git(checkout, "status", "--porcelain", "--untracked-files=all").strip()
@@ -95,46 +110,66 @@ def run_rehearsal(checkout):
     vectors = json.loads(
         git(checkout, "show", f"{ATLAS}:{CONTRACTS}/golden-vectors.json")
     )
-    sys.path.insert(0, str(checkout))
+    load_siblings(checkout, directory)
+    from integrations.healthbridge.export import normalize_capture
     from integrations.mse_ingest import RecoveryError, Scope
-    from integrations.mse_ingest.v02 import IngestV02
-
-    path = checkout / "tests/integration/mse_ingest/test_atlas_v02.py"
-    spec = importlib.util.spec_from_file_location("forge_fixture", path)
-    fixture = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(fixture)
+    from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
+    from integrations.mse_snapshot.ledger import replay_ledger_snapshot
+    from mse.contracts import canonical
 
     class PairedRestore(unittest.TestCase):
         def setUp(self):
             temporary = TemporaryDirectory(prefix="mse-paired-restore-")
             self.addCleanup(temporary.cleanup)
-            self.root = Path(temporary.name)
+            self.root = Path(temporary.name).resolve()
             self.primary = self.root / "primary"
             self.backup = self.root / "backup"
             self.backup.mkdir(mode=0o700)
-            self.export = dict(
-                vectors["export"], batch_id="recovery-" + uuid.uuid4().hex
-            )
             self.original = vectors["source_utf8"].encode()
+            self.scope = vectors["snapshot"]["scope"]
+            self.archive_id = vectors["snapshot"]["archive_id"]
+            batch = "recovery-" + uuid.uuid4().hex
+            self.export = normalize_capture(
+                self.original,
+                subject_id=self.scope["subject_id"],
+                source_instance=self.scope["source_instance"],
+                batch_id=batch,
+                capture_id=batch,
+                capture_kind="full_file",
+                exporter_version=vectors["export"]["exporter_version"],
+            )
 
         def service(self, directory):
-            return IngestV02(
+            return ConnectedIngest(
                 directory,
-                archive_id=vectors["receipt"]["archive_id"],
-                scope=Scope(**self.export["scope"]),
+                archive_id=self.archive_id,
+                scope=Scope(**self.scope),
                 schema=schema,
             )
 
-        def ingest(self, service, normalize=None):
-            if normalize is None:
-                normalize = lambda raw, context: fixture.Atlas02Tests.map(
-                    self.export, context
-                )
-            return service.ingest(
+        def ingest(self, service):
+            return service.ingest_export(
                 self.original,
                 self.export,
-                adapter_version="recovery-fixture/1",
-                normalize=normalize,
+                normalizer_version=NORMALIZER_VERSION,
+            )
+
+        def snapshot(self, service, sequence):
+            return service.build_snapshot(
+                measurement_start=vectors["snapshot"]["measurement_start"],
+                measurement_end=vectors["snapshot"]["measurement_end"],
+                knowledge_cutoff_sequence=sequence,
+                normalizer_version=NORMALIZER_VERSION,
+            )
+
+        def replay(self, service, snapshot):
+            return replay_ledger_snapshot(
+                canonical(snapshot).encode(),
+                ledger=service,
+                expected_scope=self.scope,
+                expected_archive_id=self.archive_id,
+                max_bytes=64_000,
+                max_members=128,
             )
 
         def take_backup(self, source, receipt):
@@ -151,13 +186,19 @@ def run_rehearsal(checkout):
         def test_finalized_restore_and_exact_retry(self):
             source = self.service(self.primary)
             first = self.ingest(source)
+            before = self.snapshot(source, first["commit_sequence"])
+            expected = self.replay(source, before)
+            self.assertEqual(expected["epistemic_class"], "derived")
+            self.assertEqual(
+                expected["reference_result"]["active_observation_count"], 1
+            )
+            self.assertEqual(len(expected["lineage"]["deletion_facts"]), 1)
             target, saved = self.take_backup(source, first)
             self.assertEqual(target.verify_receipt(saved), first)
-
-            def unexpected(*args):
-                self.fail("Restored finalized retry must not normalize again")
-
-            self.assertEqual(self.ingest(target, unexpected), first)
+            restored = self.snapshot(target, first["commit_sequence"])
+            self.assertEqual(restored, before)
+            self.assertEqual(self.replay(target, restored), expected)
+            self.assertEqual(self.ingest(target), first)
 
         def test_archive_committed_before_receipt_restore(self):
             class Interrupted(Exception):
@@ -173,15 +214,29 @@ def run_rehearsal(checkout):
                 self.ingest(source)
             pending = source.read_receipt(self.export["batch_id"])
             self.assertEqual(pending["status"], "durably_received")
+            sequence = pending["commit_sequence"]
+            precommit = self.snapshot(source, sequence)
+            self.assertEqual(precommit["observations"], [])
             target, saved = self.take_backup(source, pending)
             self.assertEqual(target.verify_receipt(saved), pending)
+            self.assertEqual(self.snapshot(target, sequence), precommit)
 
-            def unexpected(*args):
-                self.fail("The archived run must be recovered without normalization")
+            def checkpoint(phase):
+                if phase == "archive":
+                    self.fail("The archived run must be recovered without re-commit")
 
-            accepted = self.ingest(target, unexpected)
+            target._checkpoint = checkpoint
+            accepted = self.ingest(target)
             self.assertEqual(accepted["status"], "normalized")
             self.assertEqual(target.verify_receipt(accepted), accepted)
+            restored = self.snapshot(target, accepted["commit_sequence"])
+            self.assertEqual(
+                self.replay(target, restored)["reference_result"][
+                    "active_observation_count"
+                ],
+                1,
+            )
+            self.assertEqual(self.snapshot(target, sequence), precommit)
 
         def test_rehashed_unrelated_original_is_rejected(self):
             source = self.service(self.primary)
@@ -227,4 +282,5 @@ if __name__ == "__main__":
     if args.plan:
         print(json.dumps(LAYOUT, indent=2))
     else:
-        sys.exit(run_rehearsal(args.forge_checkout.resolve()))
+        with TemporaryDirectory(prefix="mse-pinned-source-") as source:
+            sys.exit(run_rehearsal(args.forge_checkout.resolve(), Path(source)))
