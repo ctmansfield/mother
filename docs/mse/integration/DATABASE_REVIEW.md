@@ -1,9 +1,8 @@
 # MSE database readiness for current HealthArchive captures
 
 **Disposition: NOT READY.** PF-001 SQLite is the source-backed archive for the
-local synthetic trial. The deployed database, durable custody location, intake
-route, service identity, capacity and recovery are not established by this
-review. No live destination is selected. [Readiness directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041665721)
+local synthetic trial. No deployed MSE archive, reserved custody location, intake route,
+writer identity or verified recovery was established. No live destination is selected. [Readiness directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041665721)
 
 ## Evidence and scope
 
@@ -14,20 +13,20 @@ review. No live destination is selected. [Readiness directive](https://github.co
 - Structural evidence comes from MOTHER main
   `c05f38096406965496d7d4a09edf4b3575235311`, open PF-001 #18
   `b4e70b7123689ec164ba09e2974645ae36b184a2`, FORGE #31
-  `b32f30d0b2e42ce16ae1b21363feaef2006e15f7`, and ATLAS's provisional 0.2
+  `b32f30d0b2e42ce16ae1b21363feaef2006e15f7`, the 0.2 follow-up
+  `c29f4426c0e598d07ea9b1b5d019c48cd90253c9`, and ATLAS's provisional 0.2
   candidate `928a60b704c342c091eabd25ba41c8eb84d562de`. [PF-001 SQLite migration](https://github.com/ctmansfield/mother/blob/b4e70b7123689ec164ba09e2974645ae36b184a2/mother/physiology/migrations/0001_archive.sql) · [Custody harness](https://github.com/ctmansfield/mother/pull/31) · [ATLAS 0.2](https://github.com/ctmansfield/mother/pull/23#issuecomment-7041661287)
-- Source review only. No host or catalog query, physiological row/file read,
-  migration or schema change was performed for this review. Sanitized PHOENIX
-  runtime catalog evidence is pending. Engine/version, schema visibility,
-  durable paths, capacity, service identity, route and backup/restore remain
-  unverified here.
+- FORGE inspected source and the sanitized PHOENIX catalog report. PHOENIX
+  observed the established environment on November 21 at 00:12–00:13 Guam.
+  FORGE did not query the host, catalog or physiological rows/files and did
+  not execute DDL. [PHOENIX audit at exact head](https://github.com/ctmansfield/mother/blob/b05acb390557152a6e26ad5f74b8c1f47696e174/docs/mse/integration/DESTINATION_READINESS.md)
 
 ## Current data and source structures
 
 | Data or boundary | Existing representation and constraints | Gap for the first complete slice |
 | --- | --- | --- |
 | Original HealthArchive JSON | PF-001 `raw_artifacts` stores exact bytes as a BLOB keyed by SHA-256 with media type and creation time. The archive write verifies the digest before insertion. `source_revisions.artifact_sha256` optionally references it. #31 retains the original in its separate custody journal before the PF-001 transaction. | Preserve byte count, source schema, capture/export version and stable capture locator. A repeated fact can occur in several artifacts. A revision's original artifact FK cannot enumerate later sightings or their JSON pointers. |
-| Scoped batch and custody | #31 `deliveries` has a primary key over canonical scope and batch ID, unique receipt ID and optional unique commit sequence. `commits` allocates final sequences. Exact bytes and export digest are bound on retry. PF-001 `import_runs` carries subject and correlation in request JSON and state in a checked column. | Bind trusted archive identity and actual canonical export digest. Version the journal schema and persist explicit state/timestamp/sequence rules. Current receipt is 0.1, normalized only. There is no cross-database FK. Reconciliation must prove exact bindings and report missing or ambiguous members. |
+| Scoped batch and custody | #31 `deliveries` has a primary key over canonical scope and batch ID, unique receipt ID and optional unique commit sequence. `commits` allocates final sequences. Exact bytes and export digest are bound on retry. PF-001 `import_runs` carries subject and correlation in request JSON and state in a checked column. | Bind trusted archive identity and actual canonical export digest. Version the journal schema and persist explicit state/timestamp/sequence rules. The 0.2 follow-up adds provisional custody, normalization and quarantine stages. The actual ORACLE adapter binding and complete snapshot producer remain open. There is no cross-database FK. Reconciliation must prove exact bindings and report missing or ambiguous members. |
 | UUID, source and intervals | `source_revisions` stores native ID, source namespace, collection, logical source key, revision hash, original canonical JSON, event start/end and import-run FK. Unique namespace/collection/key/revision hash allows multiple revisions. `idx_revision_source` and `idx_revision_time` support key and start-time access. #31 derives the PF-001 namespace from the complete scope. | Validate canonical UUID, interval and scope at the adapter boundary. Bind exact source facts with original lexemes and stable digests. Whole-batch quarantine of unequal upserts under one scoped UUID needs an explicit policy check; the existing SQL unique key permits those rows. |
 | HR and SDNN, source/bundle and uncertainty | PF-001 `normalized_records` has a record ID primary key, revision FK, kind, JSON and processing version, with `idx_record_revision`. JSON Schema checks records. Retain HR bpm, SDNN ms, source name, bundle and supported channel while keeping the raw numeric tokens in custody and locator lineage. | Add a reviewed adapter mapping and processing digest. Keep HR derivation unknown unless qualified and SDNN vendor-derived. Preserve source/bundle, original value/unit, conversion loss, device/calibration/source-availability unknowns. Do not use a default measured classification or fill unknown metadata. |
 | Separate clocks and opaque anchors | PF-001 separates biological start/end, optional source availability, first seen, ingested and run completion. `run_revisions.observed_at` records sightings. #31 records first MOTHER receipt separately. PF-001 `checkpoints` requires a completed run through the archive API. | Retain collector receipt separately from MOTHER receipt and commit. Bind per-channel anchor digests to capture and scope in metadata. Backfill markers, anchor presence and a receipt provide no completeness or server checkpoint authority. |
@@ -77,9 +76,20 @@ archive would require a separately reviewed mapping and validation of transactio
 semantics, identities, access boundaries, backups and restore. The source review
 cannot justify a port or a production SQLite choice. [Application migrations](https://github.com/ctmansfield/mother/tree/c05f38096406965496d7d4a09edf4b3575235311/db/migrations) · [Operations migrations](https://github.com/ctmansfield/mother/tree/c05f38096406965496d7d4a09edf4b3575235311/ops/migrations)
 
-**Next owners.** PHOENIX supplies sanitized catalog and persistence evidence,
-including engine and visible schema/object presence, service and storage
-ownership, capacity, private route and backup/restore status. GADGET and SENTINEL
-reconcile those facts with this document and the synthetic acceptance receipts.
-A readiness decision requires a selected destination and a concrete recovery
-and access plan.
+PHOENIX observed locally available native PostgreSQL 16.15 on loopback with
+SSL configured. Its bounded catalog returned only the administrative
+database among connectable non-template databases. No visible MOTHER
+physiological schema or catalog counterpart for PF-001, custody receipts or
+snapshot lineage was identified. The earlier container was exited. This is
+evidence about the sampled catalog, with other unobserved environments outside
+scope. Local ext4 is a candidate for protected single-writer storage after
+allocation and failure-domain review. Available capacity is not reserved.
+The repository's NFS mount has unqualified SQLite lock and failure behavior.
+The audit found no verified ingestion route, dedicated writer identity or
+matching active backup/restore evidence in scope. [Sanitized catalog and persistence observations](https://github.com/ctmansfield/mother/pull/33)
+
+**Next owners.** PHOENIX and the storage custodian provide the concrete private
+allocation and protected identity, quota, retention and coherent recovery
+proposal. GADGET and SENTINEL reconcile this source mapping and the sanitized
+inventory with combined synthetic acceptance, paired backup/restore and the
+owner's destination decision. The current dispositions remain NOT READY.
