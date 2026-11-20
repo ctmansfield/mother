@@ -82,3 +82,22 @@ All successful suites had zero failures, errors or skips. #25/#27/#29 ran under 
 - **Destination remains NOT READY.** Reviewed sanitized [PHOENIX inventory #33](https://github.com/ctmansfield/mother/pull/33) at `b05acb3` and [FORGE schema assessment #32](https://github.com/ctmansfield/mother/pull/32) at `5558ccb`. Reported local PostgreSQL availability and filesystem capacity are consistent with the sampled catalog and source assessment. A dedicated intake/identity, reserved protected allocation, compatible schema and coherent restored custody/archive are unverified. The audit supplied neither write acceptance nor a restore of the proposed destination. No direct host or physiological-data access in this independent review.
 
 Next evidence is ATLAS’s exact final candidate, FORGE’s connected and file-boundary head, NICKY’s actual pipeline acceptance, and PHOENIX’s paired restore.
+
+## Revision 4 connected-candidate checkpoint
+
+[Revision 4](https://github.com/ctmansfield/mother/pull/23#issuecomment-7042142491). **GO for final contract freeze at ATLAS #28 `769a0966da251da4d08633cc7663af9869da70e6`.** The contract selects the intact lowest numeric reading-index payload, preserves all locators and records alternate-payload loss. It retains finite nonpositive metrics as signed source facts and excludes them from normalized observations/native replay. Three exact edge exports passed independently executed Draft 2020-12 checks and reproduced raw/export hashes. ORACLE #30 `c26180c` produced the exact repeat and signed-zero exports, but rejected the valid negative input with a draft-value-schema error. This is a remaining implementation mismatch against the pinned contract.
+
+**Connected pipeline: qualified partial GO, final Stage B HOLD.** The detached PF-001 `b4e70b7` assembly kept the reference tree unchanged. Python 3.12.14 results:
+
+| Exact head | Independently observed |
+| --- | --- |
+| FORGE #31 `d244105` | 16 passed, including four connected cases, zero failures/errors/skips. |
+| ORACLE #30 `c26180c` | 15 passed, two mapper-dependent skips. Initial invocation had three skips before fixture path was supplied. |
+| PROVENANCE #27 `089e627` | 17 standalone passed and two opt-in connected passed, including rehashed forged/incomplete snapshot rejection and exact reopened lineage. |
+| NICKY #25 `13d2e19` | 23 passed, including real adapter-to-ledger custody and failure cases. This head's custody test deliberately stops before PF-001 mapping. |
+
+The first NICKY and opt-in PROVENANCE invocations produced three and two setup errors because stock macOS temporary paths arrived through a symlinked parent. A private canonical TMPDIR resolved the test environment without weakening the path guard. The final NICKY public-entry pipeline suite and exact adapter nonpositive parity remain pending.
+
+**FORGE file boundary: GO for the documented trusted single-UID synthetic root.** Seven independent checks passed for parent alias and write-mode rejection, existing file permissions, a direct sidecar symlink, FIFO, directory and simulated foreign-owner metadata. No file was opened after failed validation. Path checks are scoped to the reviewed caller-owned, exclusive local directory contract.
+
+**Storage: local quiescent restore smoke GO. Destination NOT READY.** PHOENIX #29 `4d76cbb` passed four paired restore cases using its exact pinned older FORGE `c29f442` fixture-mapper dependency, zero failures/errors/skips. Separately, I used current `d244105` with the connected capture and reference: backed up both quiescent SQLite stores, checked both copy integrity results, reopened and verified the original receipt and replayed the exact snapshot to identical derived output. This is one local connected restore smoke check. The PHOENIX current connected recovery harness and interrupted paired fault qualification on current heads remain pending. No destination provisioning, intake or operational restore has been observed.
