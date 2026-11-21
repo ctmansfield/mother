@@ -281,14 +281,14 @@ class BPStore:
         with self.connect(write=True) as db:
             self.writable()
             previous = db.execute(
-                "SELECT digest,receipt,witness,custody_at FROM pages WHERE stream=? AND seq=?",
+                "SELECT digest,receipt,witness,custody_at,custodian_proof FROM pages WHERE stream=? AND seq=?",
                 (stream, seq),
             ).fetchone()
             if previous is not None:
                 if previous[0] != pin:
                     raise VaultConflict("BP page identity conflict")
                 if previous[2] is None:
-                    if previous[3] is None:
+                    if previous[3] is None or previous[4] is not None:
                         raise BPUnavailable("BP page requires sealed reconciliation")
                     return 202, self.pending(stream, seq, pin, len(raw))
                 return 200, json.loads(previous[1])
@@ -385,14 +385,14 @@ class BPStore:
     def pending_lookup(self, stream, seq):
         with self.connect() as db:
             row = db.execute(
-                "SELECT digest,raw_size,custody_at FROM pages WHERE stream=? AND seq=?",
+                "SELECT digest,raw_size,custody_at,custodian_proof FROM pages WHERE stream=? AND seq=?",
                 (stream, seq),
             ).fetchone()
         if not row:
             raise KeyError("BP page absent")
         self.writable()
-        if not row[2]:
-            raise BPUnavailable("BP custody observation missing")
+        if not row[2] or row[3] is not None:
+            raise BPUnavailable("BP page requires sealed reconciliation")
         return self.pending(stream, seq, row[0], row[1])
 
     def _raw_receipt(self, stream, seq, cipher):
@@ -447,13 +447,14 @@ class BPStore:
     def custody(self, stream, seq):
         with self.connect() as db:
             witness, receipt, cipher = self._custody(db, stream, seq)
-            if (
-                db.execute(
-                    "SELECT witness FROM pages WHERE stream=? AND seq=?", (stream, seq)
-                ).fetchone()[0]
-                is None
-            ):
+            published, proof = db.execute(
+                "SELECT witness,custodian_proof FROM pages WHERE stream=? AND seq=?",
+                (stream, seq),
+            ).fetchone()
+            if published is None:
                 self.writable()
+                if proof is not None:
+                    raise BPUnavailable("BP page requires sealed reconciliation")
         return witness, receipt, cipher
 
     def commit(self, stream, seq, statement, principal, raw_witness):

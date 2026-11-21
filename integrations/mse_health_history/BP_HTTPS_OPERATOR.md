@@ -112,7 +112,17 @@ accepted. Unwitnessed rows remain sealed and absent from operator reads.
 Restart cannot synthesize a witness. A late proof-only commit can finish
 a decision witnessed before cutoff. It adds no original, facts or sequence.
 A staged outstanding page blocks later uploads for restricted reconciliation.
-No recovery by deleting a page or advancing a phone checkpoint.
+A durable custodian proof without a publication witness is an indeterminate
+hold. During the transport window, exact phone retries and receipt lookups,
+along with custodian reads and commits, return HTTP 503 with
+`{"error":"indeterminate"}`. After cutoff, unaccepted pages return HTTP 403.
+Keep the protected phone queue and checkpoint, ciphertext, receipts, proof,
+and database with its journal intact. Escalate to the archive operator for
+read-only reconciliation by archive, enrollment, stream, sequence, and
+digest. Only a persisted, valid, in-window publication witness establishes
+acceptance. A proof alone never advances a checkpoint or authorizes repair.
+For a lost response after publication, the scoped receipt lookup returns the
+same durable receipt, including after upload cutoff.
 
 Pin [upstream age v1.3.2](https://github.com/FiloSottile/age/releases/tag/v1.3.2).
 Verified Linux release archive and executable SHA-256 values are below.

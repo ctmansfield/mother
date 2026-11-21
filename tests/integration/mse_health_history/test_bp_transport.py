@@ -430,3 +430,96 @@ class BPTransportTests(unittest.TestCase):
             self.open().receipt("correlation", 1)
         self.assertEqual(self.open().export("correlation", 1, 1)["rows"], [])
         self.assertEqual(self.request("GET", "/pages/1", "receipt")[0], 403)
+
+    def test_crash_after_proof_commit_is_indeterminate_across_reopen(self):
+        class CrashAfterProof(BPStore):
+            @contextmanager
+            def connect(self, *, write=False):
+                with super().connect(write=write) as db:
+                    yield db
+                if write:
+                    raise OSError("synthetic crash before publication observation")
+
+        self.serve(self.store)
+        body = self.page()
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
+        proof = self.proof(body)
+        self.server.store = self.open(CrashAfterProof)
+        self.assertEqual(
+            self.request(
+                "PUT", "/pages/1/custody", None, proof, client_cert=self.custodian
+            )[0],
+            503,
+        )
+        self.server.store = self.open()
+        headers = {"client_cert": self.custodian}
+        indeterminate = (503, b'{"error":"indeterminate"}')
+        self.assertEqual(self.request("GET", "/pages/1", "receipt"), indeterminate)
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body), indeterminate)
+        self.assertEqual(
+            self.request("GET", "/pages/1/custody", None, **headers), indeterminate
+        )
+        self.assertEqual(
+            self.request("PUT", "/pages/1/custody", None, proof, **headers),
+            indeterminate,
+        )
+        with self.assertRaises(KeyError):
+            self.open().receipt("correlation", 1)
+        self.assertEqual(self.open().export("correlation", 1, 1)["rows"], [])
+        with self.open().connect() as db:
+            self.assertEqual(
+                db.execute(
+                    "SELECT COUNT(*) FROM pages WHERE witness IS NULL AND custodian_proof IS NOT NULL"
+                ).fetchone(),
+                (1,),
+            )
+        self.now = END
+        for method, path, role, payload, options in (
+            ("GET", "/pages/1", "receipt", None, {}),
+            ("PUT", "/pages/1", "upload", body, {}),
+            ("GET", "/pages/1/custody", None, None, headers),
+            ("PUT", "/pages/1/custody", None, proof, headers),
+        ):
+            self.assertEqual(
+                self.request(method, path, role, payload, **options)[0], 403
+            )
+
+    def test_lost_final_response_reopens_same_durable_receipt_and_rows(self):
+        self.serve(self.store)
+        body = self.page()
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
+        proof = self.proof(body)
+        base = self.server.RequestHandlerClass
+
+        class LoseResponse(base):
+            def reply(self, code, content):
+                if (
+                    code == 200
+                    and self.command == "PUT"
+                    and self.path.endswith("/custody")
+                ):
+                    self.close_connection = True
+                    return
+                super().reply(code, content)
+
+        self.server.RequestHandlerClass = LoseResponse
+        with self.assertRaises(http.client.RemoteDisconnected):
+            self.request(
+                "PUT", "/pages/1/custody", None, proof, client_cert=self.custodian
+            )
+        self.server.RequestHandlerClass = base
+        self.server.store = self.open()
+        committed = self.request("GET", "/pages/1", "receipt")
+        self.assertEqual(committed[0], 200)
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body), committed)
+        self.assertEqual(
+            self.request(
+                "PUT", "/pages/1/custody", None, proof, client_cert=self.custodian
+            ),
+            committed,
+        )
+        self.assertEqual(len(self.open().export("correlation", 1, 1)["rows"]), 1)
+        with self.open().connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM pages").fetchone(), (1,))
+        self.now = END
+        self.assertEqual(self.request("GET", "/pages/1", "receipt"), committed)
