@@ -1,0 +1,133 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-LIVE-PILOT-20261121-05",
+  "task_revision": "1",
+  "observed_at": "2026-11-21T04:21:32Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Directive and final owning reports read back. Device profile removal is user-confirmed."
+  },
+  "goal": "Install and activate a private prospective 48-hour selected HealthKit archival pilot.",
+  "scope": [
+    "Reviewed live client and endpoint, safe in-place phone install, prospective 14-type pilot, retained archive and finite cutoff."
+  ],
+  "acceptance": [
+    "Independent source/runtime readiness, preserved collector, same phone/server start-end, actual first live receipt/original/view/export reconciliation and subsequent status."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Implement missing live integration, scoped deployment/credentials, safe phone install and 48-hour selected HealthKit transfer to private archive VM with archival retention."
+    ],
+    "not_authorized": [
+      "Public exposure, historical backfill, LLM forwarding, main merge, unrelated VM/IDS changes."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Backups/restores deferred. Preserve accepted synthetic evidence and collector. No health values or secrets in shared reports. Actual start is unset until verified readiness."
+  ],
+  "instruction_binding": {
+    "id": "MSE-LIVE-PILOT-20261121-05",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057163283",
+    "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "LIVE-PILOT-DISPATCH-R1",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-LIVE-PILOT-20261121-05",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057163283",
+      "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002"
+    },
+    "source": "source",
+    "tests_performed": [
+      "Current owning results and source heads reviewed; live readiness tests pending."
+    ],
+    "limitations": [
+      "Offline candidate is not a working live endpoint; no install/start/real upload claimed."
+    ],
+    "requested_decision": "Only genuine native user steps when ready.",
+    "next_action": "#next_action"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-LIVE-PILOT-20261121-05",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057163283",
+      "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "48h-live-archival",
+      "value": "Prospective 48-hour selected-data transfer; accepted archive retained without age purge.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit user launch authorization."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "IN_PROGRESS",
+      "detail": "ORACLE and FORGE wiring live sync to selected archive.",
+      "source": "source"
+    },
+    "test": {
+      "status": "PENDING",
+      "detail": "Independent live transport/window/role readiness pending.",
+      "source": "source"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge authorized.",
+      "source": "source"
+    },
+    "deploy": {
+      "status": "STAGING",
+      "detail": "PHOENIX sole operator; live endpoint not qualified.",
+      "source": "source"
+    },
+    "runtime": {
+      "status": "NOT_STARTED",
+      "detail": "Actual start/cutoff unset; no live upload claimed.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Actual ready product/package/TLS identities, native permissions and physical background behavior; start/cutoff not set."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "ORACLE signed live client, FORGE live package, PHOENIX runtime, independent SENTINEL/PROVENANCE readiness, NICKY phone preservation."
+  ],
+  "next_action": {
+    "action": "Finish live integration and independent readiness, install safely, set exact shared window, activate and reconcile first real selected batch.",
+    "role": "GADGET and existing owners"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/live-pilot-source-r1.json",
+      "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact directive readback.",
+        "result": "Published directive visible.",
+        "limitations": [
+          "No execution or recipient acknowledgement implied."
+        ],
+        "observed_at": "2026-11-21T04:21:32Z"
+      }
+    }
+  }
+}
