@@ -1,76 +1,86 @@
-# Synthetic native BP transfer to a separate guest store
+# Synthetic native BP guest qualification
 
-This source candidate is based on native importer PR #51 at
-`91cc2cf02f2dd9cc012203bebc629324a9aa8f2e`. It uses only synthetic
-enrollment and source names. Its purpose is `mother-bp-review`.
-The destination is a fresh private guest database under a dedicated
-non-login service account, with an independently granted quota and
-listener. The existing 8446, 8447 and 8448 listeners are outside this
-candidate. Guest environment qualification and an independent schema
-review are pending.
+This candidate implements ATLAS r2 as a separate, private mutual TLS
+service. It accepts a single pinned synthetic enrollment, source namespace
+and import per fresh store. It leaves 8446, 8447 and 8448 outside this
+service. Use the native custodian runner and a separately approved real
+environment before any proposal to move real data.
 
-## Sender and payload
+## Mac projection and replay
 
-On the protected Mac, reopen the authenticated native import catalog and
-call `typed_vm.project(catalog, original_sha256)`. The function accepts
-only a native original with the paired ciphertext custody receipt.
-Retain the exact projected bytes in protected custody until reconciliation.
-The guest receives a canonical JSON envelope of at most 4 MiB with at
-most 10,000 explicitly paired native BP occurrences. Version 0.1 fields
-are enrollment, source instance, purpose, opaque native artifact receipt
-ID and sorted typed rows. Each row contains the member number, top-level
-ordinal, protected normalized revision, UTC event-end and two canonical
-mmHg decimals. Equal clocks and measurements preserve distinct source
-occurrences. The projection describes the artifact's paired sightings,
-whose semantics are distinct from a reconciled current view across native
-and API sources. Non-BP families, standalone or ambiguous measurements,
-raw member contents, native identifiers, paths, source clock strings,
-original ZIP, age identity and private provenance key stay off the guest.
+The protected Mac reopens the exact authenticated native catalog.
+`typed_vm.project` requires a private 32-byte mapping key and generates
+canonical typed batches plus a terminal manifest. Its namespace is keyed
+to the enrollment and source, and logical and component references are
+scoped to the exact export. It carries paired, incomplete, ambiguous and
+standalone BP sightings. It emits no deletion from an XML omission.
+The synthetic sink accepts deletion only for a separately pinned target.
+Coordinates, original names and identifiers, original strings, ZIP,
+ciphertext, age identity and mapping or provenance keys stay on the Mac.
 
-## Guest and reconciliation
+Persist the exact batch bytes in approved protected storage before send.
+The API accepts sequential PUTs at
+`/v1/native-bp/stores/{store_id}/enrollments/{enrollment_id}/imports/{import_ref}/batches/{batch_seq}`.
+`TypedClient.put` sends the RFC content digest and verifies the complete
+returned receipt. Every nonterminal batch carries at most 128 operations
+and 1 MiB. The empty final batch binds the artifact and member inventory,
+event bounds, previous digest, batch and byte totals, upsert and deletion
+totals and normalizer. Source occurrence and quarantine counts are
+custodian assertions. The sink verifies accepted batch totals and closes
+the import in the same durable SQLite transaction as the terminal receipt.
 
-Configure a new private guest address and listener port. The protected
-JSON config has fields `bind`, `port`, `db`, `enrollment`,
-`source_instance`, `artifact_receipt`, `certificate`, `key`, `client_ca`,
-`grants`, `start`, `end` and `snapshot`. Use an exclusive private database
-directory. The two grants are `writer` and `reader`, each containing
-`[client_certificate_der_sha256, expires_at_utc]`. The pair of snapshot
-bounds and all clocks use canonical UTC with six fractional digits.
-Pin the artifact receipt from the private Mac catalog out of band.
-Provision a dedicated client CA and distinct leaf keys and approve the
-guest server CA and hostname before transfer.
+Use `TypedClient.receipt` with the independent receipt-reader certificate
+after lost or indeterminate responses and verify the returned receipt
+with the exact retained batch bytes. First acceptance is 201 and exact
+in-lease replay is 200. Sequence, predecessor and immutable byte
+conflicts are 409. Before the terminal receipt commits the snapshot is
+absent. A terminal receipt can still be read after the writer lease
+closes, within the receipt reader's separate lease.
+
+## PHOENIX guest handoff
+
+Provision a fresh private guest address and dedicated listener port,
+non-login account, encrypted storage and dedicated quota. Verify this
+environment independently. Pin the exact reviewed source package and
+Python runtime, the store digest and namespace scopes, trust roots,
+hostname and finite writer, receipt-reader and purpose grants. Use
+dedicated TLS keys and a separately controlled private server trust root.
+Verify volume and journal placement, reserved space, resource ceilings and
+denials before any authorized guest execution.
+
+The protected config has `bind`, `port`, `db`, `scope`, `bounds`,
+`artifact`, `inventory`, `max_batches`, `max_bytes`, `admitted_deletions`,
+`certificate`, `key`, `client_ca`, `grants`, `start`, `end` and
+`snapshots`. The two-element bounds and all clocks use UTC with six
+fractional digits. The artifact and inventory refs come from the terminal
+manifest and the separately verified custody ledger. The grant map
+contains `writer`, `receipt` and the authorized purposes. Each grant
+contains a distinct `[client_certificate_der_sha256, expires_at_utc]`
+pair. A snapshot descriptor binds a purpose-specific subject, snapshot
+ID, exact terminal receipt ID, projection revision
+`native-bp-purpose-0_1` and an event interval within enrollment. Set the descriptor’s
+`max_rows` and `max_bytes` inside the service caps.
 
 The synthetic entry points are
 `python -B -m integrations.mse_health_history.typed_vm_https init CONFIG`
 and
 `python -B -m integrations.mse_health_history.typed_vm_https serve CONFIG`.
-Use `TypedClient` with a hostname-verifying TLS context and the assigned
-client certificate. Its `put(raw)` targets
-`/v1/native-typed/{enrollment}/mother-bp-review/projection`. The writer can
-submit only the pinned artifact and has a finite lease. The guest commits
-all typed rows and one receipt together in a FULL-synchronous SQLite
-transaction. New acceptance returns 201, exact replay returns the same
-receipt with 200, and different canonical contents at the pinned artifact
-return 409. An incomplete transaction has no visible receipt or rows.
+Use the dedicated purpose reader to fetch a fixed descriptor with
+`TypedClient.snapshot`. The store opens SQLite read-only, gates on the
+terminal receipt, suppresses conflicting revisions and admitted
+tombstones, excludes standalone and incomplete pairs, and returns a
+purpose-scoped subject with 15-minute UTC buckets and mmHg pairs.
+Independently record the terminal binding, snapshot count and canonical
+payload digest. Test all role denials and reopen the guest process before
+activation.
 
-On a lost response, the distinct reader calls `receipt()` and verifies
-the returned receipt against the retained bytes with `verify_receipt`.
-The receipt binds schema, purpose, enrollment, source, artifact, projection
-digest, bytes and pair count. Absent readback permits exact replay only
-during the authorized writer lease. Conflict, TLS failure or indeterminate
-storage results call for operator reconciliation with the original custody
-and guest state preserved. The reader may query `read(start, end)` within
-its configured UTC interval using its time-limited certificate grant.
-Queries open SQLite read-only and return only event-end, mmHg pairs and
-the binding receipt ID. Guest snapshots contain sensitive time and
-physiology and require protected consumer custody.
+## Review status
 
-## Qualification boundaries
-
-Synthetic loopback qualification exercises the real mTLS path into a fresh
-database, lost final response, reopen, exact replay, conflict, role denial,
-cutoffs and the read-only BP query. It uses the authenticated fabricated ZIP
-fixture from the native importer. A private guest source pin, isolated service
-identity, storage protection, quota/reserve, TLS/lease controls and approved
-environment must be independently verified before guest execution with any
-real input. Keep backup and restore work deferred.
+The synthetic loopback suite covers authenticated import, role and scope
+denials, content digest, sequence and manifest conflict, no visibility
+before terminal, rollback, lost response, exact replay, expiry,
+tombstone suppression and reopened read-only output. The target VM has
+yet to be exercised. Independent reviewers must resolve physical child
+ordinal mapping from normalized component slots before claiming complete
+child lineage. Real-data enablement and backup/restore are outside this
+candidate.

@@ -1,5 +1,6 @@
-"""Finite private mutual TLS transport for synthetic native BP qualification."""
+"""Finite private mutual TLS transport for synthetic ATLAS r2 qualification."""
 
+from base64 import b64encode
 from contextlib import closing
 from hashlib import sha256
 from hmac import compare_digest
@@ -10,57 +11,113 @@ import json
 import re
 import sqlite3
 import ssl
-from urllib.parse import unquote, urlencode
 
 from .bp_server import Clock
-from .blood_pressure import source_time
-from .typed_vm import Conflict, MAX_BYTES, PIN, PURPOSE, encoded
+from .typed_vm import (
+    Capacity,
+    Conflict,
+    MAX_BYTES,
+    MAX_ROWS,
+    PIN,
+    PROJECTION_REVISION,
+    PURPOSES,
+    ScopeDenied,
+    batch_receipt,
+    encoded,
+    is_ref,
+    require,
+    valid_clock,
+)
 from .vault_server import PRIVATE
+
+DESCRIPTOR = {
+    "snapshot_id",
+    "terminal_receipt",
+    "purpose",
+    "subject",
+    "start",
+    "end",
+    "projection_revision",
+    "max_rows",
+    "max_bytes",
+}
 
 
 class Closed(ValueError):
     pass
 
 
+def content_digest(raw):
+    return "sha-256=:" + b64encode(sha256(raw).digest()).decode("ascii") + ":"
+
+
+def routes(scope):
+    root = f"/v1/native-bp/stores/{scope['store_id']}"
+    return root, (
+        f"{root}/enrollments/{scope['enrollment_id']}/imports/{scope['import_ref']}/batches/"
+    )
+
+
 class TypedServer(HTTPServer):
     def __init__(
-        self, address, store, context, grants, start, end, *, snapshot, clock=None
+        self, address, store, context, grants, start, end, *, snapshots, clock=None
     ):
         host, port = address
-        if (
-            port in (8446, 8447, 8448)
-            or not any(IPv4Address(host) in network for network in PRIVATE)
-            or context.verify_mode != ssl.CERT_REQUIRED
-            or context.minimum_version < ssl.TLSVersion.TLSv1_2
-        ):
-            raise ValueError("dedicated private mutual TLS listener required")
-        if (
-            set(grants) != {"writer", "reader"}
-            or not all(PIN.fullmatch(pin) for pin, _ in grants.values())
-            or len({pin for pin, _ in grants.values()}) != 2
-            or not source_time(start) == start < end == source_time(end)
-            or any(
-                source_time(until) != until or until <= start
-                for _, until in grants.values()
+        require(
+            port not in (8446, 8447, 8448)
+            and any(IPv4Address(host) in network for network in PRIVATE)
+            and context.verify_mode == ssl.CERT_REQUIRED
+            and context.minimum_version >= ssl.TLSVersion.TLSv1_2,
+            "dedicated private mutual TLS listener required",
+        )
+        descriptors = {}
+        subjects = {}
+        for desc in snapshots:
+            require(
+                set(desc) == DESCRIPTOR
+                and desc["purpose"] in PURPOSES
+                and is_ref(desc["snapshot_id"])
+                and desc["projection_revision"] == PROJECTION_REVISION
+                and is_ref(desc["subject"])
+                and PIN.fullmatch(desc["terminal_receipt"])
+                and type(desc["max_rows"]) is int
+                and 1 <= desc["max_rows"] <= MAX_ROWS
+                and type(desc["max_bytes"]) is int
+                and 1 <= desc["max_bytes"] <= MAX_BYTES
+                and valid_clock(desc["start"])
+                and valid_clock(desc["end"])
+                and store.bounds[0] <= desc["start"] < desc["end"] <= store.bounds[1],
+                "invalid purpose snapshot descriptor",
             )
-            or grants["writer"][1] > end
-        ):
-            raise ValueError("invalid independent scoped grants or lease")
-        sample_start, sample_end = snapshot
-        if (
-            not source_time(sample_start)
-            == sample_start
-            < sample_end
-            == source_time(sample_end)
-        ):
-            raise ValueError("invalid qualified snapshot interval")
-        self.snapshot = snapshot
-        self.context = context
-        self.store = store
-        self.grants = dict(grants)
-        self.start, self.end = start, end
+            key = (desc["purpose"], desc["snapshot_id"])
+            require(key not in descriptors, "duplicate snapshot identity")
+            if subjects.setdefault(desc["subject"], desc["purpose"]) != desc["purpose"]:
+                raise ValueError("snapshot subject reused across purposes")
+            descriptors[key] = dict(desc)
+        require(
+            set(grants)
+            == {"writer", "receipt", *(purpose for purpose, _ in descriptors)}
+            and all(
+                PIN.fullmatch(pin) and valid_clock(until) and start < until
+                for pin, until in grants.values()
+            )
+            and len({pin for pin, _ in grants.values()}) == len(grants)
+            and valid_clock(start)
+            and valid_clock(end)
+            and start < end
+            and grants["writer"][1] <= end,
+            "invalid independent scoped grants or lease",
+        )
+        self.context, self.store = context, store
+        self.grants, self.snapshots = dict(grants), descriptors
+        self.start = start
         self.clock = clock if clock is not None else Clock()
-        self.route = f"/v1/native-typed/{store.scope[0]}/{PURPOSE}"
+        root, batch = routes(store.scope)
+        self.batch_route = re.compile(re.escape(batch) + r"([1-9][0-9]{0,8})")
+        self.snapshot_route = re.compile(
+            re.escape(root)
+            + r"/purposes/([A-Za-z0-9_-]{1,96})/snapshots/([A-Za-z0-9_-]{1,96})"
+        )
         super().__init__(address, TypedHandler)
 
     def get_request(self):
@@ -72,9 +129,9 @@ class TypedServer(HTTPServer):
             sock.close()
             raise
 
-    def writable(self):
-        if not self.start <= self.clock() < self.grants["writer"][1]:
-            raise Closed("write lease closed")
+    def check_lease(self, role):
+        if not self.start <= self.clock() < self.grants[role][1]:
+            raise Closed("role lease closed")
 
 
 class TypedHandler(BaseHTTPRequestHandler):
@@ -89,21 +146,28 @@ class TypedHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def error(self, status, value):
+        self.reply(status, encoded({"error": value}))
+
     def run_operation(self, role, operation):
-        pin, until = self.server.grants[role]
         peer = self.connection.getpeercert(binary_form=True)
-        if not peer or not compare_digest(sha256(peer).hexdigest(), pin):
-            self.reply(403, encoded({"error": "denied"}))
+        pin = sha256(peer).hexdigest() if peer else ""
+        current = self.server.grants.get(role)
+        if current is None or not compare_digest(current[0], pin):
+            known = any(
+                compare_digest(other, pin) for other, _ in self.server.grants.values()
+            )
+            self.error(403 if known else 401, "denied")
             return
         try:
-            now = self.server.clock()
-            if not self.server.start <= now < until:
-                raise Closed("role lease closed")
+            self.server.check_lease(role)
             result = operation()
-        except Closed:
-            result = 403, encoded({"error": "closed"})
+        except (Closed, ScopeDenied):
+            result = 403, encoded({"error": "denied"})
         except Conflict:
             result = 409, encoded({"error": "conflict"})
+        except Capacity:
+            result = 413, encoded({"error": "capacity"})
         except KeyError:
             result = 404, encoded({"error": "absent"})
         except (TypeError, ValueError, OverflowError):
@@ -113,107 +177,115 @@ class TypedHandler(BaseHTTPRequestHandler):
         self.reply(*result)
 
     def do_PUT(self):
-        if self.path != self.server.route + "/projection":
-            self.reply(404, encoded({"error": "absent"}))
+        match = self.server.batch_route.fullmatch(self.path)
+        if not match:
+            self.error(404, "absent")
             return
 
         def ingest():
-            self.server.writable()
             sizes = self.headers.get_all("Content-Length", [])
-            if (
-                self.headers.get("Transfer-Encoding") is not None
-                or self.headers.get("Content-Encoding") is not None
-                or self.headers.get_all("Content-Type", []) != ["application/json"]
-                or len(sizes) != 1
-                or not re.fullmatch(r"[1-9][0-9]{0,6}", sizes[0])
-                or int(sizes[0]) > MAX_BYTES
-            ):
-                raise ValueError("invalid projection framing")
+            pins = self.headers.get_all("Content-Digest", [])
+            require(
+                self.headers.get("Transfer-Encoding") is None
+                and self.headers.get("Content-Encoding") is None
+                and self.headers.get_all("Content-Type", []) == ["application/json"]
+                and len(sizes) == 1
+                and re.fullmatch(r"[1-9][0-9]{0,8}", sizes[0])
+                and len(pins) == 1
+                and re.fullmatch(r"sha-256=:[A-Za-z0-9+/]{43}=:", pins[0]),
+                "invalid native batch framing",
+            )
             size = int(sizes[0])
+            if size > MAX_BYTES:
+                raise Capacity("native batch byte cap")
             raw = self.rfile.read(size)
-            if len(raw) != size:
-                raise ValueError("incomplete projection")
-            return self.server.store.ingest(raw, self.server.writable)
+            require(
+                len(raw) == size and compare_digest(content_digest(raw), pins[0]),
+                "native batch digest mismatch",
+            )
+            return self.server.store.ingest(
+                int(match[1]),
+                raw,
+                lambda: self.server.check_lease("writer"),
+            )
 
         self.run_operation("writer", ingest)
 
     def do_GET(self):
-        if self.path == self.server.route + "/receipt":
-            self.run_operation("reader", lambda: (200, self.server.store.receipt()))
+        batch = self.server.batch_route.fullmatch(self.path)
+        if batch:
+            self.run_operation(
+                "receipt", lambda: (200, self.server.store.receipt(int(batch[1])))
+            )
             return
-        match = re.fullmatch(
-            re.escape(self.server.route)
-            + r"/bp\?start=([\w%.-]{1,80})&end=([\w%.-]{1,80})",
-            self.path,
-            re.ASCII,
-        )
-        if not match:
-            self.reply(404, encoded({"error": "absent"}))
+        snapshot = self.server.snapshot_route.fullmatch(self.path)
+        if snapshot:
+            self.run_operation(
+                snapshot[1],
+                lambda: (
+                    200,
+                    self.server.store.snapshot(
+                        self.server.snapshots[snapshot.groups()]
+                    ),
+                ),
+            )
             return
-
-        def read():
-            start, end = map(unquote, match.groups())
-            if not self.server.snapshot[0] <= start < end <= self.server.snapshot[1]:
-                raise ValueError("snapshot outside grant")
-            return 200, self.server.store.read(start, end)
-
-        self.run_operation("reader", read)
+        self.error(404, "absent")
 
 
 class TypedClient:
-    def __init__(self, host, port, enrollment, context):
-        if not context.check_hostname or context.verify_mode != ssl.CERT_REQUIRED:
-            raise ValueError("guest hostname and CA verification required")
+    def __init__(self, host, port, scope, context):
+        require(
+            context.check_hostname and context.verify_mode == ssl.CERT_REQUIRED,
+            "guest hostname and CA verification required",
+        )
         self.host, self.port, self.context = host, port, context
-        self.route = f"/v1/native-typed/{enrollment}/{PURPOSE}"
+        self.root, self.batch_path = routes(scope)
 
-    def request(self, method, suffix, raw=None):
+    def request(self, method, path, raw=None, *, headers=None):
         connection = HTTPSConnection(
             self.host, self.port, context=self.context, timeout=8
         )
         try:
-            headers = {"Content-Type": "application/json"} if raw is not None else {}
-            connection.request(method, self.route + suffix, raw, headers)
+            connection.request(method, path, raw, headers or {})
             response = connection.getresponse()
             body = response.read(MAX_BYTES + 1)
-            if len(body) > MAX_BYTES:
-                raise ValueError("guest response exceeds bound")
+            require(len(body) <= MAX_BYTES, "guest response cap")
             return response.status, json.loads(body)
         finally:
             connection.close()
 
-    def put(self, raw):
-        status, result = self.request("PUT", "/projection", raw)
+    def put(self, seq, raw):
+        status, result = self.request(
+            "PUT",
+            self.batch_path + str(seq),
+            raw,
+            headers={
+                "Content-Type": "application/json",
+                "Content-Digest": content_digest(raw),
+            },
+        )
         if status in (200, 201):
             self.verify_receipt(raw, result)
         return status, result
 
     @staticmethod
     def verify_receipt(raw, result):
-        manifest = json.loads(raw)
-        expected = {
-            **{
-                k: manifest[k]
-                for k in (
-                    "schema",
-                    "purpose",
-                    "enrollment",
-                    "source_instance",
-                    "artifact_receipt",
-                )
-            },
-            "projection_sha256": sha256(raw).hexdigest(),
-            "bytes": len(raw),
-            "bp_pairs": len(manifest["rows"]),
-        }
-        if result != dict(expected, receipt_id=sha256(encoded(expected)).hexdigest()):
-            raise ValueError("guest receipt does not match this projection")
+        batch = json.loads(raw)
+        upserts = sum(op["op"] == "upsert" for op in batch["ops"])
+        expected = batch_receipt(batch, raw, upserts, len(batch["ops"]) - upserts)
+        require(
+            encoded(result) == expected, "guest receipt does not match submitted batch"
+        )
 
-    def receipt(self):
-        return self.request("GET", "/receipt")
+    def receipt(self, seq):
+        return self.request("GET", self.batch_path + str(seq))
 
-    def read(self, start, end):
-        return self.request("GET", "/bp?" + urlencode({"start": start, "end": end}))
+    def snapshot(self, purpose, snapshot_id):
+        require(purpose in PURPOSES and is_ref(snapshot_id), "invalid snapshot path")
+        return self.request(
+            "GET", f"{self.root}/purposes/{purpose}/snapshots/{snapshot_id}"
+        )
 
 
 def main():
@@ -229,28 +301,36 @@ def main():
     parser.add_argument("config")
     args = parser.parse_args()
     os.umask(0o077)
-    config = json.loads(private_bytes(args.config, 16_384))
+    config = json.loads(private_bytes(args.config, 64 * 1024))
     if set(config) != {
         "bind",
         "port",
         "db",
-        "enrollment",
-        "source_instance",
-        "artifact_receipt",
+        "scope",
+        "bounds",
+        "artifact",
+        "inventory",
+        "max_batches",
+        "max_bytes",
+        "admitted_deletions",
         "certificate",
         "key",
         "client_ca",
         "grants",
         "start",
         "end",
-        "snapshot",
+        "snapshots",
     }:
         parser.error("guest configuration fields mismatch")
     store = TypedStore(
         config["db"],
-        config["enrollment"],
-        config["source_instance"],
-        config["artifact_receipt"],
+        config["scope"],
+        config["bounds"],
+        config["artifact"],
+        config["inventory"],
+        max_batches=config["max_batches"],
+        max_bytes=config["max_bytes"],
+        admitted_deletions=config["admitted_deletions"],
     )
     if args.mode == "init":
         store.initialize()
@@ -269,7 +349,7 @@ def main():
         config["grants"],
         config["start"],
         config["end"],
-        snapshot=config["snapshot"],
+        snapshots=config["snapshots"],
     ) as server:
         server.serve_forever()
 

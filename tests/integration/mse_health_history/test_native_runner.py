@@ -25,7 +25,7 @@ from test_history import (
     xml,
 )
 
-from test_typed_vm_support import verify_guest
+from test_typed_vm_support import verify_guest, verify_shared_vector
 
 from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
 from integrations.mse_health_history.files import InvalidHistory
@@ -38,6 +38,9 @@ class NativeRunnerTests(unittest.TestCase):
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name).resolve()
+
+    def test_shared_three_operation_terminal_vector(self):
+        verify_shared_vector(self, self.root)
 
     def test_inline_dtd_cannot_supply_native_row_types(self):
         def document(declarations):
