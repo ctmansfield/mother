@@ -25,6 +25,8 @@ from test_history import (
     xml,
 )
 
+from test_typed_vm_support import verify_guest, verify_shared_vector
+
 from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
 from integrations.mse_health_history.files import InvalidHistory
 from integrations.mse_health_history.inventory import BP_TYPE, Limits, scan
@@ -36,6 +38,9 @@ class NativeRunnerTests(unittest.TestCase):
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name).resolve()
+
+    def test_shared_three_operation_terminal_vector(self):
+        verify_shared_vector(self, self.root)
 
     def test_inline_dtd_cannot_supply_native_row_types(self):
         def document(declarations):
@@ -291,3 +296,13 @@ class NativeRunnerTests(unittest.TestCase):
             self.assertNotIn("source_ref", body)
             with self.assertRaises(sqlite3.OperationalError):
                 conn.execute("DELETE FROM facts")
+
+        verify_guest(
+            self,
+            self.root,
+            typed_catalog,
+            value["plaintext_sha256"],
+            bound["receipt_id"],
+            UTC,
+            THROUGH,
+        )
