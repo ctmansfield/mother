@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import PurePosixPath
 import stat
+from struct import unpack_from
 import unicodedata
 from xml.parsers import expat
 from zipfile import (
@@ -11,8 +12,13 @@ from zipfile import (
     ZIP_STORED,
     ZipFile,
     _ECD_ENTRIES_TOTAL,
+    _ECD_LOCATION,
+    _ECD_SIGNATURE,
     _ECD_SIZE,
     _EndRecData,
+    sizeEndCentDir64,
+    sizeEndCentDir64Locator,
+    stringEndArchive64,
 )
 
 from .files import CHUNK, InvalidHistory, LimitKind, NamedHistoryLimit, hash_stream
@@ -24,12 +30,18 @@ BP_TYPES = {
 }
 
 
+DEFAULT_ZIP_MEMBERS = 4096
+MAX_ZIP_MEMBERS = 16_384
+CENTRAL_HEADER_BYTES = 46
+CENTRAL_LENGTHS_OFFSET = 28
+
+
 @dataclass(frozen=True)
 class Limits:
     archive_bytes: int = 4 * 1024**3
     expanded_bytes: int = 8 * 1024**3
     member_bytes: int = 4 * 1024**3
-    members: int = 4096
+    members: int = DEFAULT_ZIP_MEMBERS
     directory_bytes: int = 4 * 1024**2
     ratio: int = 2000
     xml_depth: int = 32
@@ -42,6 +54,8 @@ class Limits:
     def __post_init__(self):
         if any(type(value) is not int or value <= 0 for value in vars(self).values()):
             raise ValueError("history limits must be positive integers")
+        if self.members > MAX_ZIP_MEMBERS:
+            raise ValueError("history member limit exceeds hard ceiling")
 
 
 def _forbidden(*_):
@@ -212,6 +226,49 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
     return hashing.hexdigest(), cursor
 
 
+def _check_zip_directory(stream, directory, limits):
+    declared = directory[_ECD_ENTRIES_TOTAL]
+    size = directory[_ECD_SIZE]
+    if declared > limits.members:
+        raise NamedHistoryLimit(LimitKind.ZIP_MEMBERS, "ZIP member count exceeded")
+    if size > limits.directory_bytes:
+        raise NamedHistoryLimit(
+            LimitKind.ZIP_DIRECTORY, "ZIP directory bounds exceeded"
+        )
+
+    end = directory[_ECD_LOCATION]
+    if directory[_ECD_SIGNATURE] == stringEndArchive64:
+        # Older Python leaves the location at the conventional end record.
+        # Newer Python gives the actual ZIP64 record, including any extension.
+        stream.seek(end)
+        if stream.read(4) != stringEndArchive64:
+            end -= sizeEndCentDir64 + sizeEndCentDir64Locator
+    start = end - size
+    if start < 0:
+        raise InvalidHistory("invalid ZIP directory offset")
+
+    # Count actual central records before ZipFile creates one ZipInfo per row.
+    # The end-record count is attacker-controlled and cannot bound allocations.
+    offset = start
+    count = 0
+    while offset < end:
+        if end - offset < CENTRAL_HEADER_BYTES:
+            raise InvalidHistory("truncated ZIP directory")
+        stream.seek(offset)
+        header = stream.read(CENTRAL_HEADER_BYTES)
+        if len(header) != CENTRAL_HEADER_BYTES or not header.startswith(b"PK\x01\x02"):
+            raise InvalidHistory("invalid ZIP directory entry")
+        offset += CENTRAL_HEADER_BYTES + sum(
+            unpack_from("<HHH", header, CENTRAL_LENGTHS_OFFSET)
+        )
+        count += 1
+        if count > limits.members:
+            raise NamedHistoryLimit(LimitKind.ZIP_MEMBERS, "ZIP member count exceeded")
+    if offset != end or count != declared:
+        raise InvalidHistory("ZIP directory size or member count mismatch")
+    return count, size
+
+
 def scan(stream, limits, on_row, on_member, on_nested=None):
     """Read an already-open, stable local file and return its exact byte identity."""
     stream.seek(0)
@@ -225,12 +282,7 @@ def scan(stream, limits, on_row, on_member, on_nested=None):
             raise InvalidHistory("original changed during inventory")
         on_member(1, None, "healthdata_xml", *member)
         return original
-    if directory[_ECD_ENTRIES_TOTAL] > limits.members:
-        raise NamedHistoryLimit(LimitKind.ZIP_MEMBERS, "ZIP member count exceeded")
-    if directory[_ECD_SIZE] > limits.directory_bytes:
-        raise NamedHistoryLimit(
-            LimitKind.ZIP_DIRECTORY, "ZIP directory bounds exceeded"
-        )
+    _check_zip_directory(stream, directory, limits)
     stream.seek(0)
     with ZipFile(stream) as archive:
         infos = archive.infolist()
