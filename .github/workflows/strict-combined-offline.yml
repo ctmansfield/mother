@@ -7,6 +7,8 @@ on:
     paths:
       - .github/workflows/strict-combined-offline.yml
       - analytics/**
+      - requirements-broja.txt
+      - requirements-dev.txt
       - mother/physiology/**
       - tests/physiology/**
 permissions:
@@ -25,15 +27,16 @@ jobs:
           python-version: '3.12'
       - name: Install explicit offline test dependencies
         run: |
-          python -m pip install --disable-pip-version-check -r requirements-dev.txt 'jsonschema>=4.18,<5' 'defusedxml>=0.7' 'setuptools>=69' wheel
+          python -m pip install --disable-pip-version-check -r requirements-dev.txt -r requirements-broja.txt 'jsonschema>=4.18,<5' 'defusedxml>=0.7'
       - name: Combined physiology and analytics pytest; failures are fatal
         env:
           PYTHONDONTWRITEBYTECODE: '1'
           PYTHONNOUSERSITE: '1'
           PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+          MOTHER_REQUIRE_BROJA: '1'
         run: |
           python -B -m pytest -q -p no:cacheprovider --junitxml="$RUNNER_TEMP/strict-combined.xml" tests/physiology/test_contracts.py tests/physiology/test_evaluation.py tests/physiology/test_evaluation_independent.py tests/physiology/test_import_replay.py tests/physiology/test_independent_acceptance.py analytics/tests
-      - name: Verify actual test count and exactly the tracked optional skip
+      - name: Verify actual test count and BROJA execution with zero skips
         run: |
           python - <<'PY'
           import os
@@ -47,9 +50,14 @@ jobs:
           print("CASES", len(cases), "SKIPS", len(skips), "FAILURES", len(failures))
           if len(cases) < 150 or failures:
               raise SystemExit("Combined pytest gate did not execute the required cases")
-          if len(skips) != 1 or skips[0].get("name") != "test_pid_broja_two_sources":
-              raise SystemExit("Unexpected pytest skip; see MOTHER issue #19")
-          print("PASS: all executed cases passed; one separately tracked BROJA PID skip")
+          required_broja = {"test_pid_broja_two_sources", "test_pid_broja_redundant_sources"}
+          passed_broja = {
+              case.get("name") for case in cases
+              if case.get("classname", "").endswith("test_pid_end2end") and len(case) == 0
+          }
+          if skips or not required_broja <= passed_broja:
+              raise SystemExit("Required BROJA cases did not pass or the combined suite skipped tests")
+          print("PASS: combined suite and required BROJA cases passed with zero skips")
           PY
       - name: Verify E1 structural register
         run: python -B research/e1/verify_register.py
