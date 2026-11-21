@@ -4,6 +4,10 @@
     "MSE-001-publication": {
       "path": "tasks/MSE-001-publication-r1.json",
       "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
+    },
+    "MSE-ALL-ZIP-DATA-20261121-07": {
+      "path": "tasks/MSE-ALL-ZIP-DATA-20261121-07-r2.json",
+      "sha256": "ed4e51023676afb6328dd681ed9d9019ddcd48c97c094982cd996f3e530211f9"
     }
   },
   "version": 1
