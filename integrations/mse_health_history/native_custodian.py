@@ -1,6 +1,7 @@
 """Explicitly admitted native archive import on a protected macOS volume."""
 
 import argparse
+import errno
 from datetime import datetime, timezone
 from hashlib import sha256
 import hmac
@@ -20,7 +21,7 @@ from mother.physiology.contracts import canonical_json
 
 from .blood_pressure import source_time
 from .catalog import _HistoryCatalog
-from .files import private_path
+from .files import HistoryLimit, private_path
 from .inventory import Limits
 from .native_runner import private_bytes
 from .vault import DIGEST, TOKEN
@@ -147,13 +148,13 @@ def paths_on_encrypted_volume(policy):
 
 def ensure_space(policy, catalog, *, extra=0):
     if shutil.disk_usage(catalog).free < policy["reserve_bytes"] + extra:
-        raise ValueError("protected filesystem reserve insufficient")
+        raise HistoryLimit("protected filesystem reserve insufficient")
     database = catalog / "history.sqlite3"
     for path in (database, catalog / "history.sqlite3-journal"):
         if os.path.lexists(path):
             private_path(path, directory=False)
             if path.stat().st_size > policy["catalog_bytes"]:
-                raise ValueError("protected catalog bound exceeded")
+                raise HistoryLimit("protected catalog bound exceeded")
     if any(os.path.lexists(str(database) + suffix) for suffix in ("-wal", "-shm")):
         raise ValueError("protected catalog requires rollback journal mode")
 
@@ -162,18 +163,30 @@ def timeout(_signal, _frame):
     raise TimeoutError("protected native import wall deadline")
 
 
+def file_limit(_signal, _frame):
+    raise HistoryLimit("protected file-size deadline")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--admission", required=True)
     parser.add_argument("--approval-key", required=True)
+    parser.add_argument("--diagnostic-category", action="store_true")
     args = parser.parse_args()
     os.umask(0o077)
+    phase = "ADMISSION"
+
+    def report_phase(value):
+        nonlocal phase
+        phase = value
+
     try:
         if sys.platform != "darwin":
             raise ValueError("protected runner requires macOS")
         approval = private_bytes(args.approval_key, 32)
         policy = load_admission(args.admission, approval)
         lease(policy)
+        report_phase("ENVIRONMENT")
         catalog_root, scratch = paths_on_encrypted_volume(policy)
         binding = policy["binding"]
         ensure_space(
@@ -188,17 +201,20 @@ def main():
         os.environ["TMPDIR"] = str(scratch)
 
         def precommit():
+            report_phase("ADMISSION_WINDOW")
             lease(policy)
             ensure_space(policy, catalog_root)
+            report_phase("COMMIT")
 
         cap = max(binding["plaintext_length"], policy["catalog_bytes"])
         _, hard = resource.getrlimit(resource.RLIMIT_FSIZE)
         if hard != resource.RLIM_INFINITY and cap > hard:
-            raise ValueError("protected file limit unavailable")
+            raise HistoryLimit("protected file limit unavailable")
         resource.setrlimit(resource.RLIMIT_FSIZE, (cap, hard))
-        signal.signal(signal.SIGXFSZ, timeout)
+        signal.signal(signal.SIGXFSZ, file_limit)
         signal.signal(signal.SIGALRM, timeout)
         signal.alarm(policy["runtime_seconds"])
+        report_phase("CATALOG")
         catalog = _HistoryCatalog(
             catalog_root,
             key=key,
@@ -223,9 +239,11 @@ def main():
             age_executable=policy["age_executable"],
             scratch_root=scratch,
             precommit=precommit,
+            report_phase=report_phase,
             database_bytes=policy["catalog_bytes"],
             **binding,
         )
+        report_phase("READBACK")
         if catalog.receipt(binding["plaintext_sha256"]) != receipt:
             raise ValueError("reopened catalog receipt mismatch")
         print("Protected native catalog receipt verified")
@@ -237,11 +255,26 @@ def main():
         ValueError,
         sqlite3.Error,
         subprocess.SubprocessError,
-    ):
-        print(
-            "Protected native import refused or requires receipt reconciliation",
-            file=sys.stderr,
-        )
+    ) as error:
+        if args.diagnostic_category:
+            if isinstance(error, TimeoutError):
+                phase = "RUNTIME_LIMIT"
+            elif (
+                isinstance(error, HistoryLimit)
+                or getattr(error, "errno", None)
+                in (errno.ENOSPC, errno.EDQUOT, errno.EFBIG)
+                or getattr(error, "sqlite_errorcode", None)
+                == getattr(sqlite3, "SQLITE_FULL", 13)
+            ):
+                phase = "RESOURCE_LIMIT"
+            elif isinstance(error, sqlite3.Error) and phase == "INVENTORY":
+                phase = "CATALOG"
+            print(f"Protected native import category {phase}", file=sys.stderr)
+        else:
+            print(
+                "Protected native import refused or requires receipt reconciliation",
+                file=sys.stderr,
+            )
         return 1
     finally:
         signal.alarm(0)

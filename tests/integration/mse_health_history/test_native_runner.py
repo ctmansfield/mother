@@ -348,8 +348,13 @@ class NativeRunnerTests(unittest.TestCase):
                 sha256,
             ).hexdigest()
 
-        def run(signature, **filesystem_overrides):
-            admission.write_text(json.dumps(dict(policy=policy, hmac_sha256=signature)))
+        def run(
+            signature, *, selected=policy, diagnostic=False, **filesystem_overrides
+        ):
+            admission.write_text(
+                json.dumps(dict(policy=selected, hmac_sha256=signature))
+            )
+            stderr, stdout = StringIO(), StringIO()
             contexts = (
                 patch.object(
                     sys,
@@ -360,6 +365,7 @@ class NativeRunnerTests(unittest.TestCase):
                         str(admission),
                         "--approval-key",
                         str(approval),
+                        *(["--diagnostic-category"] if diagnostic else []),
                     ],
                 ),
                 patch.object(sys, "platform", "darwin"),
@@ -374,19 +380,85 @@ class NativeRunnerTests(unittest.TestCase):
                         dict(filesystem, **filesystem_overrides)
                     ),
                 ),
-                redirect_stderr(StringIO()),
-                redirect_stdout(StringIO()),
+                redirect_stderr(stderr),
+                redirect_stdout(stdout),
             )
             with ExitStack() as stack:
                 for context in contexts:
                     stack.enter_context(context)
-                return native_custodian.main()
+                status = native_custodian.main()
+            return status, stderr.getvalue()
 
-        self.assertEqual(run("0" * 64), 1)
-        self.assertEqual(run(sign(policy), EncryptionThisVolumeProper=False), 1)
+        self.assertEqual(
+            run("0" * 64),
+            (
+                1,
+                "Protected native import refused or requires receipt reconciliation\n",
+            ),
+        )
+        self.assertEqual(run(sign(policy), EncryptionThisVolumeProper=False)[0], 1)
         self.assertFalse(list(catalog.iterdir()))
-        self.assertEqual(run(sign(policy)), 0)
-        self.assertEqual(run(sign(policy)), 0)
+
+        malformed = b"<HealthData><fabricated-private-marker></HealthData>"
+        encrypted = subprocess.check_output(
+            [
+                age,
+                "-e",
+                "-r",
+                subprocess.check_output(
+                    [age.with_name("age-keygen"), "-y", identity]
+                ).strip(),
+            ],
+            input=malformed,
+        )
+        invalid_cipher = self.root / "synthetic-parser-refusal.age"
+        invalid_cipher.touch(mode=0o600)
+        invalid_cipher.write_bytes(encrypted)
+        invalid_receipt = dict(
+            binding["receipt"],
+            ciphertext_sha256=sha256(encrypted).hexdigest(),
+            byte_length=len(encrypted),
+        )
+        invalid_receipt.pop("receipt_id")
+        invalid_receipt["receipt_id"] = sha256(
+            canonical_json(invalid_receipt).encode()
+        ).hexdigest()
+        parser_case = dict(
+            policy,
+            ciphertext=str(invalid_cipher),
+            binding=dict(
+                binding,
+                receipt=invalid_receipt,
+                plaintext_sha256=sha256(malformed).hexdigest(),
+                plaintext_length=len(malformed),
+            ),
+        )
+        cases = (
+            (
+                "BINDING_OR_AUTHENTICATION",
+                dict(policy, binding=dict(binding, plaintext_sha256="0" * 64)),
+            ),
+            ("INVENTORY", parser_case),
+            ("RESOURCE_LIMIT", dict(policy, max_top_level_rows=1)),
+        )
+        for category, selected in cases:
+            with self.subTest(category=category):
+                self.assertEqual(
+                    run(sign(selected), selected=selected, diagnostic=True),
+                    (1, f"Protected native import category {category}\n"),
+                )
+                with sqlite3.connect(
+                    (catalog / "history.sqlite3").as_uri() + "?mode=ro", uri=True
+                ) as db:
+                    for table in ("artifacts", "members", "sightings", "bp_revisions"):
+                        self.assertEqual(
+                            db.execute(f"SELECT count(*) FROM {table}").fetchone(), (0,)
+                        )
+                self.assertFalse((catalog / "history.sqlite3-journal").exists())
+                self.assertFalse(list(scratch.iterdir()))
+
+        self.assertEqual(run(sign(policy)), (0, ""))
+        self.assertEqual(run(sign(policy)), (0, ""))
         reopened = _HistoryCatalog(
             catalog,
             key=b"k" * 32,

@@ -10,7 +10,7 @@ from threading import Timer
 
 from mother.physiology.contracts import canonical_json
 
-from .files import CHUNK, hash_stream, private_path
+from .files import CHUNK, HistoryLimit, hash_stream, private_path
 from .vault import DIGEST, TOKEN
 
 
@@ -80,7 +80,7 @@ def authenticate_export(
     private_path(cipher, directory=False)
     private_path(scratch, directory=True)
     if shutil.disk_usage(scratch).free < plaintext_length + 64 * 1024**2:
-        raise ValueError("protected export scratch capacity insufficient")
+        raise HistoryLimit("protected export scratch capacity insufficient")
     expected = (receipt["ciphertext_sha256"], receipt["byte_length"])
     with cipher.open("rb") as source, TemporaryFile(dir=scratch) as stage:
         if hash_stream(source, limit + 16 * 1024**2) != expected:
