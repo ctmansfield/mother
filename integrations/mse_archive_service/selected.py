@@ -1,13 +1,15 @@
-"""Offline-only adapter for the additive selected HealthKit archive."""
+"""Scoped storage and fixture adapter for the selected HealthKit archive."""
 
 from contextlib import closing, contextmanager
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from hashlib import sha256
 import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import stat
 
@@ -16,6 +18,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 from integrations.healthbridge.capture import _check_depth, _unique_object
 from integrations.mse_ingest import BatchConflict
 from mother.physiology.contracts import canonical_json
+
+from .store import CapacityExceeded
 
 SCHEMA = (
     Path(__file__).resolve().parents[2]
@@ -63,6 +67,66 @@ def _clock():
     )
 
 
+class PendingAcceptance(OSError):
+    """Unpublished custody is preserved for operator reconciliation."""
+
+
+class PilotClosed(ValueError):
+    """The selected pilot is staged or outside its release window."""
+
+
+def parse_clock(value):
+    if not isinstance(value, str) or not re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}Z", value
+    ):
+        raise ValueError("expected canonical pilot UTC clock")
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+@dataclass(frozen=True)
+class Pilot:
+    enrollment_id: str
+    start: str | None
+    end: str | None
+    enabled: bool
+    max_commits: int
+    reserve_bytes: int
+
+    def __post_init__(self):
+        if not isinstance(self.enrollment_id, str) or not TOKEN.fullmatch(
+            self.enrollment_id
+        ):
+            raise ValueError("invalid pilot enrollment")
+        if (
+            type(self.enabled) is not bool
+            or type(self.max_commits) is not int
+            or not 1 <= self.max_commits <= 100_000
+            or type(self.reserve_bytes) is not int
+            or not 32 * 1024**2 <= self.reserve_bytes <= 1024**4
+        ):
+            raise ValueError("invalid pilot storage bounds")
+        if self.start is None and self.end is None and not self.enabled:
+            return
+        if parse_clock(self.end) - parse_clock(self.start) != timedelta(hours=48):
+            raise ValueError("selected pilot must be exactly 48 hours")
+
+    def writable(self, now):
+        if not self.enabled or not self.start <= now < self.end:
+            raise PilotClosed("selected pilot is closed")
+
+    def validate_records(self, records, now):
+        for record in records:
+            if not self.start <= record["collector_received_at"] <= now:
+                raise ValueError("selected collector clock outside pilot")
+            if record["operation"] == "upsert" and not (
+                self.start
+                <= record["event_start"]
+                <= record["event_end"]
+                <= record["collector_received_at"]
+            ):
+                raise ValueError("selected source interval outside pilot")
+
+
 def _bounded_integer(text):
     if len(text) > 20:
         raise ValueError("selected JSON integer exceeds bound")
@@ -91,9 +155,18 @@ def _processing(fact, record):
 
 
 class SelectedArchive:
-    """A single synthetic grant and an independently initialized SQLite root."""
+    """A scoped grant and an independently initialized SQLite root."""
 
-    def __init__(self, root, *, archive_id, scope, allowed_artifact_sha256):
+    def __init__(
+        self,
+        root,
+        *,
+        archive_id,
+        scope,
+        allowed_artifact_sha256=None,
+        pilot=None,
+        clock=_clock,
+    ):
         self.root = Path(root).absolute()
         self.path = self.root / "selected-healthkit.sqlite3"
         if not isinstance(archive_id, str) or not TOKEN.fullmatch(archive_id):
@@ -108,25 +181,36 @@ class SelectedArchive:
             TOKEN.fullmatch(scope[key]) for key in ("subject_id", "source_instance")
         ):
             raise ValueError("invalid selected scope tokens")
-        if not scope["subject_id"].startswith("synthetic-"):
-            raise ValueError("selected archive is synthetic-only")
-        self.allowed = frozenset(allowed_artifact_sha256)
-        if not 1 <= len(self.allowed) <= 32 or any(
-            not isinstance(item, str) or not DIGEST.fullmatch(item)
-            for item in self.allowed
+        synthetic = allowed_artifact_sha256 is not None
+        if synthetic != scope["subject_id"].startswith("synthetic-"):
+            raise ValueError("selected scope does not match the synthetic-only grant")
+        if not synthetic and pilot is None:
+            raise ValueError("selected live scope requires explicit pilot enrollment")
+        self.allowed = None if not synthetic else frozenset(allowed_artifact_sha256)
+        if synthetic and (
+            not 1 <= len(self.allowed) <= 32
+            or any(
+                not isinstance(item, str) or not DIGEST.fullmatch(item)
+                for item in self.allowed
+            )
         ):
             raise ValueError("invalid selected synthetic grant")
+        self.pilot = pilot
+        self.clock = clock
         self.archive_id = archive_id
         self.scope = dict(scope)
-        self.identity = canonical_json(
-            {
-                "archive_id": archive_id,
-                "scope": self.scope,
-                "layout": "selected-healthkit-sqlite/1",
-                "schema_sha256": SCHEMA_SHA256,
-                "processing_version": PROCESSING,
-            }
-        )
+        identity = {
+            "archive_id": archive_id,
+            "scope": self.scope,
+            "layout": "selected-healthkit-sqlite/1",
+            "schema_sha256": SCHEMA_SHA256,
+            "processing_version": PROCESSING,
+        }
+        if pilot is not None:
+            identity["layout"] = "selected-healthkit-pilot-sqlite/2"
+            identity["enrollment_id"] = pilot.enrollment_id
+            identity["lane"] = "synthetic" if synthetic else "live"
+        self.identity = canonical_json(identity)
 
     def _validate(self, definition, value):
         validator = self.validator.evolve(schema={"$ref": f"#/$defs/{definition}"})
@@ -162,6 +246,22 @@ class SelectedArchive:
         with closing(sqlite3.connect(self.path)) as db, db:
             db.executescript("BEGIN IMMEDIATE;\n" + DDL)
             db.execute("INSERT INTO identity VALUES (1,?)", (self.identity,))
+            if self.pilot is not None:
+                db.execute(
+                    """CREATE TABLE pilot_release (
+                        id INTEGER PRIMARY KEY CHECK(id=1),
+                        start TEXT NOT NULL, end TEXT NOT NULL,
+                        closed INTEGER NOT NULL CHECK(closed IN (0,1))
+                    )"""
+                )
+                db.execute(
+                    """CREATE TABLE pilot_publication (
+                        sequence INTEGER PRIMARY KEY REFERENCES batches(sequence),
+                        durable_at TEXT NOT NULL,
+                        receipt_verified_at TEXT
+                            CHECK(receipt_verified_at IS NULL OR receipt_verified_at>=durable_at)
+                    )"""
+                )
         self.check_startup()
 
     @contextmanager
@@ -178,10 +278,21 @@ class SelectedArchive:
         with closing(sqlite3.connect(uri, uri=True, timeout=3)) as db, db:
             db.execute("PRAGMA foreign_keys=ON")
             if write:
+                db.execute("PRAGMA synchronous=FULL")
                 db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT body FROM identity WHERE id=1").fetchone()
             if row != (self.identity,):
                 raise ValueError("selected archive identity mismatch")
+            if self.pilot is not None:
+                release = db.execute(
+                    "SELECT start,end FROM pilot_release WHERE id=1"
+                ).fetchone()
+                if (
+                    release is not None
+                    and self.pilot.start is not None
+                    and release != (self.pilot.start, self.pilot.end)
+                ):
+                    raise ValueError("selected release window is immutable")
             yield db
 
     def check_startup(self):
@@ -190,6 +301,36 @@ class SelectedArchive:
                 raise ValueError("selected archive integrity failure")
             if db.execute("PRAGMA foreign_key_check").fetchone() is not None:
                 raise ValueError("selected archive lineage failure")
+
+    def prepare_release(self):
+        self.check_startup()
+        if self.pilot is None or not self.pilot.enabled:
+            return
+        with self._connection(write=True) as db:
+            db.execute(
+                "INSERT OR IGNORE INTO pilot_release VALUES (1,?,?,0)",
+                (self.pilot.start, self.pilot.end),
+            )
+
+    def mark_cutoff(self):
+        if (
+            self.pilot is None
+            or self.pilot.end is None
+            or self.clock() < self.pilot.end
+        ):
+            return False
+        with self._connection(write=True) as db:
+            db.execute("UPDATE pilot_release SET closed=1 WHERE id=1")
+        return True
+
+    def check_write_window(self):
+        if self.pilot is not None:
+            self.pilot.writable(self.clock())
+            with self._connection() as db:
+                if db.execute(
+                    "SELECT closed FROM pilot_release WHERE id=1"
+                ).fetchone() != (0,):
+                    raise PilotClosed("selected release is closed")
 
     def _parse(self, batch, original):
         if not isinstance(original, bytes) or not 1 <= len(original) <= MAX_BYTES:
@@ -254,6 +395,25 @@ class SelectedArchive:
                 return True
         return False
 
+    @staticmethod
+    def _require_observed_deletions(db, rows):
+        upserts = {
+            (metric, native_id)
+            for _, metric, native_id, op, _, _ in rows
+            if op == "upsert"
+        }
+        for _, metric, native_id, operation, _, _ in rows:
+            if (
+                operation == "delete"
+                and (metric, native_id) not in upserts
+                and not db.execute(
+                    """SELECT 1 FROM sightings
+                   WHERE metric=? AND native_id=? AND operation='upsert' LIMIT 1""",
+                    (metric, native_id),
+                ).fetchone()
+            ):
+                raise ValueError("selected deletion requires a pilot-observed fact")
+
     def _receipt(self, batch, original, sequence, received, committed, rows, status):
         artifact = _digest(original)
         receipt_id = _pin(
@@ -297,15 +457,37 @@ class SelectedArchive:
         return canonical_json(receipt).encode("utf-8")
 
     def put(self, batch, original):
-        """Admit exact authorized synthetic bytes, then verify the committed result."""
+        """Admit scoped bytes and verify their committed receipt on reopen."""
         if not isinstance(original, bytes) or not 1 <= len(original) <= MAX_BYTES:
             raise ValueError("selected original exceeds bounds")
-        if _digest(original) not in self.allowed:
+        if self.allowed is not None and _digest(original) not in self.allowed:
             raise ValueError("selected original is not admitted")
-        received = _clock()
+        received = self.clock()
+        if self.pilot is not None:
+            self.pilot.writable(received)
         records = self._parse(batch, original)
+        if self.pilot is not None:
+            self.pilot.validate_records(records, received)
         rows = list(self._rows(records))
+        pending_sequence = None
         with self._connection(write=True) as db:
+            if self.pilot is not None:
+                self.pilot.writable(self.clock())
+                if db.execute(
+                    "SELECT start,end,closed FROM pilot_release WHERE id=1"
+                ).fetchone() != (self.pilot.start, self.pilot.end, 0):
+                    raise PilotClosed("selected release is not registered")
+                if db.execute(
+                    """SELECT 1 FROM batches b LEFT JOIN pilot_publication p
+                       ON p.sequence=b.sequence
+                       WHERE p.receipt_verified_at IS NULL LIMIT 1"""
+                ).fetchone():
+                    raise PendingAcceptance("selected custody requires reconciliation")
+                last = db.execute(
+                    "SELECT receipt_verified_at FROM pilot_publication ORDER BY sequence DESC LIMIT 1"
+                ).fetchone()
+                if last is not None and received < last[0]:
+                    raise PilotClosed("selected clock regressed")
             existing = db.execute(
                 "SELECT original FROM batches WHERE batch=?", (batch,)
             ).fetchone()
@@ -313,18 +495,24 @@ class SelectedArchive:
                 if existing[0] != original:
                     raise BatchConflict("selected batch is already bound")
             else:
+                if self.pilot is not None:
+                    self._require_observed_deletions(db, rows)
                 status = "quarantined" if self._conflicts(db, rows) else "normalized"
                 sequence = db.execute(
                     "SELECT COALESCE(MAX(sequence),0)+1 FROM batches"
                 ).fetchone()[0]
+                if self.pilot is not None and (
+                    sequence > self.pilot.max_commits
+                    or shutil.disk_usage(self.root).free
+                    < self.pilot.reserve_bytes + 4 * MAX_BYTES
+                ):
+                    raise CapacityExceeded("selected archive requires capacity")
+                committed = max(received, self.clock())
+                if self.pilot is not None:
+                    self.pilot.writable(committed)
+                    pending_sequence = sequence
                 receipt = self._receipt(
-                    batch,
-                    original,
-                    sequence,
-                    received,
-                    max(received, _clock()),
-                    rows,
-                    status,
+                    batch, original, sequence, received, committed, rows, status
                 )
                 db.execute(
                     "INSERT INTO batches VALUES (?,?,?,?,?)",
@@ -341,6 +529,48 @@ class SelectedArchive:
                         "INSERT INTO sightings VALUES (?,?,?,?,?,?,?)",
                         [(sequence, *row) for row in rows],
                     )
+            if self.pilot is not None:
+                self.pilot.writable(self.clock())
+        if pending_sequence is not None:
+            durable_at = self.clock()
+            self.pilot.writable(durable_at)
+            if durable_at < committed:
+                raise PilotClosed("selected clock regressed at durability boundary")
+            with self._connection(write=True) as db:
+                self.pilot.writable(self.clock())
+                receipt = self._receipt(
+                    batch,
+                    original,
+                    pending_sequence,
+                    received,
+                    durable_at,
+                    rows,
+                    status,
+                )
+                db.execute(
+                    "UPDATE batches SET receipt=? WHERE sequence=?",
+                    (canonical_json(receipt), pending_sequence),
+                )
+                db.execute(
+                    "INSERT INTO pilot_publication VALUES (?,?,NULL)",
+                    (pending_sequence, durable_at),
+                )
+                self.pilot.writable(self.clock())
+            # The receipt transaction has returned from SQLite FULL-sync commit.
+            # Persist only a witness of that already-durable receipt; a restart
+            # cannot infer the observation from an unwitnessed database row.
+            verified_at = self.clock()
+            self.pilot.writable(verified_at)
+            if verified_at < durable_at:
+                raise PilotClosed("selected clock regressed at receipt boundary")
+            with self._connection(write=True) as db:
+                self.pilot.writable(self.clock())
+                db.execute(
+                    "UPDATE pilot_publication SET receipt_verified_at=? WHERE sequence=?",
+                    (verified_at, pending_sequence),
+                )
+                self.pilot.writable(self.clock())
+            self.pilot.writable(self.clock())
         return self.get(batch)
 
     def _read(self, db, batch):
@@ -352,6 +582,22 @@ class SelectedArchive:
             raise KeyError("unknown selected batch")
         sequence, artifact, original, receipt_json = saved
         receipt = json.loads(receipt_json)
+        if self.pilot is not None:
+            publication = db.execute(
+                "SELECT durable_at,receipt_verified_at FROM pilot_publication WHERE sequence=?",
+                (sequence,),
+            ).fetchone()
+            if publication is None or publication[1] is None:
+                raise KeyError("selected receipt is unpublished")
+            release = db.execute(
+                "SELECT start,end FROM pilot_release WHERE id=1"
+            ).fetchone()
+            if (
+                release is None
+                or publication[0] != receipt["committed_at"]
+                or not release[0] <= publication[0] <= publication[1] < release[1]
+            ):
+                raise ValueError("selected publication or window integrity mismatch")
         if _digest(original) != artifact:
             raise ValueError("selected original integrity mismatch")
         self._validate("receipt", receipt)
@@ -407,10 +653,21 @@ class SelectedArchive:
         rows = []
         with self._connection() as db:
             db.execute("BEGIN")
-            batches = db.execute(
-                "SELECT batch FROM batches WHERE sequence BETWEEN ? AND ? ORDER BY sequence",
-                (start, through),
-            ).fetchall()
+            if self.pilot is None:
+                query = "SELECT batch FROM batches WHERE sequence BETWEEN ? AND ? ORDER BY sequence"
+            else:
+                query = """SELECT b.batch FROM batches b JOIN pilot_publication p
+                           ON b.sequence=p.sequence
+                           WHERE p.receipt_verified_at IS NOT NULL
+                             AND b.sequence BETWEEN ? AND ? ORDER BY b.sequence"""
+            batches = db.execute(query, (start, through)).fetchall()
+            prior_sighting = """SELECT 1 FROM sightings WHERE metric=? AND native_id=?
+                                AND sequence<=? AND (operation='delete' OR sequence<?)"""
+            if self.pilot is not None:
+                prior_sighting += (
+                    " AND sequence IN (SELECT sequence FROM pilot_publication"
+                    " WHERE receipt_verified_at IS NOT NULL)"
+                )
             for (batch,) in batches:
                 receipt, _, records, sightings = self._read(db, batch)
                 for (
@@ -424,9 +681,7 @@ class SelectedArchive:
                     if current and (
                         operation == "delete"
                         or db.execute(
-                            """SELECT 1 FROM sightings WHERE metric=? AND native_id=?
-                               AND sequence<=? AND (operation='delete' OR sequence<?)
-                               LIMIT 1""",
+                            prior_sighting + " LIMIT 1",
                             (metric, native_id, through, receipt["commit_sequence"]),
                         ).fetchone()
                         or any(previous[4] == fact for previous in sightings[:ordinal])
