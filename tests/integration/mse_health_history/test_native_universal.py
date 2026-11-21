@@ -165,6 +165,146 @@ class NativeUniversalTests(unittest.TestCase):
                     (1,),
                 )
 
+    def test_invalid_temporal_dispositions_preserve_exact_source(self):
+        from test_history import DIASTOLIC, OBSERVED, SYSTOLIC, correlation, record, xml
+
+        earlier = "2026-11-21 09:59:00 +1000"
+        end = f'endDate="{OBSERVED}"'
+        reversed_end = f'endDate="{earlier}"'
+        pair = record(SYSTOLIC, "125") + record(DIASTOLIC, "81")
+        original_xml = xml(
+            '<ActivitySummary dateComponents="2026-02-30"/>'
+            '<Record type="HKQuantityTypeIdentifierStepCount" value="2" unit="count" '
+            'startDate="2026-02-30T10:00:00Z"/>'
+            '<Record type="HKQuantityTypeIdentifierStepCount" value="3" unit="count" '
+            f'startDate="{OBSERVED}" {reversed_end}/>'
+            + correlation(pair).replace(end, reversed_end, 1)
+            + correlation(pair.replace(end, reversed_end, 1))
+            + correlation(pair)
+        )
+        with TemporaryDirectory() as private:
+            root = Path(private).resolve()
+            state = root / "catalog"
+            state.mkdir(mode=0o700)
+            archive_path = root / "synthetic.zip"
+            with ZipFile(archive_path, "w") as archive:
+                archive.writestr("export.xml", original_xml)
+            catalog = SyntheticHistoryCatalog(
+                state, enrollment="synthetic-clock-dispositions", key=b"k" * 32
+            )
+            catalog.initialize()
+            artifact = catalog.ingest(archive_path)["sha256"]
+            rows = catalog.source_occurrences(artifact)
+            self.assertEqual(
+                [row["level"] for row in rows], ["quarantine"] * 5 + ["typed"]
+            )
+            self.assertEqual(
+                [json.loads(row["typed_json"])["reason"] for row in rows[:5]],
+                [
+                    "invalid_activity_date",
+                    "invalid_source_clock",
+                    "reversed_source_interval",
+                    "reversed_source_interval",
+                    "reversed_source_interval",
+                ],
+            )
+            self.assertEqual(
+                catalog.source_member_range(
+                    artifact, 1, sha256(original_xml).hexdigest(), 0, len(original_xml)
+                ),
+                original_xml,
+            )
+            self.assertTrue(catalog.source_events(artifact, 1, 5))
+
+    def test_purpose_excludes_legacy_reversed_root_and_component_intervals(self):
+        import sqlite3
+        from types import SimpleNamespace
+
+        from integrations.mse_health_history.inventory import BP_TYPE
+        from integrations.mse_health_history.native_universal_https import (
+            UniversalServer,
+        )
+
+        begin = "2026-11-21T00:00:00.000000Z"
+        instant = "2026-11-21T00:01:00.000000Z"
+        end = "2026-11-22T00:00:00.000000Z"
+        quantity = "HKQuantityTypeIdentifierStepCount"
+
+        def pressure(start, finish, component_end):
+            return dict(
+                pairing="paired",
+                clocks=dict(event_start=start, event_end=finish),
+                components=[
+                    dict(
+                        role="systolic",
+                        value="120",
+                        clocks=dict(event_start=instant, event_end=component_end),
+                    ),
+                    dict(
+                        role="diastolic",
+                        value="80",
+                        clocks=dict(event_start=instant, event_end=instant),
+                    ),
+                ],
+            )
+
+        db = sqlite3.connect(":memory:")
+        db.execute(
+            "CREATE TABLE native_source_occurrences (artifact,member,ordinal,source_type,adapter,typed)"
+        )
+        rows = [
+            (
+                quantity,
+                "quantity",
+                dict(
+                    value="8",
+                    source_unit="count",
+                    clocks=dict(startDate=dict(utc=instant), endDate=dict(utc=begin)),
+                ),
+            ),
+            (BP_TYPE, "blood_pressure", pressure(instant, begin, instant)),
+            (BP_TYPE, "blood_pressure", pressure(instant, instant, begin)),
+            (BP_TYPE, "blood_pressure", pressure(instant, instant, instant)),
+        ]
+        db.executemany(
+            "INSERT INTO native_source_occurrences VALUES ('synthetic',1,?,?,?,?)",
+            [
+                (ordinal, source_type, adapter, json.dumps(body))
+                for ordinal, (source_type, adapter, body) in enumerate(rows, 1)
+            ],
+        )
+        server = SimpleNamespace(
+            policies={
+                "mother": {
+                    "subject": "fabricated",
+                    "adapters": ["quantity", "blood_pressure"],
+                    "types": [quantity, BP_TYPE],
+                    "units": ["count"],
+                    "states": [],
+                    "activities": [],
+                    "from": begin,
+                    "before": end,
+                    "timeless": True,
+                    "limit": 1,
+                }
+            },
+            cursor_key=b"k" * 32,
+            store=SimpleNamespace(
+                connect=lambda: db,
+                receipt=lambda: None,
+                pin="synthetic",
+                manifest={"artifact": "synthetic"},
+            ),
+        )
+        result = json.loads(UniversalServer.features(server, "mother", None))
+        self.assertEqual(
+            [row["fields"] for row in result["rows"]],
+            [
+                {"systolic": "120", "diastolic": "80", "unit": "mmHg"},
+            ],
+        )
+        self.assertIsNone(result["next"])
+
     def test_security_refusal_keeps_no_universal_rows(self):
         with TemporaryDirectory() as private:
             root = Path(private).resolve()
@@ -273,6 +413,11 @@ def verify_universal_transfer(test, root, catalog, artifact, start, end):
     test.assertEqual(
         reopened.restricted_occurrences(), catalog.source_occurrences(artifact)
     )
+    attachment = next(
+        row for row in reopened.restricted_members() if row["kind"] == "attachment"
+    )
+    test.assertEqual(attachment["disposition"], "byte_only")
+    test.assertEqual(attachment["reason"], "gpx_not_recognized_as_supported_xml")
     for row in catalog.members(artifact):
         if row["kind"] == "directory":
             continue

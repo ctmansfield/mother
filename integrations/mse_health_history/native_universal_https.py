@@ -233,6 +233,16 @@ class UniversalServer(HTTPServer):
             if adapter == "blood_pressure":
                 if source.get("pairing") != "paired":
                     return None
+                for fact in (source, *source["components"]):
+                    clocks = fact["clocks"]
+                    start, end = clocks["event_start"], clocks["event_end"]
+                    try:
+                        if not (
+                            valid_clock(start) and valid_clock(end) and start <= end
+                        ):
+                            return None
+                    except ValueError:
+                        return None
                 values = {part["role"]: part["value"] for part in source["components"]}
                 if set(values) != {"systolic", "diastolic"}:
                     return None
@@ -254,6 +264,10 @@ class UniversalServer(HTTPServer):
                       AND NOT EXISTS (
                           SELECT 1 FROM json_each(typed,'$.clocks') AS source_clock
                           WHERE json_type(typed,source_clock.fullkey || '.utc')='null'
+                      )
+                      AND NOT coalesce(
+                          json_extract(typed,'$.clocks.endDate.utc') <
+                          json_extract(typed,'$.clocks.startDate.utc'), 0
                       )
                 )
                 SELECT * FROM values_in_scope

@@ -88,6 +88,11 @@ def adapt(family, source_type, tag, attrs):
     base = {"clocks": clocks}
     if family == "auxiliary_xml":
         return "fallback", base
+    if any(clock["utc"] is None for clock in clocks.values()):
+        return "quarantine", dict(base, reason="invalid_source_clock")
+    if "startDate" in clocks and "endDate" in clocks:
+        if clocks["endDate"]["utc"] < clocks["startDate"]["utc"]:
+            return "quarantine", dict(base, reason="reversed_source_interval")
 
     if family == "quantity" and tag == "Record":
         try:
@@ -108,9 +113,11 @@ def adapt(family, source_type, tag, attrs):
         )
         return adapter, dict(base, source_state=attrs["value"])
 
-    if tag == "ActivitySummary" and attrs.get("dateComponents"):
+    if tag == "ActivitySummary" and "dateComponents" in attrs:
         try:
             local_date = date.fromisoformat(attrs["dateComponents"]).isoformat()
+            if local_date != attrs["dateComponents"]:
+                raise ValueError("invalid HealthData calendar date")
         except ValueError:
             return "quarantine", dict(base, reason="invalid_activity_date")
         return "activity_date", dict(
@@ -445,10 +452,10 @@ class SourceWriter:
         tag,
         attrs,
         bp=None,
-        invalid_bp=False,
+        bp_reason=None,
     ):
-        if invalid_bp:
-            adapter, value = "quarantine", {"reason": "invalid_bp_source"}
+        if bp_reason is not None:
+            adapter, value = "quarantine", {"reason": bp_reason}
         elif bp is None:
             adapter, value = adapt(family, source_type, tag, attrs)
         else:
@@ -671,11 +678,20 @@ def member_range(db, artifact, member, expected, offset, length):
 
 def members(db, artifact, *, after=0, limit=64):
     rows = db.execute(
-        """SELECT ordinal,path,kind,member_sha256,byte_length FROM members
-           WHERE digest=? AND ordinal>? ORDER BY ordinal LIMIT ?""",
+        """SELECT ordinal,path,kind,member_sha256,byte_length,
+                  CASE kind WHEN 'attachment' THEN 'byte_only'
+                            WHEN 'directory' THEN 'directory' ELSE 'structured' END,
+                  CASE WHEN kind='attachment' AND lower(path) LIKE '%.gpx'
+                            THEN 'gpx_not_recognized_as_supported_xml'
+                       WHEN kind='attachment' THEN 'no_structured_decoder' END
+           FROM members WHERE digest=? AND ordinal>? ORDER BY ordinal LIMIT ?""",
         (artifact, after, MAX_PAGE_ROWS + 1),
     )
-    return _bounded(rows, limit, ("ordinal", "path", "kind", "sha256", "byte_length"))
+    return _bounded(
+        rows,
+        limit,
+        ("ordinal", "path", "kind", "sha256", "byte_length", "disposition", "reason"),
+    )
 
 
 def references(db, artifact, member, *, after=0, limit=64):

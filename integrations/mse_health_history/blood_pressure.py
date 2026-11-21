@@ -46,27 +46,38 @@ def source_time(raw):
     canonical_input = (
         f"{base.replace(' ', 'T')}.{(fraction or '').ljust(6, '0')}{offset}"
     )
-    return (
-        datetime.fromisoformat(canonical_input)
-        .astimezone(timezone.utc)
-        .isoformat(timespec="microseconds")
-        .replace("+00:00", "Z")
-    )
+    try:
+        return (
+            datetime.fromisoformat(canonical_input)
+            .astimezone(timezone.utc)
+            .isoformat(timespec="microseconds")
+            .replace("+00:00", "Z")
+        )
+    except OverflowError:
+        raise ValueError("unusable HealthData clock") from None
+
+
+class SourceClockError(ValueError):
+    """A BP source clock failed qualification."""
 
 
 def clocks(attrs):
-    start = source_time(attrs.get("startDate"))
-    end = source_time(attrs.get("endDate"))
-    if end < start:
-        raise ValueError("reversed HealthData interval")
     creation = attrs.get("creationDate")
+    try:
+        start = source_time(attrs.get("startDate"))
+        end = source_time(attrs.get("endDate"))
+        created_at = source_time(creation) if creation is not None else None
+    except ValueError:
+        raise SourceClockError("invalid_source_clock") from None
+    if end < start:
+        raise SourceClockError("reversed_source_interval")
     return {
         "source_start": attrs["startDate"],
         "source_end": attrs["endDate"],
         "source_creation": creation,
         "event_start": start,
         "event_end": end,
-        "created_at": source_time(creation) if creation is not None else None,
+        "created_at": created_at,
     }
 
 

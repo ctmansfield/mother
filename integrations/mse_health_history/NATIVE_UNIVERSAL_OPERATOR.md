@@ -146,7 +146,13 @@ operator estimate. They do not establish a production bound or certify the
 target volume.
 
 Purpose discovery reports whether genuinely timeless rows are eligible.
-Rows with an invalid supplied clock stay in protected source storage.
+HealthData occurrences with an invalid supplied clock, a reversed interval,
+or an invalid ActivitySummary calendar date are quarantined with a reason.
+A malformed BP root or required component makes the whole occurrence
+ineligible. Quarantine keeps exact source events and member bytes. Purpose
+reads also exclude reversed intervals in earlier typed data. Source member
+discovery reports a byte-only disposition and a reason for attachments,
+including GPX unreadable as supported XML.
 Default purpose cursors refer to the last returned eligible row and are
 present only when another eligible row exists. Restart pagination after
 upgrading from the previous candidate. Reviewed fallback grants may
