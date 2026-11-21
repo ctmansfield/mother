@@ -14,8 +14,8 @@
       "sha256": "b6c65b4204ff141096f617c5a2532f50f3f757645f08d2e6cb10777bb675963f"
     },
     "MSE-HEALTH-HISTORY-20261121-06": {
-      "path": "tasks/health-history-r2.json",
-      "sha256": "f3a5e2f3676ced33b8d081aac5d0c9dca03d5bc60e1c69542d74026cbe8b83a7"
+      "path": "tasks/health-history-r3.json",
+      "sha256": "318535a2f31d8f2b7ad018a9f4b7009816d48627a1fd3093bc88fccb2bd37fc2"
     },
     "MSE-INTEGRATION-20261120-01": {
       "path": "tasks/mse-integration-r2.json",

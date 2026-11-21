@@ -1,0 +1,150 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-HEALTH-HISTORY-20261121-06",
+  "task_revision": "1",
+  "observed_at": "2026-11-21T06:49:21Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Current worker completions and owning receipts checked; export sealed locally; native importer CI passes; typed BP recovery bug reproduced."
+  },
+  "goal": "Archive all accessible historical HealthKit categories with BP priority and prepare scoped Mother/Coach data views.",
+  "scope": [
+    "Separate all-history import, BP-first app/schema preparation, protected raw vault and per-family coverage; Nightscout investigation/synthetic source only."
+  ],
+  "acceptance": [
+    "Protected exact originals, explicit per-family retained/normalized/consumable coverage, pairedBP lineage, live-overlapdedup and reproducible source/config/key interfaces."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "All available historical HealthKit categories to private archive VM, archival retention, BP priority and necessary reviewed source/native capture preparation."
+    ],
+    "not_authorized": [
+      "Real Nightscout endpoint/credentials, vendor cloud signup/cuff reset, LLM forwarding, main merge, unrelated infrastructure changes."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Backups/restores deferred; preserve current live pilot/window. Raw health/identity data remains with custodians and out of shared logs. No anonymity claim."
+  ],
+  "instruction_binding": {
+    "id": "MSE-HEALTH-HISTORY-20261121-06",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057772764",
+    "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "HEALTH-HISTORY-PROGRESS-R3",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-HEALTH-HISTORY-20261121-06",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057772764",
+      "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4"
+    },
+    "source": "progress",
+    "tests_performed": [
+      "Reviewed eight worker snapshots, canonical receipts, and exact PR51 hosted check results."
+    ],
+    "limitations": [
+      "Author native importer tests require independent review; real parse and typed VM destination pending; reproduced BP recovery gap blocks enabled guest qualification."
+    ],
+    "requested_decision": "Only genuine native export or grant steps when ready.",
+    "next_action": "#next_action"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-HEALTH-HISTORY-20261121-06",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057772764",
+      "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4"
+    },
+    "source": "progress"
+  },
+  "decisions": [
+    {
+      "id": "all-healthkit-history",
+      "value": "User explicitly selected all available HealthKit categories/history, especially BP.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "User clarification and BP priority."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "PUSHED",
+      "detail": "Native importer PR51 91cc2cf pushed; BP ea5a821 pending recovery fix; app9232385 pending status refinement.",
+      "source": "progress"
+    },
+    "test": {
+      "status": "PENDING",
+      "detail": "Native PR51 all8hosted checks pass; independent parser/package/lineage review assigned; BP recovery failure independently reproduced.",
+      "source": "progress"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge.",
+      "source": "source"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "Real8447 separate disabled stage under review; no completed upload claimed. BP8448 held. Preserve8446.",
+      "source": "progress"
+    },
+    "runtime": {
+      "status": "NOT_IMPORTED",
+      "detail": "Export locally sealed with originals retained; real parsing/typed import not yet claimed.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Per-family capability and coverage, protected VM receiver qualification, actual historical source bytes, Mother/Coach consumer projection."
+  ],
+  "conflicts": [],
+  "blockers": [
+    "BP indeterminate crash state returns202 despite inability to progress.",
+    "Real parsing requires independent source and protected environment qualification."
+  ],
+  "dependencies": [
+    "ATLAS coverage/BP contract; ORACLE signed candidate; FORGE bulk/schema; PHOENIX private vault; independent SENTINEL/PROVENANCE; NICKY user native export."
+  ],
+  "next_action": {
+    "action": "Complete reviewed real ciphertext custody/readback/closure; qualify native importer and protected typed destination; fix and independently rerun BP recovery before guest release.",
+    "role": "GADGET and assigned owners"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/health-history-source-r1.json",
+      "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated canonical comment readback.",
+        "result": "Published and visible; recipient acknowledgements separate.",
+        "limitations": [
+          "No full-window completion inferred."
+        ],
+        "observed_at": "2026-11-21T05:16:20Z"
+      }
+    },
+    "progress": {
+      "path": "evidence/health-history-progress-r3.json",
+      "sha256": "0310fb775102b7e6de7ce8ad4ce0646ea4c2ffdc606c2fe9bfe2a5e3e5d69f3c",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact GitHub comment readback.",
+        "result": "Posted and visible; assignment acknowledgments separate.",
+        "limitations": [
+          "Real VM custody and typed import not yet demonstrated."
+        ],
+        "observed_at": "2026-11-21T06:49:21Z"
+      }
+    }
+  }
+}
