@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import fcntl
+import json
 from hashlib import sha256
 import os
 from pathlib import Path
@@ -79,7 +80,12 @@ class Enrollment:
         utc(self.cutoff)
 
     def identity(self):
-        return canonical_json({k: v for k, v in vars(self).items() if k != "enabled"})
+        return canonical_json(
+            {
+                "layout": "history-vault/2",
+                **{k: v for k, v in vars(self).items() if k != "enabled"},
+            }
+        )
 
 
 class CiphertextVault:
@@ -95,6 +101,7 @@ class CiphertextVault:
         self.partial = self.root / "partial.age"
         self.original = self.root / "original.age"
         self.committed = self.root / "receipt.json"
+        self.witness = self.root / "receipt.witness.json"
 
     def _sync_dir(self):
         fd = os.open(self.root, os.O_RDONLY | os.O_DIRECTORY)
@@ -160,9 +167,19 @@ class CiphertextVault:
         )
 
     def _receipt(self):
-        if not self._has(self.committed):
+        if not self._has(self.witness):
             return None
+        if not self._has(self.committed) or self.witness.stat().st_size > 8192:
+            raise ValueError("history receipt witness integrity mismatch")
         body = self._receipt_body()
+        proof = json.loads(self.witness.read_bytes())
+        if (
+            not isinstance(proof, dict)
+            or set(proof) != {"receipt_id", "receipt_verified_at"}
+            or proof["receipt_id"] != body["receipt_id"]
+            or utc(proof["receipt_verified_at"]) >= utc(self.enrollment.cutoff)
+        ):
+            raise ValueError("history receipt witness integrity mismatch")
         if (
             self.committed.stat().st_size > 8192
             or self.committed.read_bytes() != canonical_json(body).encode()
@@ -187,8 +204,10 @@ class CiphertextVault:
             if self._receipt() is not None:
                 self._hash_original(self.original)
 
-    def writable(self):
-        if not self.enrollment.enabled or self.clock() >= utc(self.enrollment.cutoff):
+    def writable(self, now=None):
+        if now is None:
+            now = self.clock()
+        if not self.enrollment.enabled or now >= utc(self.enrollment.cutoff):
             raise VaultClosed("history intake closed")
 
     def progress(self):
@@ -276,14 +295,25 @@ class CiphertextVault:
                 self._sync_dir()
             self.writable()
             receipt = self._receipt_body()
-            temporary = self.root / "receipt.pending"
-            if self._has(temporary):
-                # A crashed metadata write carries no authority. Full ciphertext
-                # was verified again above before replacing that staging file.
-                temporary.unlink()
-            self._create(temporary, canonical_json(receipt).encode())
-            self.writable()
-            os.rename(temporary, self.committed)
-            self._sync_dir()
-            self.writable()
+            self._publish_metadata(self.committed, canonical_json(receipt).encode())
+            verified_at = self.clock()
+            self.writable(verified_at)
+            proof = {
+                "receipt_id": receipt["receipt_id"],
+                "receipt_verified_at": verified_at.astimezone(timezone.utc)
+                .isoformat(timespec="microseconds")
+                .replace("+00:00", "Z"),
+            }
+            # Only this witness exposes the already durable pre-cutoff receipt.
+            # Publishing it performs no data write or new acceptance decision.
+            self._publish_metadata(self.witness, canonical_json(proof).encode())
             return receipt
+
+    def _publish_metadata(self, destination, body):
+        temporary = destination.with_suffix(".pending")
+        if self._has(temporary):
+            temporary.unlink()
+        self._create(temporary, body)
+        self.writable()
+        os.rename(temporary, destination)
+        self._sync_dir()

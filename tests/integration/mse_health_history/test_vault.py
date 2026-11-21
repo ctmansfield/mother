@@ -224,3 +224,64 @@ class VaultTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             reopened.retrieve(0)
         self.assertEqual(self.vault.original.read_bytes(), self.body)
+
+    def test_cutoff_after_receipt_fsync_keeps_object_and_receipt_sealed(self):
+        self.start()
+        original_sync = self.vault._sync_dir
+
+        def sync():
+            original_sync()
+            if self.vault.committed.exists() and not self.vault.witness.exists():
+                self.now = END
+
+        self.vault._sync_dir = sync
+        self.assertEqual(self.request("PUT", ROUTE, "upload", body=self.body)[0], 403)
+        reopened = self.open_vault()
+        reopened.check_startup()
+        self.assertEqual(reopened.original.read_bytes(), self.body)
+        self.assertFalse(reopened.progress()["complete"])
+        self.assertEqual(self.request("GET", ROUTE, "receipt")[0], 404)
+        self.assertEqual(
+            self.request("GET", ROUTE + "/ciphertext?offset=0", "ciphertext")[0], 404
+        )
+        with self.assertRaises(VaultClosed):
+            self.upload(reopened, 0, self.body)
+
+    def test_crash_before_witness_does_not_infer_receipt_on_reopen(self):
+        original_sync = self.vault._sync_dir
+
+        def sync():
+            original_sync()
+            if self.vault.committed.exists() and not self.vault.witness.exists():
+                raise OSError("synthetic crash before cutoff observation")
+
+        self.vault._sync_dir = sync
+        with self.assertRaises(OSError):
+            self.upload(self.vault, 0, self.body)
+        reopened = self.open_vault()
+        reopened.check_startup()
+        with self.assertRaises(KeyError):
+            reopened.receipt()
+        with self.assertRaises(KeyError):
+            reopened.retrieve(0)
+        # An explicit in-window exact retry can rehash and reverify the
+        # durable files. Startup alone must never synthesize a witness.
+        self.assertEqual(self.upload(reopened, 0, self.body), reopened.receipt())
+
+    def test_witness_fsync_crossing_cutoff_returns_already_verified_receipt(self):
+        self.start()
+        original_sync = self.vault._sync_dir
+
+        def sync():
+            original_sync()
+            if self.vault.witness.exists():
+                self.now = END
+
+        self.vault._sync_dir = sync
+        code, receipt = self.request("PUT", ROUTE, "upload", body=self.body)
+        self.assertEqual(code, 200)
+        reopened = self.open_vault()
+        reopened.check_startup()
+        self.assertEqual(reopened.receipt(), json.loads(receipt))
+        self.assertEqual(reopened.retrieve(0), self.body)
+        self.assertEqual(self.request("PUT", ROUTE, "upload", body=self.body)[0], 401)

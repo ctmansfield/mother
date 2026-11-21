@@ -59,7 +59,8 @@ python -B -m integrations.mse_health_history.vault_server serve \
 ```
 
 The initializer refuses a populated root and pins every enrollment field
-except the enable switch. Regular restart uses serve. Use TLS with the
+except the enable switch. The receipt-witness layout is `history-vault/2`.
+Preserve any earlier staged root and qualify this package in a fresh root. Regular restart uses serve. Use TLS with the
 approved guest-terminated certificate and client-verified hostname. There
 is no wildcard, SQL or plaintext listener. Disable intake and close only its
 separate relay when stopping. Leave the files in place.
@@ -75,14 +76,19 @@ separate relay when stopping. Leave the files in place.
   GET `/progress` reports offset and completion. An exact repeat of a
   contained range is idempotent. Changed, overlapping, or skipped ranges
   fail. No cursor or completion is inferred from a lost response.
-- A final 200 receipt means the full pinned ciphertext hash and length were
-  checked, its file and name were durable, and the separate raw receipt was
-  durably published. Full hash verification after an interrupted final
-  upload requires an exact contained retry before the cutoff. A partial or
-  unacknowledged object at cutoff stays restricted. After cutoff it is
-  never automatically adopted, decrypted, replayed or published. A missing
-  receipt remains missing on startup. A receipt previously bound to durable
-  ciphertext remains available to authorized readers.
+- A final 200 means the ciphertext was rehashed and both the final file
+  name and candidate receipt were observed durable before cutoff. A separate
+  witness binds that pre-cutoff observation to the receipt ID. Only a
+  witnessed receipt is visible to readers. If the receipt-directory sync
+  returns at cutoff or later, PUT is denied and receipt/ciphertext reads
+  stay hidden through restart. Startup never supplies a missing witness.
+- An explicit, byte-identical contained retry before cutoff may rehash and
+  reverify an interrupted object. After cutoff there is no retry, new
+  byte admission, or inferred acceptance. If only the final witness
+  directory sync crosses cutoff, the original PUT may return its already
+  verified receipt. That sync records proof of a pre-cutoff decision
+  and adds no ciphertext. This finite upload lease is separate from
+  the selected 48-hour pilot. Unwitnessed bytes remain restricted.
 - Receipt GET on the same path requires the receipt role. Use a separate
   ciphertext role for GET `/ciphertext?offset=N`, at most 4 MiB per response.
   The client verifies each response hash and the complete object against
