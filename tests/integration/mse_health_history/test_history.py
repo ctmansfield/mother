@@ -169,6 +169,54 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual((upper["original_decimal"], upper["value"]), ("124.00", "124"))
         self.assertEqual(upper["clocks"]["source_start"], OBSERVED)
 
+    def test_native_bp_backfill_uses_explicit_membership_and_artifact_lineage(self):
+        leaf_pair = record(SYSTOLIC, "124") + record(DIASTOLIC, "81")
+        latest = self.file(xml(correlation(leaf_pair)), "newer.xml")
+        self.catalog.ingest(latest)
+
+        # The historical portal parser grouped BP by equal times and skipped old
+        # rows below a global watermark. Preserve equal-clock occurrences here.
+        earlier_clock = "2026-11-20 10:00:00 +1000"
+        earlier_pair = correlation(leaf_pair).replace(OBSERVED, earlier_clock)
+        standalone = leaf_pair.replace(OBSERVED, earlier_clock)
+        alternate_spelling = record(
+            "HKQuantityTypeIdentifierSystolicBloodPressure", "124"
+        ).replace(OBSERVED, earlier_clock)
+        archive_file = self.root / "older.zip"
+        with ZipFile(archive_file, "w") as archive:
+            archive.writestr(
+                "apple_health_export/export.xml",
+                xml(earlier_pair + standalone + earlier_pair + alternate_spelling),
+            )
+
+        reopened = self.open_catalog()
+        receipt = reopened.ingest(archive_file)
+        self.assertEqual(receipt["observed_top_level_rows"], 5)
+        self.assertEqual(receipt["unnormalized_top_level_rows"], 1)
+        lineage = list(reopened.blood_pressure_lineage(receipt["sha256"]))
+        self.assertEqual(
+            [
+                (row["member"], row["ordinal"], row["fact"]["pairing"])
+                for row in lineage
+            ],
+            [
+                (1, 1, "paired"),
+                (1, 2, "unpaired"),
+                (1, 3, "unpaired"),
+                (1, 4, "paired"),
+            ],
+        )
+        self.assertEqual(len({row["revision"] for row in lineage}), 4)
+        self.assertEqual(
+            {row["fact"]["clocks"]["event_end"] for row in lineage},
+            {"2026-11-20T00:00:00.000000Z"},
+        )
+        self.assertEqual(len(list(reopened.blood_pressure(current=True))), 5)
+        self.assertEqual(reopened.ingest(archive_file), receipt)
+        self.assertEqual(
+            list(reopened.blood_pressure_lineage(receipt["sha256"])), lineage
+        )
+
     def test_path_escape_confusable_names_symlink_and_entities_are_refused(self):
         for name, reason in (
             ("../escape", "unsafe ZIP"),
