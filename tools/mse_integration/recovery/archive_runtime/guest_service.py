@@ -5,6 +5,7 @@ CONFIG = json.loads(Path(sys.argv[1]).read_text())
 HOST, IFACE = sys.argv[2:4]
 GUEST_IP = CONFIG["expected_guest_ipv4"]
 assert re.fullmatch("[a-z0-9][a-z0-9.-]+", HOST)
+assert re.fullmatch("[a-zA-Z0-9_-]{1,15}", IFACE)
 root = Path("/opt/phoenix-mse-archive")
 source = root / "source"
 parent = Path("/var/lib/phoenix-mse-archive")
@@ -123,8 +124,8 @@ run(
 unit.write_text(
     f"""[Unit]
 Description=Protected MSE synthetic archive HTTPS
-After=network-online.target
-Wants=network-online.target
+After=systemd-networkd.service
+Requires=systemd-networkd.service
 
 [Service]
 Type=exec
@@ -132,6 +133,7 @@ User=mse-archive
 Group=mse-archive
 WorkingDirectory={source}
 UMask=0077
+ExecStartPre=/usr/lib/systemd/systemd-networkd-wait-online --interface={IFACE}:routable --ipv4 --timeout=20
 ExecStart={v} -B -m integrations.mse_archive_service.server serve --config {config} --root {state} --bind {GUEST_IP} --port 8445 --cert {cert} --key {key}
 KillSignal=SIGINT
 TimeoutStopSec=15s
