@@ -88,6 +88,48 @@ and observed write/read duration under a chosen candidate. These figures
 do not establish host capacity, locking on networked mounts or recovery time.
 [Database fit measurements](https://github.com/ctmansfield/mother/pull/36)
 
+## Proposed connection and phone-sync requirements
+
+Remote database connections should default to encrypted transport with
+certificate-chain and server-hostname verification. A missing trust root,
+name mismatch, or TLS negotiation failure must stop the connection. No
+silent plaintext fallback. Any engine or client choice must preserve a
+supported path to that mode before remote access is approved. A same-host
+Unix-domain socket may be considered separately with explicit filesystem
+permissions, service identity and peer authorization. Socket access does
+not provide encrypted transport. Transport security and encryption of
+database files and backups are separate decisions. No engine, certificate,
+trust root or socket path is selected here.
+
+The phone connects to a private **HTTPS ingestion API over Tailscale**.
+Keep database credentials and database access behind the API. The phone
+validates the HTTPS server certificate and hostname even on the tailnet,
+and presents a scoped API identity. Tailnet reachability, HTTPS identity
+and API authorization are separate checks. The ingress URL, audience,
+certificate and operating policy remain unselected.
+
+The proposed sync sequence is:
+
+1. Persist original bytes, digest, scope and stable batch identity in a
+   durable phone outbox before sending. Keep the outbox through timeout,
+   restart and uncertain response.
+2. Send the same batch over the private HTTPS route. The archive validates
+   scope and content, commits the original and its acceptance stage, and
+   returns a durable receipt. An identical retry returns the existing
+   commitment. Changed content under the same identity is a conflict.
+3. Verify the receipt against the expected scope, batch, digest and required
+   commitment stage before durably acknowledging the outbox item or advancing
+   the delivery checkpoint. A transport response alone is insufficient.
+   A delivery checkpoint supplies no authority to advance a HealthKit
+   acquisition anchor.
+
+Earlier synthetic upload and network checks provide reusable transport
+evidence. The offline candidate provides reusable custody, retry and recovery
+evidence. Continuous real-data sync, background execution, physical-device
+restart and offline catch-up through the proposed API remain unqualified.
+[Health-data ingestion requirements](https://github.com/ctmansfield/mother/blob/91d67e387e91d93a7a60aec03c8164c11c7aa994/docs/mse/HEALTH_DATA_INGESTION_REQUIREMENTS.md)
+· [Offline custody acceptance](https://github.com/ctmansfield/mother/pull/35)
+
 ## Verification, backup and rollback
 
 From a clean detached checkout of exact #31, with the verifier's pinned Git
