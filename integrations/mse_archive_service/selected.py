@@ -119,7 +119,10 @@ class Pilot:
             if not self.start <= record["collector_received_at"] <= now:
                 raise ValueError("selected collector clock outside pilot")
             if record["operation"] == "upsert" and not (
-                self.start <= record["event_start"] <= record["event_end"] <= now
+                self.start
+                <= record["event_start"]
+                <= record["event_end"]
+                <= record["collector_received_at"]
             ):
                 raise ValueError("selected source interval outside pilot")
 

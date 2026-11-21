@@ -273,6 +273,11 @@ class SelectedLiveTests(unittest.TestCase):
             archive.put("unknown", self.body("unknown", [deletion]))
         archive.put("point", self.body("point", [point]))
         self.now = NOW
+        with self.assertRaisesRegex(ValueError, "interval"):
+            archive.put(
+                "not-yet-observed",
+                self.body("not-yet-observed", [dict(point, event_end=NOW)]),
+            )
         archive.put("delete", self.body("delete", [deletion]))
         current = json.loads(archive.export(1, 2, current=True))["view"]
         self.assertEqual(current["rows"], [])
