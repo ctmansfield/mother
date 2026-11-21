@@ -32,6 +32,10 @@ def _reject_number(_):
     raise ValueError("historical BP API decimals must be strings")
 
 
+class BPPageBindingError(ValueError):
+    """A valid page envelope targets the wrong enrolled source or feed."""
+
+
 def read_page(stream, enrollment, source_instance):
     stream.seek(0)
     raw = stream.read(MAX_BYTES + 1)
@@ -51,13 +55,13 @@ def read_page(stream, enrollment, source_instance):
     )
     if (
         page["schema_version"] != VERSION
-        or page["enrollment"] != enrollment
-        or page["source_instance"] != source_instance
         or not isinstance(page["feed"], str)
         or page["feed"] not in FEEDS
         or source_time(page["through"]) != page["through"]
     ):
-        raise ValueError("historical BP page enrollment or feed mismatch")
+        raise ValueError("invalid historical BP schema, feed or through timestamp")
+    if page["enrollment"] != enrollment or page["source_instance"] != source_instance:
+        raise BPPageBindingError("historical BP page enrollment or feed mismatch")
     for field in ("cursor_in", "cursor_out"):
         value = page[field]
         if field == "cursor_in" and value is None:

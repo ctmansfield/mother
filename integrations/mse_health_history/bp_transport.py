@@ -193,14 +193,19 @@ class BPStore:
     def _parse(self, stream, seq, raw):
         if not isinstance(raw, bytes) or len(raw) > MAX_BYTES:
             raise VaultCapacity("BP page byte cap")
-        page = bp_page.read_page(
-            BytesIO(raw), self.config["enrollment_id"], self.config["source_instance"]
-        )
+        try:
+            page = bp_page.read_page(
+                BytesIO(raw),
+                self.config["enrollment_id"],
+                self.config["source_instance"],
+            )
+        except bp_page.BPPageBindingError:
+            raise VaultConflict("BP enrollment page binding mismatch") from None
         if (
             self.config["streams"].get(page["feed"]) != stream
             or page["through"] != self.config["snapshot"]["sample_end_before"]
         ):
-            raise ValueError("BP page binding mismatch")
+            raise VaultConflict("BP stream or snapshot binding mismatch")
         return page
 
     def _facts(self, stream, page):
@@ -442,6 +447,13 @@ class BPStore:
     def custody(self, stream, seq):
         with self.connect() as db:
             witness, receipt, cipher = self._custody(db, stream, seq)
+            if (
+                db.execute(
+                    "SELECT witness FROM pages WHERE stream=? AND seq=?", (stream, seq)
+                ).fetchone()[0]
+                is None
+            ):
+                self.writable()
         return witness, receipt, cipher
 
     def commit(self, stream, seq, statement, principal, raw_witness):

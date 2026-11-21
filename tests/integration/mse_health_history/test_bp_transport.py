@@ -322,6 +322,10 @@ class BPTransportTests(unittest.TestCase):
     def test_https_pending_certificate_binding_then_witnessed_receipt(self):
         self.serve(self.store)
         body = self.page()
+        mismatch = json.dumps(
+            dict(json.loads(body), through="2026-11-20T00:00:00.000000Z")
+        ).encode()
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", mismatch)[0], 409)
         pending = self.request("PUT", "/pages/1", "upload", body)
         self.assertEqual(pending[0], 202)
         self.assertEqual(json.loads(pending[1])["status"], "awaiting_custodian_witness")
