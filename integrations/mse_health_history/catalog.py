@@ -1,0 +1,460 @@
+"""Atomic synthetic custody catalog with independently counted BP normalization."""
+
+from contextlib import closing, contextmanager
+from hashlib import sha256
+import json
+import os
+from pathlib import Path
+import re
+import sqlite3
+from tempfile import NamedTemporaryFile
+from zipfile import BadZipFile
+
+from mother.physiology.contracts import canonical_json
+
+from . import bp_page
+from .blood_pressure import BloodPressure, protected_ref, source_time
+from .files import CHUNK, InvalidHistory, hash_stream, private_path
+from .inventory import Limits, scan
+from .sealed_page import authenticate_page
+
+DIGEST = re.compile(r"[a-f0-9]{64}")
+DDL = """
+CREATE TABLE identity (owner TEXT NOT NULL);
+CREATE TABLE artifacts (
+    digest TEXT PRIMARY KEY, receipt TEXT NOT NULL
+);
+CREATE TABLE members (
+    digest TEXT NOT NULL REFERENCES artifacts(digest), ordinal INTEGER NOT NULL,
+    path TEXT, kind TEXT NOT NULL, member_sha256 TEXT NOT NULL, byte_length INTEGER NOT NULL,
+    PRIMARY KEY(digest, ordinal)
+);
+CREATE TABLE coverage (
+    digest TEXT NOT NULL REFERENCES artifacts(digest), family TEXT NOT NULL, source_type TEXT NOT NULL,
+    observed INTEGER NOT NULL, typed INTEGER NOT NULL, unnormalized INTEGER NOT NULL,
+    first_event TEXT, last_event TEXT,
+    PRIMARY KEY(digest, family, source_type)
+);
+CREATE TABLE bp_revisions (
+    revision TEXT PRIMARY KEY, identity TEXT NOT NULL, normalized TEXT NOT NULL
+);
+CREATE INDEX bp_identity ON bp_revisions(identity);
+CREATE TABLE bp_members (
+    revision TEXT NOT NULL REFERENCES bp_revisions(revision), native_ref TEXT NOT NULL,
+    PRIMARY KEY(revision, native_ref)
+);
+CREATE TABLE bp_deletions (
+    digest TEXT NOT NULL REFERENCES artifacts(digest), native_ref TEXT NOT NULL,
+    PRIMARY KEY(digest,native_ref)
+);
+CREATE INDEX bp_deleted_key ON bp_deletions(native_ref);
+CREATE TABLE bp_cursors (
+    feed TEXT PRIMARY KEY, through TEXT NOT NULL, anchor_sha256 TEXT NOT NULL,
+    exhausted INTEGER NOT NULL CHECK(exhausted IN (0,1))
+);
+CREATE TABLE sightings (
+    digest TEXT NOT NULL, member INTEGER NOT NULL, ordinal INTEGER NOT NULL,
+    revision TEXT NOT NULL REFERENCES bp_revisions(revision),
+    PRIMARY KEY(digest, member, ordinal),
+    FOREIGN KEY(digest, member) REFERENCES members(digest, ordinal) DEFERRABLE INITIALLY DEFERRED
+);
+"""
+
+
+def _clock_or_none(value):
+    try:
+        return source_time(value)
+    except ValueError:
+        return None
+
+
+class SyntheticHistoryCatalog:
+    """Local synthetic source candidate. Production vault is deliberately separate."""
+
+    def __init__(
+        self,
+        root,
+        *,
+        enrollment,
+        key,
+        limits=Limits(),
+        archive_id="synthetic-bp-custody",
+        bp_cutoff=None,
+    ):
+        if not isinstance(enrollment, str) or not re.fullmatch(
+            r"synthetic-[A-Za-z0-9-]{1,100}", enrollment
+        ):
+            raise ValueError("synthetic history enrollment required")
+        self.root = Path(root).absolute()
+        self.objects = self.root / "originals"
+        self.db = self.root / "history.sqlite3"
+        if not isinstance(archive_id, str) or not re.fullmatch(
+            r"synthetic-[A-Za-z0-9-]{1,100}", archive_id
+        ):
+            raise ValueError("synthetic history archive identity required")
+        self.archive_id = archive_id
+        self.enrollment = enrollment
+        if bp_cutoff is not None and source_time(bp_cutoff) != bp_cutoff:
+            raise ValueError("historical BP cutoff requires canonical UTC")
+        self.bp_cutoff = bp_cutoff
+        self.bp = BloodPressure(enrollment, key)
+        self.owner = protected_ref(
+            key, "historical-catalog/0.1", archive_id, enrollment, bp_cutoff
+        )
+        self.limits = limits
+
+    def initialize(self):
+        private_path(self.root, directory=True)
+        if any(self.root.iterdir()):
+            raise InvalidHistory("history initialization requires an empty root")
+        self.objects.mkdir(mode=0o700)
+        descriptor = os.open(self.db, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        os.close(descriptor)
+        with closing(sqlite3.connect(self.db)) as db, db:
+            db.executescript("BEGIN IMMEDIATE;\n" + DDL)
+            db.execute("INSERT INTO identity VALUES (?)", (self.owner,))
+
+    @contextmanager
+    def _connection(self, *, write=False):
+        private_path(self.root, directory=True)
+        private_path(self.objects, directory=True)
+        private_path(self.db, directory=False)
+        for suffix in ("-journal", "-wal", "-shm"):
+            sidecar = Path(str(self.db) + suffix)
+            if os.path.lexists(sidecar):
+                private_path(sidecar, directory=False)
+        uri = self.db.as_uri() + ("?mode=rw" if write else "?mode=ro")
+        with closing(sqlite3.connect(uri, uri=True, timeout=5)) as db, db:
+            db.execute("PRAGMA foreign_keys=ON")
+            if write:
+                db.execute("PRAGMA synchronous=FULL")
+                db.execute("BEGIN IMMEDIATE")
+            if db.execute("SELECT owner FROM identity").fetchall() != [(self.owner,)]:
+                raise InvalidHistory("history enrollment identity mismatch")
+            yield db
+
+    def _stage(self, source, staging):
+        hashing = sha256()
+        size = 0
+        with Path(source).open("rb") as stream:
+            while chunk := stream.read(CHUNK):
+                size += len(chunk)
+                if size > self.limits.archive_bytes:
+                    raise InvalidHistory("history byte limit exceeded")
+                hashing.update(chunk)
+                staging.write(chunk)
+        staging.flush()
+        os.fsync(staging.fileno())
+        return hashing.hexdigest(), size
+
+    def _verify_original(self, body, size):
+        if not isinstance(body, str) or not DIGEST.fullmatch(body):
+            raise InvalidHistory("invalid history original identity")
+        path = self.objects / body
+        private_path(path, directory=False)
+        with path.open("rb") as stream:
+            if hash_stream(stream, self.limits.archive_bytes) != (body, size):
+                raise InvalidHistory("history original integrity mismatch")
+
+    def _publish(self, staging, body, size):
+        # An object without a committed receipt is an orphan, not accepted
+        # custody. An exact retry can use it after verifying its full digest.
+        destination = self.objects / body
+        if os.path.lexists(destination):
+            self._verify_original(body, size)
+            return
+        # The SQLite write transaction serializes publication within this private directory.
+        os.rename(staging, destination)
+        descriptor = os.open(self.objects, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+    def ingest(self, source):
+        """Inventory a fabricated exact XML/ZIP original."""
+        return self._ingest(source, self._inventory)
+
+    def ingest_bp_page(self, source):
+        """Commit a fabricated API page and its cursor digest atomically."""
+        return self._ingest(source, self._bp_page)
+
+    def ingest_sealed_bp_page(self, **custodian_inputs):
+        """Authenticate exact ciphertext locally, then commit typed page/cursor only."""
+        body = custodian_inputs["plaintext_sha256"]
+        size = custodian_inputs["plaintext_length"]
+        stream, raw = authenticate_page(**custodian_inputs)
+        with stream, self._connection(write=True) as db:
+            existing = db.execute(
+                "SELECT receipt FROM artifacts WHERE digest=?", (body,)
+            ).fetchone()
+            if existing is not None:
+                receipt = json.loads(existing[0])
+                if receipt.get("ciphertext_receipt") != raw:
+                    raise InvalidHistory(
+                        "historical plaintext already bound to different custody"
+                    )
+                return receipt
+            return self._bp_page(db, stream, body, size, raw=raw)
+
+    def _ingest(self, source, operation):
+        private_path(self.root, directory=True)
+        private_path(self.objects, directory=True)
+        with NamedTemporaryFile(
+            dir=self.objects, prefix=".pending-", delete=False
+        ) as stage:
+            try:
+                body, size = self._stage(source, stage)
+                with self._connection(write=True) as db:
+                    existing = db.execute(
+                        "SELECT receipt FROM artifacts WHERE digest=?", (body,)
+                    ).fetchone()
+                    if existing is not None:
+                        self._verify_original(body, size)
+                        return json.loads(existing[0])
+                    receipt = operation(db, stage, body, size)
+                    self._publish(stage.name, body, size)
+                    return receipt
+            finally:
+                Path(stage.name).unlink(missing_ok=True)
+
+    def _record_bp(self, db, original, member, ordinal, normalized):
+        identity, revision, document = normalized
+        db.execute(
+            "INSERT OR IGNORE INTO bp_revisions VALUES (?,?,?)",
+            (revision, identity, canonical_json(document)),
+        )
+        db.executemany(
+            "INSERT OR IGNORE INTO bp_members VALUES (?,?)",
+            [
+                (revision, item["native_ref"])
+                for item in document["components"]
+                if item["native_ref"] is not None
+            ],
+        )
+        db.execute(
+            "INSERT INTO sightings VALUES (?,?,?,?)",
+            (original, member, ordinal, revision),
+        )
+
+    def _bp_page(self, db, stage, body, size, *, raw=None):
+        page = bp_page.read_page(stage, self.enrollment, DIGEST)
+        if page["through"] != self.bp_cutoff:
+            raise InvalidHistory(
+                "historical BP cutoff differs from configured enrollment"
+            )
+        feed = page["feed"]
+        previous = db.execute(
+            "SELECT through,anchor_sha256,exhausted FROM bp_cursors WHERE feed=?",
+            (feed,),
+        ).fetchone()
+        enrolled = db.execute("SELECT through FROM bp_cursors LIMIT 1").fetchone()
+        if enrolled is not None and enrolled[0] != page["through"]:
+            raise InvalidHistory("historical BP enrollment cutoff changed")
+        if previous and previous[2]:
+            raise InvalidHistory("historical BP feed already completed")
+        if page["prior_cursor_sha256"] != (previous[1] if previous else None):
+            raise InvalidHistory("historical BP cursor digest mismatch")
+        if (page["upserts"] or page["deleted_ids"]) and (
+            page["next_cursor_sha256"] == page["prior_cursor_sha256"]
+        ):
+            raise InvalidHistory("nonempty historical BP page did not advance")
+        db.execute("INSERT INTO artifacts VALUES (?,?)", (body, "{}"))
+        db.execute(
+            "INSERT INTO members VALUES (?,1,NULL,'bp_api_page',?,?)",
+            (body, body, size),
+        )
+        seen = set()
+        for ordinal, row in enumerate(page["upserts"], 1):
+            normalized = bp_page.normalize(row, feed, page["through"], self.bp)
+            if normalized[0] in seen:
+                raise InvalidHistory("ambiguous historical BP page key")
+            seen.add(normalized[0])
+            self._record_bp(db, body, 1, ordinal, normalized)
+        deleted = {
+            self.bp._native({"uuid": native}, bp_page.FEEDS[feed])
+            for native in page["deleted_ids"]
+        }
+        db.executemany(
+            "INSERT INTO bp_deletions VALUES (?,?)",
+            [(body, native) for native in sorted(deleted)],
+        )
+        db.execute(
+            """INSERT INTO bp_cursors VALUES (?,?,?,?)
+               ON CONFLICT(feed) DO UPDATE SET anchor_sha256=excluded.anchor_sha256,
+                   exhausted=excluded.exhausted""",
+            (feed, page["through"], page["next_cursor_sha256"], page["exhausted"]),
+        )
+        receipt = {
+            "schema_version": "mse.historical-bp-page-receipt/0.1",
+            "status": "typed_and_cursor_durable",
+            "archive_id": self.archive_id,
+            "enrollment": self.enrollment,
+            "exhausted": page["exhausted"],
+            "receipt_id": protected_ref(
+                self.bp.key, "history-bp-page", self.owner, body
+            ),
+            "sha256": body,
+            "byte_length": size,
+            "protection": (
+                "synthetic_unencrypted"
+                if raw is None
+                else "custodian_verified_ciphertext"
+            ),
+            "feed": feed,
+            "through": page["through"],
+            "prior_cursor_sha256": page["prior_cursor_sha256"],
+            "next_cursor_sha256": page["next_cursor_sha256"],
+            "typed_upserts": len(seen),
+            "typed_tombstones": len(deleted),
+        }
+        if raw is not None:
+            receipt["ciphertext_receipt"] = raw
+        db.execute(
+            "UPDATE artifacts SET receipt=? WHERE digest=?",
+            (canonical_json(receipt), body),
+        )
+        return receipt
+
+    def _inventory(self, db, stage, body, size):
+        db.execute("INSERT INTO artifacts VALUES (?,?)", (body, "{}"))
+        counts = {}
+        normalizations = {"paired": 0, "unpaired": 0, "incomplete": 0, "ambiguous": 0}
+        nested_unmapped = 0
+        files = 0
+        attachments = 0
+        source_xml = 0
+
+        def member(ordinal, path, kind, digest, size):
+            nonlocal files, attachments, source_xml
+            files += 1
+            attachments += kind == "attachment"
+            source_xml += kind == "healthdata_xml"
+            db.execute(
+                "INSERT INTO members VALUES (?,?,?,?,?,?)",
+                (body, ordinal, path, kind, digest, size),
+            )
+
+        def row(member_index, ordinal, family, source_type, tag, attrs, children):
+            nonlocal nested_unmapped
+            key = (family, source_type or tag)
+            if key not in counts and len(counts) >= self.limits.type_buckets:
+                raise InvalidHistory("HealthData type bucket limit exceeded")
+            values = counts.setdefault(key, [0, 0, 0, None, None])
+            values[0] += 1
+            first = _clock_or_none(attrs.get("startDate"))
+            last = _clock_or_none(attrs.get("endDate"))
+            if first is not None and (values[3] is None or first < values[3]):
+                values[3] = first
+            if last is not None and (values[4] is None or last > values[4]):
+                values[4] = last
+            try:
+                normalized = self.bp.normalize(
+                    tag, attrs, children, (body, member_index, ordinal)
+                )
+            except ValueError:
+                normalized = None
+            if normalized is None:
+                values[2] += 1
+                return
+            identity, revision, document = normalized
+            values[1] += 1
+            normalizations[document["pairing"]] += 1
+            nested_unmapped += document["unsupported_component_count"]
+            self._record_bp(db, body, member_index, ordinal, normalized)
+
+        try:
+            identity = scan(stage, self.limits, row, member)
+        except (BadZipFile, EOFError):
+            raise InvalidHistory("invalid HealthData ZIP structure") from None
+        if identity != (body, size):
+            raise InvalidHistory("history exact original verification failed")
+        db.executemany(
+            "INSERT INTO coverage VALUES (?,?,?,?,?,?,?,?)",
+            [(body, *kind, *values) for kind, values in counts.items()],
+        )
+        receipt = {
+            "schema_version": "mse.historical-original-receipt/0.1",
+            "receipt_id": protected_ref(
+                self.bp.key, "history-custody", self.owner, body
+            ),
+            "sha256": body,
+            "byte_length": size,
+            "protection": "synthetic_unencrypted",
+            "members": files,
+            "attachment_members_retained_unnormalized": attachments,
+            "healthdata_xml_members": source_xml,
+            "observed_top_level_rows": sum(values[0] for values in counts.values()),
+            "normalized_bp_top_level_rows": sum(normalizations.values()),
+            "unnormalized_top_level_rows": sum(values[2] for values in counts.values()),
+            "unmapped_bp_children": nested_unmapped,
+            "bp_pairing_counts": normalizations,
+        }
+        db.execute(
+            "UPDATE artifacts SET receipt=? WHERE digest=?",
+            (canonical_json(receipt), body),
+        )
+        return receipt
+
+    def receipt(self, body):
+        with self._connection() as db:
+            row = db.execute(
+                "SELECT receipt FROM artifacts WHERE digest=?", (body,)
+            ).fetchone()
+        if row is None:
+            raise KeyError("unknown historical original")
+        receipt = json.loads(row[0])
+        if receipt["protection"] == "synthetic_unencrypted":
+            self._verify_original(body, receipt["byte_length"])
+        return receipt
+
+    def coverage(self, body):
+        self.receipt(body)
+        with self._connection() as db:
+            keys = (
+                "family",
+                "source_type",
+                "observed",
+                "typed",
+                "unnormalized",
+                "first_event",
+                "last_event",
+            )
+            rows = db.execute(
+                """SELECT family,source_type,observed,typed,unnormalized,first_event,last_event
+                   FROM coverage WHERE digest=? ORDER BY family,source_type""",
+                (body,),
+            )
+            return [dict(zip(keys, row)) for row in rows]
+
+    def members(self, body):
+        self.receipt(body)
+        with self._connection() as db:
+            keys = ("ordinal", "path", "kind", "sha256", "byte_length")
+            rows = db.execute(
+                """SELECT ordinal,path,kind,member_sha256,byte_length
+                   FROM members WHERE digest=? ORDER BY ordinal""",
+                (body,),
+            )
+            return [dict(zip(keys, row)) for row in rows]
+
+    def blood_pressure(self, *, current=False):
+        with self._connection() as db:
+            query = "SELECT normalized FROM bp_revisions ORDER BY identity,revision"
+            if current:
+                # Multiple source revisions without authoritative ordering
+                # remain conflicted and do not enter the default view.
+                query = """SELECT normalized FROM bp_revisions
+                           WHERE identity IN (
+                               SELECT identity FROM bp_revisions GROUP BY identity HAVING COUNT(*)=1
+                           )
+                           AND NOT EXISTS (
+                               SELECT 1 FROM bp_deletions d
+                               WHERE d.native_ref=bp_revisions.identity
+                                  OR d.native_ref IN (
+                                      SELECT native_ref FROM bp_members m
+                                      WHERE m.revision=bp_revisions.revision
+                                  )
+                           ) ORDER BY identity,revision"""
+            for (body,) in db.execute(query):
+                yield json.loads(body)
