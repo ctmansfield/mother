@@ -11,13 +11,17 @@ class InvalidHistory(ValueError):
     """Refuse an archive without exposing member or record values."""
 
 
+class HistoryLimit(InvalidHistory):
+    """A protected archive or catalog exceeded an approved resource bound."""
+
+
 def hash_stream(stream, limit):
     digest = sha256()
     count = 0
     while chunk := stream.read(CHUNK):
         count += len(chunk)
         if count > limit:
-            raise InvalidHistory("history byte limit exceeded")
+            raise HistoryLimit("history byte limit exceeded")
         digest.update(chunk)
     return digest.hexdigest(), count
 

@@ -14,7 +14,7 @@ from mother.physiology.contracts import canonical_json
 
 from . import bp_page
 from .blood_pressure import BloodPressure, protected_ref, source_time
-from .files import CHUNK, InvalidHistory, hash_stream, private_path
+from .files import CHUNK, HistoryLimit, InvalidHistory, hash_stream, private_path
 from .inventory import Limits, scan
 from .sealed_page import authenticate_page
 from .protected_export import authenticate_export
@@ -208,15 +208,24 @@ class _HistoryCatalog:
             return self._bp_page(db, stream, body, size, raw=raw)
 
     def ingest_sealed_export(
-        self, *, precommit=None, database_bytes=None, **custodian_inputs
+        self,
+        *,
+        precommit=None,
+        database_bytes=None,
+        report_phase=None,
+        **custodian_inputs,
     ):
         """Import after authenticated custody, without a local plaintext original copy."""
         body = custodian_inputs["plaintext_sha256"]
         size = custodian_inputs["plaintext_length"]
         sealed_receipt = custodian_inputs["receipt"]
+        if report_phase is not None:
+            report_phase("BINDING_OR_AUTHENTICATION")
         with authenticate_export(
             limit=self.limits.archive_bytes, **custodian_inputs
         ) as stage:
+            if report_phase is not None:
+                report_phase("CATALOG")
             with self._connection(write=True) as db:
                 if database_bytes is not None:
                     page_size = db.execute("PRAGMA page_size").fetchone()[0]
@@ -225,7 +234,7 @@ class _HistoryCatalog:
                         db.execute(f"PRAGMA max_page_count={limit_pages}").fetchone()[0]
                         != limit_pages
                     ):
-                        raise InvalidHistory("protected catalog page limit unavailable")
+                        raise HistoryLimit("protected catalog page limit unavailable")
                 existing = db.execute(
                     "SELECT receipt FROM artifacts WHERE digest=?", (body,)
                 ).fetchone()
@@ -238,6 +247,8 @@ class _HistoryCatalog:
                     if precommit is not None:
                         precommit()
                     return receipt
+                if report_phase is not None:
+                    report_phase("INVENTORY")
                 receipt = self._inventory(
                     db, stage, body, size, ciphertext_receipt=sealed_receipt
                 )
@@ -401,14 +412,14 @@ class _HistoryCatalog:
                 lookup not in nested_counts
                 and len(nested_counts) >= self.limits.type_buckets
             ):
-                raise InvalidHistory("HealthData nested type bucket limit exceeded")
+                raise HistoryLimit("HealthData nested type bucket limit exceeded")
             nested_counts[lookup] = nested_counts.get(lookup, 0) + 1
 
         def row(member_index, ordinal, family, source_type, tag, attrs, children):
             nonlocal nested_unmapped, invalid_bp
             key = (family, source_type or tag)
             if key not in counts and len(counts) >= self.limits.type_buckets:
-                raise InvalidHistory("HealthData type bucket limit exceeded")
+                raise HistoryLimit("HealthData type bucket limit exceeded")
             values = counts.setdefault(key, [0, 0, 0, None, None])
             values[0] += 1
             first = _clock_or_none(attrs.get("startDate"))
