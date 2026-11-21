@@ -1,9 +1,12 @@
 """Fabricated native ZIP import and bounded streaming qualification."""
 
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from hashlib import sha256
-from io import BytesIO
+import hmac
+from io import BytesIO, StringIO
 import json
 import os
+import plistlib
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -11,6 +14,7 @@ import sys
 from tempfile import TemporaryDirectory
 import tracemalloc
 import unittest
+from unittest.mock import patch
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from test_history import (
@@ -27,7 +31,13 @@ from test_history import (
 
 from test_typed_vm_support import verify_guest, verify_shared_vector
 
-from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
+from mother.physiology.contracts import canonical_json
+
+from integrations.mse_health_history import native_custodian
+from integrations.mse_health_history.catalog import (
+    SyntheticHistoryCatalog,
+    _HistoryCatalog,
+)
 from integrations.mse_health_history.files import InvalidHistory
 from integrations.mse_health_history.inventory import BP_TYPE, Limits, scan
 from integrations.mse_health_history.vault import CiphertextVault, Enrollment, utc
@@ -306,3 +316,100 @@ class NativeRunnerTests(unittest.TestCase):
             UTC,
             THROUGH,
         )
+        self.verify_protected_admission(value, cipher, identity, age, pkey, scratch)
+
+    def verify_protected_admission(self, binding, cipher, identity, age, pkey, scratch):
+        catalog = self.root / "protected-typed"
+        catalog.mkdir(mode=0o700)
+        approval = self.root / "authority-key"
+        approval.touch(mode=0o600)
+        approval.write_bytes(b"a" * 32)
+        admission = self.root / "admission"
+        admission.touch(mode=0o600)
+        policy = dict(
+            mode="protected-native-import",
+            archive_id="admitted-archive",
+            enrollment="admitted-enrollment",
+            source_instance="admitted-source",
+            allowed_at="2020-01-01T00:00:00.000000Z",
+            expires_at="2040-01-01T00:00:00.000000Z",
+            volume_uuid="fabricated-volume",
+            mount=str(self.root),
+            catalog=str(catalog),
+            scratch=str(scratch),
+            ciphertext=str(cipher),
+            identity_file=str(identity),
+            provenance_key_file=str(pkey),
+            age_executable=str(age),
+            binding=binding,
+            catalog_bytes=64 * 1024**2,
+            reserve_bytes=256 * 1024**2,
+            runtime_seconds=60,
+            max_expanded_bytes=1024**2,
+            max_top_level_rows=100,
+        )
+        filesystem = dict(
+            MountPoint=str(self.root),
+            FilesystemType="apfs",
+            EncryptionThisVolumeProper=True,
+            VolumeUUID="fabricated-volume",
+        )
+
+        def sign(value):
+            return hmac.new(
+                b"a" * 32,
+                native_custodian.DOMAIN + canonical_json(value).encode(),
+                sha256,
+            ).hexdigest()
+
+        def run(signature, **filesystem_overrides):
+            admission.write_text(json.dumps(dict(policy=policy, hmac_sha256=signature)))
+            contexts = (
+                patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "runner",
+                        "--admission",
+                        str(admission),
+                        "--approval-key",
+                        str(approval),
+                    ],
+                ),
+                patch.object(sys, "platform", "darwin"),
+                patch.dict(os.environ),
+                patch.object(native_custodian.resource, "setrlimit"),
+                patch.object(native_custodian.signal, "signal"),
+                patch.object(native_custodian.signal, "alarm"),
+                patch.object(
+                    native_custodian.subprocess,
+                    "check_output",
+                    return_value=plistlib.dumps(
+                        dict(filesystem, **filesystem_overrides)
+                    ),
+                ),
+                redirect_stderr(StringIO()),
+                redirect_stdout(StringIO()),
+            )
+            with ExitStack() as stack:
+                for context in contexts:
+                    stack.enter_context(context)
+                return native_custodian.main()
+
+        self.assertEqual(run("0" * 64), 1)
+        self.assertEqual(run(sign(policy), EncryptionThisVolumeProper=False), 1)
+        self.assertFalse(list(catalog.iterdir()))
+        self.assertEqual(run(sign(policy)), 0)
+        self.assertEqual(run(sign(policy)), 0)
+        reopened = _HistoryCatalog(
+            catalog,
+            key=b"k" * 32,
+            archive_id=policy["archive_id"],
+            enrollment=policy["enrollment"],
+            source_instance=policy["source_instance"],
+        )
+        self.assertEqual(
+            reopened.receipt(binding["plaintext_sha256"])["ciphertext_receipt"],
+            binding["receipt"],
+        )
+        self.assertFalse(list(reopened.objects.iterdir()))
