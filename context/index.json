@@ -16,6 +16,10 @@
     "MSE-INTEGRATION-20261120-01": {
       "path": "tasks/mse-integration-r2.json",
       "sha256": "49b6fc4aa6a4a387ffc2a78880e888ef6fe4bc2b6eb12c390e49d2d2c9fab03a"
+    },
+    "MSE-LIVE-PILOT-PREP-20261121-04": {
+      "path": "tasks/live-pilot-prep-r1.json",
+      "sha256": "b8fc5762f0b198b3993493fdc58006a7727b55b7050edc99f6da04f090f474cf"
     }
   },
   "version": 1

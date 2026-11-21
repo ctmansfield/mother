@@ -1,0 +1,133 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-LIVE-PILOT-PREP-20261121-04",
+  "task_revision": "1",
+  "observed_at": "2026-11-21T04:04:22Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Directive and final owning reports read back. Device profile removal is user-confirmed."
+  },
+  "goal": "Implement expanded selected HealthKit collection and archival retention in the next app candidate.",
+  "scope": [
+    "Next app source and signed build; additive archive contract and source adapters; synthetic qualification."
+  ],
+  "acceptance": [
+    "Selected 14 types, collector preservation, all-type synthetic archive/export lineage, archival history semantics and live transmission disabled by default."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Select high-value types and implement next app/source candidate with archival retention."
+    ],
+    "not_authorized": [
+      "Live health upload, device install, runtime migration, new route, main merge or LLM forwarding."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Preserve collector and accepted evidence. Backups/restores remain deferred. Existing startup/CI/reproduction task continues."
+  ],
+  "instruction_binding": {
+    "id": "MSE-LIVE-PILOT-PREP-20261121-04",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056948768",
+    "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "LIVE-PILOT-PREP-DISPATCH-R1",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-LIVE-PILOT-PREP-20261121-04",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056948768",
+      "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759"
+    },
+    "tests_performed": [
+      "PM reviewed published ATLAS selected-healthkit contract35ec238 and confirmed directive readback. App/server candidate tests remain pending."
+    ],
+    "limitations": [
+      "Worker dispatch and contract fixtures do not establish completed implementation or physical acceptance."
+    ],
+    "requested_decision": "None for source/build preparation.",
+    "next_action": "#next_action",
+    "source": "source"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-LIVE-PILOT-PREP-20261121-04",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056948768",
+      "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "archival-retention",
+      "value": "No automatic age purge of accepted exported originals and revision history; current views reflect explicit tombstones.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit user archival retention selection."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "IN_PROGRESS",
+      "detail": "ORACLE app, FORGE schema and ATLAS contract assigned.",
+      "source": "source"
+    },
+    "test": {
+      "status": "PENDING",
+      "detail": "Independent app/server synthetic qualification pending.",
+      "source": "source"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge authorized.",
+      "source": "source"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "Existing archive and phone remain unchanged.",
+      "source": "source"
+    },
+    "runtime": {
+      "status": "NOT_ACTIVATED",
+      "detail": "Live transfer remains disabled; existing phone relay closed.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Per-type implementation and physical background behavior pending candidate; exact live pilot window not set."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "ATLAS selected-type contract; FORGE CI prerequisite; ORACLE candidate; independent review."
+  ],
+  "next_action": {
+    "action": "Complete source/build candidate and independent synthetic review, then report precise pilot launch prerequisites.",
+    "role": "ORACLE, FORGE, ATLAS and independent owners"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/live-pilot-prep-source-r1.json",
+      "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact comment readback.",
+        "result": "Directive published and visible.",
+        "limitations": [
+          "No completion implied."
+        ],
+        "observed_at": "2026-11-21T04:04:22Z"
+      }
+    }
+  }
+}
