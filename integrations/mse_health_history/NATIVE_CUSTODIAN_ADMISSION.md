@@ -144,3 +144,36 @@ central directory peaked at 21,699,747 traced Python bytes during the
 inventory-only scan on the qualification Mac. This measures allocations
 made in that scan. It excludes whole-process memory, native allocations,
 SQLite, and the authenticated import workload.
+
+### Physical child lineage handoff
+
+A PR #61 catalog retains artifact, member and top-level parent sightings.
+That schema lacks the physical child ledger required by the reviewed PR
+#58 projector. Preserve the successful PR #61 catalog for its original
+scope. This successor requires a fresh protected catalog and records
+direct XML child positions before sorting normalized BP components. It
+refuses a parent-only catalog before authenticating or parsing an archive.
+Do not generate physical ordinals from sorted components.
+
+For a separately approved manual continuation, bind one fresh single-use
+admission to this exact successor and the retained authenticated
+ciphertext, using a new empty protected catalog. Keep the previously
+verified member allowance and the other bounds. After independently
+reconciling that run's receipt, the exact PR #58 projector can reopen the
+new catalog on the Mac under the same private catalog scope and produce
+opaque child references. Guest ingest is a distinct authorization gate.
+The PR #61 receipt remains evidence for its own parent-level import.
+
+An optional signed `projection` object requests a protected projection in
+the same manual invocation, after reopening the committed catalog receipt.
+It pins `scope`, canonical UTC `bounds`, `mapping_key_file`, fresh
+`output`, `max_batches` and `max_bytes`. The mapping key is independent
+from the admission and provenance keys and remains on the Mac. The output
+must be a new path on the same approved encrypted volume with an
+owner-only parent separate from typed catalog and scratch. The runner
+preflights the projection bytes in addition to existing storage checks.
+All exact batch files appear together in `batches/` only when publication
+completes. The private accounting file remains in Mac custody. If catalog
+receipt verification succeeded and projection later refuses, preserve
+the catalog and reconcile it read-only. Do not authenticate or parse the
+archive again merely to recover projection.

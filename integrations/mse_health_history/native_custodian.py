@@ -24,6 +24,12 @@ from .catalog import _HistoryCatalog
 from .files import HistoryLimit, LimitKind, NamedHistoryLimit, private_path
 from .inventory import DEFAULT_ZIP_MEMBERS, MAX_ZIP_MEMBERS, Limits
 from .native_runner import private_bytes
+from .native_projected_output import (
+    mapping_key,
+    protected_destination,
+    publish_projection,
+    validate_projection,
+)
 from .native_status import CATEGORIES, DIAGNOSTIC_PREFIX, SUCCESS
 from .protected_export import ExportAuthenticationError
 from .vault import DIGEST, TOKEN
@@ -72,7 +78,7 @@ def load_admission(path, approval_key):
     if not hmac.compare_digest(envelope["hmac_sha256"], expected.hexdigest()):
         raise ValueError("custodian admission authentication")
     if (
-        set(policy) not in (FIELDS, FIELDS | {"max_zip_members"})
+        not FIELDS <= set(policy) <= FIELDS | {"max_zip_members", "projection"}
         or policy["mode"] != "protected-native-import"
     ):
         raise ValueError("custodian admission scope")
@@ -90,6 +96,8 @@ def load_admission(path, approval_key):
     ):
         if type(policy[field]) is not int or not low <= policy[field] <= high:
             raise ValueError("custodian resource bounds")
+    if "projection" in policy:
+        validate_projection(policy["projection"], policy["enrollment"])
     members = policy.get("max_zip_members", DEFAULT_ZIP_MEMBERS)
     if type(members) is not int or not 1 <= members <= MAX_ZIP_MEMBERS:
         raise ValueError("custodian ZIP member limit outside reviewed bounds")
@@ -231,14 +239,23 @@ def main():
         report_phase("ENVIRONMENT")
         catalog_root, scratch = paths_on_encrypted_volume(policy)
         binding = policy["binding"]
+        plan = policy.get("projection")
+        projection_bytes = plan["max_bytes"] if plan is not None else 0
         ensure_space(
             policy,
             catalog_root,
-            extra=binding["plaintext_length"] + 2 * policy["catalog_bytes"],
+            extra=binding["plaintext_length"]
+            + 2 * policy["catalog_bytes"]
+            + projection_bytes,
         )
         key = private_bytes(policy["provenance_key_file"], 32)
         if len(key) != 32 or hmac.compare_digest(key, approval):
             raise ValueError("independent provenance key required")
+        if plan is not None:
+            output = protected_destination(
+                plan, Path(policy["mount"]), catalog_root, scratch
+            )
+            child_mapping_key = mapping_key(plan, approval, key)
         os.environ["SQLITE_TMPDIR"] = str(scratch)
         os.environ["TMPDIR"] = str(scratch)
 
@@ -291,6 +308,21 @@ def main():
         report_phase("READBACK")
         if catalog.receipt(binding["plaintext_sha256"]) != receipt:
             raise ValueError("reopened catalog receipt mismatch")
+        if plan is not None:
+            report_phase("PROJECTION")
+
+            def prepublish():
+                lease(policy)
+                ensure_space(policy, catalog_root)
+
+            publish_projection(
+                catalog,
+                binding["plaintext_sha256"],
+                plan,
+                output,
+                mapping_key=child_mapping_key,
+                prepublish=prepublish,
+            )
         print(SUCCESS.decode("ascii"), end="")
     except (
         AttributeError,
