@@ -29,7 +29,11 @@ from test_history import (
     xml,
 )
 
-from test_typed_vm_support import verify_guest, verify_shared_vector
+from test_typed_vm_support import (
+    verify_guest,
+    verify_projection_window,
+    verify_shared_vector,
+)
 
 from mother.physiology.contracts import canonical_json
 
@@ -51,6 +55,11 @@ class NativeRunnerTests(unittest.TestCase):
 
     def test_shared_three_operation_terminal_vector(self):
         verify_shared_vector(self, self.root)
+
+    def test_projection_filters_whole_out_of_window_sightings_and_reconciles_counts(
+        self,
+    ):
+        verify_projection_window(self, self.root)
 
     def test_inline_dtd_cannot_supply_native_row_types(self):
         def document(declarations):

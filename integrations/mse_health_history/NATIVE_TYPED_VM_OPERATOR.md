@@ -41,6 +41,23 @@ conflicts are 409. Before the terminal receipt commits the snapshot is
 absent. A terminal receipt can still be read after the writer lease
 closes, within the receipt reader's separate lease.
 
+## Protected snapshot accounting
+
+The Mac projector applies the same full-interval rule as guest ingress.
+The root and every included child must independently satisfy
+`lower <= start <= end < upper`. It excludes the entire out-of-window
+upsert and continues through the artifact. Preserve its original facts
+and membership in the protected catalog. The optional `record_accounting`
+callback receives the private totals once the source iterator is consumed,
+before the terminal batch is produced. Record those totals in the
+protected Mac ledger. The totals reconcile source occurrences into
+normalized and unnormalized rows, and normalized BP into emitted and
+snapshot-excluded rows. Snapshot exclusions do not alter the terminal
+manifest's source occurrence or parser quarantine assertions. The latter
+counts invalid BP within unnormalized inventory. Non-BP inventory is
+not parser quarantine. The terminal
+upsert count reflects only emitted operations.
+
 ## PHOENIX guest handoff
 
 Provision a fresh private guest address and dedicated listener port,
