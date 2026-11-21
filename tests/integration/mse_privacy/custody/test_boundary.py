@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
@@ -6,8 +8,10 @@ from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+from threading import Event
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from integrations.mse_privacy.custody import (
     AccessDenied,
@@ -56,7 +60,7 @@ class BoundaryTests(unittest.TestCase):
         self.parent = Path(temp.name).resolve()
         self.roots = {
             f"{name}_root": self.parent / name
-            for name in ("evidence", "vault", "projection")
+            for name in ("evidence", "vault", "projection", "authority", "fence")
         }
         for root in self.roots.values():
             root.mkdir(mode=0o700)
@@ -92,7 +96,7 @@ class BoundaryTests(unittest.TestCase):
     def boot(self, *, initialize=False, grants=None):
         return open_custody(
             **self.roots,
-            grants=grants or self.grants,
+            grants=(grants or self.grants) if initialize else None,
             initialize=initialize,
             clock=lambda: self.now,
         )
@@ -153,9 +157,8 @@ class BoundaryTests(unittest.TestCase):
         with self.assertRaises(AccessDenied):
             self.service.resolve_pseudonym(self.tokens["vault_other"], one)
         reopened, grants = self.boot()
-        self.assertEqual(reopened.pseudonym(grants["vault"]), one)
-        with self.assertRaises(AccessDenied):
-            reopened.pseudonym(self.tokens["vault"])
+        self.assertEqual(grants, {})
+        self.assertEqual(reopened.pseudonym(self.tokens["vault"]), one)
 
     def test_projection_storage_has_no_private_linkage_and_no_fallback(self):
         raw = self.service.put_evidence(self.tokens["evidence"], ORIGINAL)
@@ -181,8 +184,9 @@ class BoundaryTests(unittest.TestCase):
         ):
             self.assertNotIn(removed, dump)
         (self.roots["vault_root"] / "store.sqlite3").unlink()
-        with self.assertRaises(StoreUnavailable):
-            self.service.read_projection(self.tokens["reader"], view_id)
+        self.assertEqual(
+            self.service.read_projection(self.tokens["reader"], view_id), expected
+        )
         self.assertEqual(
             self.service.read_evidence(self.tokens["evidence"], raw), ORIGINAL
         )
@@ -221,43 +225,43 @@ class BoundaryTests(unittest.TestCase):
             self.service.authorize_lineage(
                 self.tokens["audit"], view_id, operation="resolve"
             )
-        updated = {
-            name: replace(grant, generation=2) for name, grant in self.grants.items()
-        }
-        reopened, tokens = self.boot(grants=updated)
-        with self.assertRaises(AccessDenied):
-            reopened.read_projection(tokens["reader"], view_id)
+        reopened, credentials = self.boot()
+        self.assertEqual(credentials, {})
         with self.assertRaises(AccessDenied):
             reopened.read_projection(self.tokens["reader"], view_id)
-        next_id = reopened.issue_view(tokens["writer"])
-        self.assertNotEqual(next_id, view_id)
-        reopened.put_projection(tokens["writer"], next_id, view_payload(next_id))
-        self.assertEqual(
-            reopened.read_projection(tokens["reader"], next_id)["view_id"], next_id
-        )
 
-    def test_projection_only_restore_needs_current_vault_and_generation(self):
-        view_id, _ = self.publish()
-        restore = self.parent / "projection-restore"
-        restore.mkdir(mode=0o700)
-        path = restore / "store.sqlite3"
-        path.touch(mode=0o600)
-        with sqlite3.connect(self.roots["projection_root"] / "store.sqlite3") as source:
-            with sqlite3.connect(path) as backup:
-                source.backup(backup)
-        updated = {
-            name: replace(grant, generation=2) for name, grant in self.grants.items()
-        }
-        roots = dict(self.roots, projection_root=restore)
-        restored, grants = open_custody(**roots, grants=updated, clock=lambda: self.now)
+    def test_projection_restore_without_vault_or_originals_and_stale_authority(self):
+        view_id, expected = self.publish()
+        restored_roots = {}
+        for name in ("projection", "authority"):
+            restore = self.parent / (name + "-restore")
+            restore.mkdir(mode=0o700)
+            path = restore / "store.sqlite3"
+            path.touch(mode=0o600)
+            with sqlite3.connect(
+                self.roots[name + "_root"] / "store.sqlite3"
+            ) as source:
+                with sqlite3.connect(path) as backup:
+                    source.backup(backup)
+            restored_roots[name + "_root"] = restore
+        serving = dict(
+            authority_root=self.roots["authority_root"],
+            fence_root=self.roots["fence_root"],
+            projection_root=restored_roots["projection_root"],
+        )
+        restored, _ = open_custody(**serving, clock=lambda: self.now)
+        self.assertEqual(
+            restored.read_projection(self.tokens["reader"], view_id), expected
+        )
+        self.service.revoke(self.tokens["revoke"])
         with self.assertRaises(AccessDenied):
-            restored.read_projection(grants["reader"], view_id)
-        empty = self.parent / "empty-vault"
-        empty.mkdir(mode=0o700)
-        roots["vault_root"] = empty
+            restored.read_projection(self.tokens["reader"], view_id)
+        serving["authority_root"] = restored_roots["authority_root"]
         with self.assertRaises(StoreUnavailable):
-            open_custody(**roots, grants=updated, clock=lambda: self.now)
-        self.assertFalse((empty / "store.sqlite3").exists())
+            open_custody(**serving, clock=lambda: self.now)
+        (self.roots["fence_root"] / "store.sqlite3").unlink()
+        with self.assertRaises(StoreUnavailable):
+            self.boot()
 
     def test_fifo_and_aliased_store_refuse_without_opening(self):
         fifo = self.roots["vault_root"] / "store.sqlite3-wal"
@@ -280,26 +284,21 @@ except StoreUnavailable:
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         fifo.unlink()
+        swapped, _ = open_custody(
+            **dict(
+                self.roots, projection_root=self.roots["vault_root"], vault_root=None
+            ),
+            clock=lambda: self.now,
+        )
+        view_id = self.service.issue_view(self.tokens["writer"])
         with self.assertRaises(StoreUnavailable):
-            open_custody(
-                **dict(
-                    self.roots,
-                    vault_root=self.roots["projection_root"],
-                    projection_root=self.roots["vault_root"],
-                ),
-                grants=self.grants,
-            )
+            swapped.read_projection(self.tokens["reader"], view_id)
 
     def test_expired_view_is_denied_under_a_longer_reader_grant(self):
         view_id, expected = self.publish()
-        longer = dict(
-            self.grants,
-            reader=replace(self.grants["reader"], expires_at=NOW + timedelta(days=1)),
-        )
-        reopened, tokens = self.boot(grants=longer)
         self.now = NOW + timedelta(hours=1)
         with self.assertRaises(AccessDenied):
-            reopened.read_projection(tokens["reader"], view_id)
+            self.service.read_projection(self.tokens["reader"], view_id)
 
     def test_payload_allowlist_and_immutable_write(self):
         view_id, approved = self.publish()
@@ -322,13 +321,72 @@ except StoreUnavailable:
             self.service.read_projection(self.tokens["reader"], view_id), approved
         )
 
+    def test_denied_public_operations_open_no_private_content_store(self):
+        view, _ = self.publish()
+        with (
+            patch.object(self.service._evidence, "open") as evidence,
+            patch.object(self.service._vault, "open") as vault,
+            patch.object(self.service._projection, "open") as projection,
+        ):
+            for operation in (
+                lambda: self.service.read_evidence(self.tokens["reader"], view),
+                lambda: self.service.read_projection(
+                    self.tokens["other_subject"], view
+                ),
+                lambda: self.service.authorize_projection(self.tokens["reader"]),
+                lambda: self.service.authorize_lineage(
+                    self.tokens["reader"], view, operation="resolve"
+                ),
+            ):
+                with self.assertRaises(AccessDenied):
+                    operation()
+            for opened in (evidence, vault, projection):
+                opened.assert_not_called()
+
+    def test_read_admitted_before_revoke_finishes_then_stale_reads_deny(self):
+        view, expected = self.publish()
+        other, _ = self.boot()
+        inside, release, revoking, revoked = Event(), Event(), Event(), Event()
+        original = self.service._projection.open
+
+        @contextmanager
+        def slow_projection():
+            inside.set()
+            if not release.wait(1):
+                raise AssertionError("test did not release the read")
+            with original() as db:
+                yield db
+
+        def revoke():
+            revoking.set()
+            version = other.revoke(self.tokens["revoke"])
+            revoked.set()
+            return version
+
+        with patch.object(self.service._projection, "open", slow_projection):
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                read = pool.submit(
+                    self.service.read_projection, self.tokens["reader"], view
+                )
+                try:
+                    self.assertTrue(inside.wait(1))
+                    change = pool.submit(revoke)
+                    self.assertTrue(revoking.wait(1))
+                    self.assertFalse(revoked.wait(0.05))
+                finally:
+                    release.set()
+                self.assertEqual(read.result(timeout=2), expected)
+                self.assertEqual(change.result(timeout=2), 2)
+        with self.assertRaises(AccessDenied):
+            other.read_projection(self.tokens["reader"], view)
+
     def test_roots_must_be_distinct_and_private(self):
         nested = self.roots["evidence_root"] / "nested"
         nested.mkdir(mode=0o700)
         for other in (self.roots["evidence_root"], nested):
             roots = dict(self.roots, projection_root=other)
             with self.assertRaisesRegex(ValueError, "disjoint"):
-                open_custody(**roots, grants=self.grants)
+                open_custody(**roots)
         self.roots["vault_root"].chmod(0o755)
         with self.assertRaises(StoreUnavailable):
             self.boot()

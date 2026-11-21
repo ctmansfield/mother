@@ -1,55 +1,54 @@
 # Synthetic privacy custody
 
-This isolated prototype adds three separate roots. It does not connect to the
-accepted PF-001 ledger or change existing HR/SDNN, reference, receipt or source
-bytes. It follows ATLAS's provisional analytical 0.1 contract at
-`794591cfddbd05a2b226f917679429b104bbbac8`. [Round 8](https://github.com/ctmansfield/mother/pull/23#issuecomment-7045857604)
+This prototype adds independent SQLite roots for originals, pseudonyms,
+analytical projections, authorization and a revocation fence. No accepted
+HR/SDNN, PF-001, reference or receipt bytes are modified. [Round 9](https://github.com/ctmansfield/mother/pull/23#issuecomment-7055350520)
 
-| Root | Content | Application access |
-| --- | --- | --- |
-| Evidence | Exact synthetic original bytes, private scope and random evidence handle | Evidence writer for its configured evidence-ingest scope. No analytics, projection-worker, exact-MSE or vault credential reads raw originals through this interface. |
-| Linkage vault | Private scope/recipient/purpose/version/generation and separately random purpose tokens; issued view reservations with expiry | Linkage custodian can issue or resolve a pseudonym in its own context. Projection worker can allocate a view and bind lineage. A separately authorized lineage auditor can resolve an existing view binding. |
-| Projection | Random `av_` view handle and strict analytical 0.1 payload | Projection writer can publish the same approved payload idempotently. Analyst reads only a published view with a matching live reservation. No raw archive fallback or scope, raw-source, linkage or expiry columns in the projection store. |
+| Root | Content and authority |
+| --- | --- |
+| Evidence | Exact synthetic originals and private scoped handles. Only the scoped evidence writer can open originals through the API. |
+| Identity vault | Private random purpose-specific pseudonym mappings. Linkage credentials are distinct from analytical credentials. |
+| Projection | Opaque view handle and allowlisted analytical 0.1 payload. No source scope or identity mapping is stored here. |
+| Authority | Trusted grant policy, scope, recipient, operation role, generation and expiry. Stores credential digests and scoped view reservations. No original bytes or pseudonym lookup table. |
+| Fence | Independent pair binding and monotonic revocation epoch. Keep outside all restorable roots and independently protected. |
 
-Trusted, local bootstrap calls `open_custody` with existing, disjoint canonical
-private roots and configured `Grant` values. Set `initialize=True` only for a
-fresh trial. Each grant binds role, the four-field source scope, purpose,
-policy version, generation, recipient and an aware expiration. Bootstrap
-returns the boundary object and a name-to-credential map. Pass each consumer
-only its own opaque random credential. View and pseudonym handles are not
-credentials. Projection and analyst grants use `aggregate_hr_sdnn` with policy
-`synthetic-aggregate-hr-sdnn/0.1`; writer and reader roles are distinct. The
-projection worker's input admission and aggregation stay with ORACLE; the
-custody layer independently enforces the outward allowlist.
+Trusted local bootstrap calls `open_custody(authority_root=..., fence_root=...,
+projection_root=..., evidence_root=..., vault_root=..., grants=...,
+initialize=True)` on fresh disjoint canonical private roots. Each `Grant` binds
+an operation role, the four HealthArchive scope fields, purpose, policy,
+generation, recipient and an aware expiration. The returned name-to-credential
+map is private. Reopen with `initialize=False` and omit `grants`. Previously
+issued random credentials remain subject to the durable generation and expiry.
+For aggregate-only reopen omit both `evidence_root` and `vault_root`.
+Authority, fence and projection remain required.
 
-The evidence APIs are `put_evidence` and `read_evidence`. Vault pseudonyms are
-internal, purpose/recipient/generation-scoped and persist across reopen.
-`issue_view`, `put_projection` and `read_projection` bind the opaque view to an
-active reservation on every call. `authorize_lineage(..., operation="bind")`
-allows the projection writer, and `operation="resolve"` allows the lineage
-auditor. Its private decision contains a copy of the exact scope, purpose,
-policy version, generation, recipient and reservation expiry. Never serialize
-this decision into the analytical response. A reader grant’s expiry is still
-checked separately from the stored reservation clock.
+`authorize_projection(credential, view_id=None)` provides the private
+trusted binding for pre-read admission. `issue_view(credential)` reserves an
+opaque random view handle. `put_projection(credential, view_id, payload)` and
+`read_projection(credential, view_id)` check live authority and the same
+reservation before projection access. `authorize_lineage(credential, view_id,
+operation="bind"|"resolve")` returns the private scope, purpose, policy,
+generation, recipient and immutable reservation expiry for the distinct
+writer and auditor operations. The caller receives no raw role override.
+Outward projection storage and reads enforce the analytical 0.1 allowlist.
+Unsafe values or unavailable private stores produce fixed error text.
 
-`revoke` fences the context in the live object using the independent
-retention-recovery role. After restart or restore, trusted bootstrap must
-provide the current generation and approved policy from a source outside
-restorable data. This prototype does not maintain that operational authority
-or deliver production revocation. Older generation rows remain protected
-history and cannot be served to the current generation. A missing vault
-or reservation denies access. Separate stores are not a security boundary
-against a process sharing the local filesystem UID, host/root control or
-configuration access. All files are plaintext in this prototype. The caller
-owns authentication, trusted process separation and any future encryption,
-keys, backups and retention. An allowlisted aggregate can still be linkable.
+`revoke(credential)` advances the scope/purpose/recipient generation and
+persistent global epoch. An authority SQLite transaction serializes the
+authorization decision and the projection read. A read admitted before
+revocation may finish. A read after revocation commits is denied. The fence
+commits first. An interruption between commits leaves unequal epochs and
+blocks service until trusted reconciliation. Missing authority or fence,
+a different pair, or a stale authority backup with the current fence denies.
+This prototype provides no renewal, fence recovery, or rollback protection
+if both authority and independently protected fence are replaced together.
+The restore operator must exclude the live fence from restoration.
 
-The boundary assumes caller-owned private paths and a trusted exclusive PID/UID
-environment. It pins root and parent identity, checks store SQLite kind and
-version, rejects symlinks and nonregular files or sidecars before SQLite, and
-sanitizes expected access and storage errors. It does not use ambient raw
-fallback. Retain historical evidence and protect backups of the three domains
-under separate roles. Do not let a projection restore supply its own grants.
+The stores are plaintext and assume trusted bootstrap, caller-owned canonical
+paths and exclusive local filesystem control. These application checks
+provide no protection against another process with the same UID, raw-readable
+backups, or a compromised host. Production authentication, independent
+storage identities, encryption and key custody remain unqualified.
 
 ## Original-byte minimization plan
 
