@@ -24,6 +24,7 @@ from .files import (
     private_path,
 )
 from .inventory import Limits, scan
+from . import native_source
 from .sealed_page import authenticate_page
 from .protected_export import authenticate_export
 from .vault import TOKEN
@@ -136,7 +137,7 @@ class _HistoryCatalog:
         descriptor = os.open(self.db, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         os.close(descriptor)
         with closing(sqlite3.connect(self.db)) as db, db:
-            db.executescript("BEGIN IMMEDIATE;\n" + DDL)
+            db.executescript("BEGIN IMMEDIATE;\n" + DDL + native_source.DDL)
             db.execute("INSERT INTO identity VALUES (?)", (self.owner,))
 
     @contextmanager
@@ -236,6 +237,12 @@ class _HistoryCatalog:
         sealed_receipt = custodian_inputs["receipt"]
         with self._connection() as db:
             self._require_child_ledger(db)
+            if not db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='native_source_occurrences'"
+            ).fetchone():
+                raise InvalidHistory(
+                    "universal source ingestion requires a fresh catalog"
+                )
         if report_phase is not None:
             report_phase("BINDING")
         with authenticate_export(
@@ -415,11 +422,14 @@ class _HistoryCatalog:
         files = 0
         attachments = 0
         source_xml = 0
+        member_bytes = 0
+        source = native_source.SourceWriter(db, body)
 
         def member(ordinal, path, kind, digest, size):
-            nonlocal files, attachments, source_xml
+            nonlocal files, attachments, source_xml, member_bytes
             files += 1
-            attachments += kind == "attachment"
+            member_bytes += size
+            attachments += kind in ("attachment", "source_xml")
             source_xml += kind == "healthdata_xml"
             db.execute(
                 "INSERT INTO members VALUES (?,?,?,?,?,?)",
@@ -454,13 +464,33 @@ class _HistoryCatalog:
             if last is not None and (values[4] is None or last > values[4]):
                 values[4] = last
             child_sightings = []
+            invalid_record = False
             try:
-                normalized = self.bp.normalize(
-                    tag, attrs, children, (body, member_index, ordinal), child_sightings
+                normalized = (
+                    None
+                    if family == "auxiliary_xml"
+                    else self.bp.normalize(
+                        tag,
+                        attrs,
+                        children,
+                        (body, member_index, ordinal),
+                        child_sightings,
+                    )
                 )
             except (ValueError, OverflowError):
                 invalid_bp += 1
+                invalid_record = True
                 normalized = None
+            source.occurrence(
+                member_index,
+                ordinal,
+                family,
+                source_type,
+                tag,
+                attrs,
+                bp=normalized[2] if normalized is not None else None,
+                invalid_bp=invalid_record,
+            )
             if normalized is None:
                 values[2] += 1
                 return
@@ -478,7 +508,15 @@ class _HistoryCatalog:
             )
 
         try:
-            identity = scan(stage, self.limits, row, member, nested)
+            identity = scan(
+                stage,
+                self.limits,
+                row,
+                member,
+                nested,
+                on_event=source.event,
+                on_bytes=source.chunk,
+            )
         except (BadZipFile, DeflateError, EOFError):
             raise InvalidHistory("invalid HealthData ZIP structure") from None
         if identity != (body, size):
@@ -508,6 +546,9 @@ class _HistoryCatalog:
                 for (family, source_type), count in sorted(nested_counts.items())
             ],
             "bp_pairing_counts": normalizations,
+            "source_inventory": source.reconciliation(
+                sum(values[0] for values in counts.values()), member_bytes
+            ),
         }
         if ciphertext_receipt is not None:
             receipt["protection"] = "custodian_verified_ciphertext"
@@ -586,6 +627,28 @@ class _HistoryCatalog:
             raise InvalidHistory(
                 "native physical child lineage requires a fresh catalog"
             )
+
+    def source_occurrences(self, artifact, **page):
+        with self._connection() as db:
+            return native_source.occurrences(db, artifact, **page)
+
+    def source_events(self, artifact, member, occurrence, **page):
+        with self._connection() as db:
+            return native_source.events(db, artifact, member, occurrence, **page)
+
+    def source_elements(self, artifact, member, **page):
+        with self._connection() as db:
+            return native_source.elements(db, artifact, member, **page)
+
+    def source_member_range(self, artifact, member, expected, offset, length):
+        with self._connection() as db:
+            return native_source.member_range(
+                db, artifact, member, expected, offset, length
+            )
+
+    def source_member_chunks(self, artifact, member, **page):
+        with self._connection() as db:
+            return list(native_source.member_payload(db, artifact, member, **page))
 
     def blood_pressure_component_lineage(self, body, member, ordinal):
         with self._connection() as db:

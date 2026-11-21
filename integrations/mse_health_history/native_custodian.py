@@ -24,10 +24,12 @@ from .catalog import _HistoryCatalog
 from .files import HistoryLimit, LimitKind, NamedHistoryLimit, private_path
 from .inventory import DEFAULT_ZIP_MEMBERS, MAX_ZIP_MEMBERS, Limits
 from .native_runner import private_bytes
+from .typed_vm import is_ref
 from .native_projected_output import (
     mapping_key,
     protected_destination,
     publish_projection,
+    publish_universal,
     validate_projection,
 )
 from .native_status import CATEGORIES, DIAGNOSTIC_PREFIX, SUCCESS
@@ -78,7 +80,9 @@ def load_admission(path, approval_key):
     if not hmac.compare_digest(envelope["hmac_sha256"], expected.hexdigest()):
         raise ValueError("custodian admission authentication")
     if (
-        not FIELDS <= set(policy) <= FIELDS | {"max_zip_members", "projection"}
+        not FIELDS
+        <= set(policy)
+        <= FIELDS | {"max_zip_members", "projection", "universal_transfer"}
         or policy["mode"] != "protected-native-import"
     ):
         raise ValueError("custodian admission scope")
@@ -98,6 +102,17 @@ def load_admission(path, approval_key):
             raise ValueError("custodian resource bounds")
     if "projection" in policy:
         validate_projection(policy["projection"], policy["enrollment"])
+    if "universal_transfer" in policy:
+        universal = policy["universal_transfer"]
+        if (
+            "projection" in policy
+            or not isinstance(universal, dict)
+            or set(universal) != {"output", "import_ref", "max_bytes"}
+            or not is_ref(universal["import_ref"])
+            or type(universal["max_bytes"]) is not int
+            or not 1 <= universal["max_bytes"] <= 16 * GIB
+        ):
+            raise ValueError("invalid universal transfer request")
     members = policy.get("max_zip_members", DEFAULT_ZIP_MEMBERS)
     if type(members) is not int or not 1 <= members <= MAX_ZIP_MEMBERS:
         raise ValueError("custodian ZIP member limit outside reviewed bounds")
@@ -240,7 +255,9 @@ def main():
         catalog_root, scratch = paths_on_encrypted_volume(policy)
         binding = policy["binding"]
         plan = policy.get("projection")
-        projection_bytes = plan["max_bytes"] if plan is not None else 0
+        universal = policy.get("universal_transfer")
+        transfer = plan if plan is not None else universal
+        projection_bytes = transfer["max_bytes"] if transfer is not None else 0
         ensure_space(
             policy,
             catalog_root,
@@ -251,10 +268,11 @@ def main():
         key = private_bytes(policy["provenance_key_file"], 32)
         if len(key) != 32 or hmac.compare_digest(key, approval):
             raise ValueError("independent provenance key required")
-        if plan is not None:
+        if transfer is not None:
             output = protected_destination(
-                plan, Path(policy["mount"]), catalog_root, scratch
+                transfer, Path(policy["mount"]), catalog_root, scratch
             )
+        if plan is not None:
             child_mapping_key = mapping_key(plan, approval, key)
         os.environ["SQLITE_TMPDIR"] = str(scratch)
         os.environ["TMPDIR"] = str(scratch)
@@ -308,19 +326,28 @@ def main():
         report_phase("READBACK")
         if catalog.receipt(binding["plaintext_sha256"]) != receipt:
             raise ValueError("reopened catalog receipt mismatch")
+
+        def prepublish():
+            lease(policy)
+            ensure_space(policy, catalog_root)
+
         if plan is not None:
             report_phase("PROJECTION")
-
-            def prepublish():
-                lease(policy)
-                ensure_space(policy, catalog_root)
-
             publish_projection(
                 catalog,
                 binding["plaintext_sha256"],
                 plan,
                 output,
                 mapping_key=child_mapping_key,
+                prepublish=prepublish,
+            )
+        if universal is not None:
+            report_phase("UNIVERSAL_TRANSFER")
+            publish_universal(
+                catalog,
+                binding["plaintext_sha256"],
+                universal,
+                output,
                 prepublish=prepublish,
             )
         print(SUCCESS.decode("ascii"), end="")

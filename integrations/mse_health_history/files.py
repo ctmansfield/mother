@@ -50,7 +50,7 @@ class NamedHistoryLimit(HistoryLimit):
         self.kind = kind
 
 
-def hash_stream(stream, limit, *, kind=None):
+def hash_stream(stream, limit, *, kind=None, on_chunk=None):
     digest = sha256()
     count = 0
     while chunk := stream.read(CHUNK):
@@ -60,6 +60,8 @@ def hash_stream(stream, limit, *, kind=None):
                 raise NamedHistoryLimit(kind, "history byte limit exceeded")
             raise HistoryLimit("history byte limit exceeded")
         digest.update(chunk)
+        if on_chunk is not None:
+            on_chunk(chunk)
     return digest.hexdigest(), count
 
 

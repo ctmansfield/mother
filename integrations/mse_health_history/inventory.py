@@ -106,9 +106,19 @@ def _kind(tag, source_type):
     }.get(tag, "other")
 
 
-def _scan_xml(stream, member_index, limits, on_row, on_nested):
+def _scan_xml(
+    stream,
+    member_index,
+    limits,
+    on_row,
+    on_nested,
+    on_event=None,
+    on_bytes=None,
+    health_data=True,
+):
     parser = expat.ParserCreate()
     parser.specified_attributes = True
+    parser.ordered_attributes = on_event is not None
     parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
     parser.EntityDeclHandler = _forbidden
     parser.ExternalEntityRefHandler = _forbidden
@@ -123,13 +133,23 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
     root_seen = False
     dtd_start = None
 
+    def emit(kind, data):
+        if on_event is not None:
+            occurrence = ordinal + 1 if depth >= 2 else 0
+            on_event(member_index, occurrence, depth, kind, data)
+
     def doctype(name, system, public, _internal_subset):
         nonlocal dtd_start
         # Apple exports may carry an inline grammar. No DTD entity or external
         # resolution is needed to interpret source records.
-        if name != "HealthData" or system is not None or public is not None:
+        if (
+            (health_data and name != "HealthData")
+            or system is not None
+            or public is not None
+        ):
             _forbidden()
         dtd_start = parser.CurrentByteIndex
+        emit("doctype", [name, bool(_internal_subset)])
 
     def check_dtd(position):
         if dtd_start is not None and position - dtd_start > limits.xml_dtd_bytes:
@@ -154,6 +174,10 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
                 LimitKind.XML_ELEMENTS, "XML total element limit exceeded"
             )
         depth += 1
+        pairs = None
+        if on_event is not None:
+            pairs = list(zip(attrs[::2], attrs[1::2]))
+            attrs = dict(pairs)
         if depth > 2 and on_nested is not None:
             source_type = attrs.get("type", "")
             on_nested(_kind(tag, source_type), source_type or tag)
@@ -161,15 +185,17 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
             raise NamedHistoryLimit(LimitKind.XML_DEPTH, "XML depth limit exceeded")
         if sum(len(k) + len(v) for k, v in attrs.items()) > limits.xml_token_bytes:
             raise NamedHistoryLimit(LimitKind.XML_TOKEN, "XML attribute limit exceeded")
+        emit("start", [tag, pairs])
         if depth == 1:
-            if tag != "HealthData":
+            if health_data and tag != "HealthData":
                 raise InvalidHistory("expected Apple HealthData root")
             root_seen = True
         elif depth == 2:
             pending = [tag, attrs, []]
             child_ordinal = 0
         elif (
-            depth == 3
+            health_data
+            and depth == 3
             and pending[0] == "Correlation"
             and pending[1].get("type") == BP_TYPE
         ):
@@ -181,8 +207,9 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
             child_ordinal += 1
             pending[2].append((child_ordinal, tag, attrs))
 
-    def end(_tag):
+    def end(tag):
         nonlocal depth, ordinal, pending
+        emit("end", tag)
         if depth == 2:
             ordinal += 1
             if ordinal > limits.top_level_rows:
@@ -208,6 +235,15 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
     parser.AttlistDeclHandler = attlist
     parser.StartElementHandler = start
     parser.EndElementHandler = end
+    if on_event is not None:
+        parser.CharacterDataHandler = lambda data: emit("text", data)
+        parser.CommentHandler = lambda data: emit("comment", data)
+        parser.ProcessingInstructionHandler = lambda tag, data: emit(
+            "processing_instruction", [tag, data]
+        )
+        parser.XmlDeclHandler = lambda *parts: emit("xml_declaration", list(parts))
+        parser.StartCdataSectionHandler = lambda: emit("cdata_start", None)
+        parser.EndCdataSectionHandler = lambda: emit("cdata_end", None)
     hashing = sha256()
     try:
         while chunk := stream.read(CHUNK):
@@ -217,6 +253,8 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
                     LimitKind.ZIP_MEMBER_BYTES, "XML member limit exceeded"
                 )
             hashing.update(chunk)
+            if on_bytes is not None:
+                on_bytes(member_index, chunk)
             parser.Parse(chunk, False)
             check_dtd(cursor)
             if cursor - parser.CurrentByteIndex > limits.xml_token_bytes:
@@ -272,7 +310,9 @@ def _check_zip_directory(stream, directory, limits):
     return count, size
 
 
-def scan(stream, limits, on_row, on_member, on_nested=None):
+def scan(
+    stream, limits, on_row, on_member, on_nested=None, *, on_event=None, on_bytes=None
+):
     """Read an already-open, stable local file and return its exact byte identity."""
     stream.seek(0)
     original = hash_stream(stream, limits.archive_bytes, kind=LimitKind.ARCHIVE_BYTES)
@@ -280,7 +320,7 @@ def scan(stream, limits, on_row, on_member, on_nested=None):
     directory = _EndRecData(stream)
     if directory is None:
         stream.seek(0)
-        member = _scan_xml(stream, 1, limits, on_row, on_nested)
+        member = _scan_xml(stream, 1, limits, on_row, on_nested, on_event, on_bytes)
         if member != original:
             raise InvalidHistory("original changed during inventory")
         on_member(1, None, "healthdata_xml", *member)
@@ -336,14 +376,54 @@ def scan(stream, limits, on_row, on_member, on_nested=None):
                 if info.filename.rsplit("/", 1)[-1].casefold() == "export.xml"
                 else "attachment"
             )
+            if (
+                on_event is not None
+                and kind == "attachment"
+                and info.filename.casefold().endswith(".xml")
+            ):
+                kind = "source_xml"
             with archive.open(info) as member:
-                result = (
-                    _scan_xml(member, index, limits, on_row, on_nested)
-                    if kind == "healthdata_xml"
-                    else hash_stream(
-                        member, limits.member_bytes, kind=LimitKind.ZIP_MEMBER_BYTES
+                if (
+                    on_event is not None
+                    and kind == "attachment"
+                    and info.filename.casefold().endswith(".gpx")
+                ):
+                    probe = member.read(4096)
+                    member.seek(0)
+                    if probe.removeprefix(b"\xef\xbb\xbf").lstrip().startswith(b"<"):
+                        kind = "source_xml"
+                if kind in ("healthdata_xml", "source_xml"):
+
+                    def report(
+                        index, ordinal, family, source_type, tag, attrs, children
+                    ):
+                        if kind == "source_xml":
+                            family = "auxiliary_xml"
+                        on_row(
+                            index, ordinal, family, source_type, tag, attrs, children
+                        )
+
+                    result = _scan_xml(
+                        member,
+                        index,
+                        limits,
+                        report,
+                        on_nested,
+                        on_event,
+                        on_bytes,
+                        health_data=kind == "healthdata_xml",
                     )
-                )
+                else:
+                    result = hash_stream(
+                        member,
+                        limits.member_bytes,
+                        kind=LimitKind.ZIP_MEMBER_BYTES,
+                        on_chunk=(
+                            None
+                            if on_bytes is None
+                            else lambda raw: on_bytes(index, raw)
+                        ),
+                    )
             if result[1] != info.file_size:
                 raise InvalidHistory("ZIP member length mismatch")
             on_member(index, info.filename, kind, *result)

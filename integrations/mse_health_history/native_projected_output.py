@@ -133,3 +133,31 @@ def mapping_key(plan, approval, provenance):
         "independent native mapping key required",
     )
     return key
+
+
+def publish_universal(catalog, original_sha256, plan, output, *, prepublish):
+    """Stage the authenticated universal catalog as complete canonical frames."""
+    from .native_universal_transfer import export_catalog
+
+    with TemporaryDirectory(prefix=".native-universal-", dir=output.parent) as scratch:
+        stage = Path(scratch) / "ready"
+        stage.mkdir(mode=0o700)
+        flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
+        with os.fdopen(
+            os.open(stage / "exact-source.frames", flags, 0o600), "wb"
+        ) as file:
+            manifest = export_catalog(
+                catalog,
+                original_sha256,
+                file,
+                import_ref=plan["import_ref"],
+                max_bytes=plan["max_bytes"],
+            )
+            file.flush()
+            os.fsync(file.fileno())
+        _durable_file(stage / "private-manifest.json", encoded(manifest))
+        _fsync_dir(stage)
+        prepublish()
+        require(not os.path.lexists(output), "native universal destination occupied")
+        os.rename(stage, output)
+        _fsync_dir(output.parent)

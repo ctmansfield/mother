@@ -31,6 +31,7 @@ from test_history import (
     xml,
 )
 
+from test_native_universal import verify_universal_transfer
 from test_typed_vm_support import (
     verify_admitted_guest,
     verify_projection_window,
@@ -468,6 +469,9 @@ class NativeRunnerTests(unittest.TestCase):
                     + '<Workout><WorkoutRoute><FileReference path="../opaque.gpx"/></WorkoutRoute></Workout>'
                     + '<Record type="HKClinicalTypeIdentifierLabResultRecord"/>'
                     + "<MedicationRecord/>"
+                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="9" unit="count" '
+                    'startDate="2026-11-21 10:00:00 +1000" endDate="2026-11-21 10:00:00 +1000"/>'
+                    + '<Record type="HKCategoryTypeIdentifierSleepAnalysis" value="FabricatedState"/>'
                 ),
             )
             archive.writestr("opaque.gpx", b"fabricated route attachment")
@@ -557,7 +561,7 @@ class NativeRunnerTests(unittest.TestCase):
         first = json.loads(run("import", *import_args).stdout)
         self.assertEqual(first, json.loads(run("import", *import_args).stdout))
         self.assertEqual(first["normalized_bp_rows"], 2)
-        self.assertEqual(first["unnormalized_top_level_rows"], 3)
+        self.assertEqual(first["unnormalized_top_level_rows"], 5)
         self.assertFalse(list((typed / "originals").iterdir()))
         self.assertFalse(list(scratch.iterdir()))
         typed_catalog = SyntheticHistoryCatalog(
@@ -599,6 +603,15 @@ class NativeRunnerTests(unittest.TestCase):
             self.assertNotIn("source_ref", body)
             with self.assertRaises(sqlite3.OperationalError):
                 conn.execute("DELETE FROM facts")
+
+        verify_universal_transfer(
+            self,
+            self.root / "source-transfer",
+            typed_catalog,
+            value["plaintext_sha256"],
+            UTC,
+            THROUGH,
+        )
 
         self.verify_protected_admission(value, cipher, identity, age, pkey, scratch)
 
@@ -838,7 +851,16 @@ class NativeRunnerTests(unittest.TestCase):
             self.assertEqual(
                 db.execute("SELECT count(*) FROM artifacts").fetchone(), (0,)
             )
-        larger_admission = dict(large_policy, max_zip_members=attachment_count + 3)
+        universal_output = self.root / "synthetic-universal-ready"
+        larger_admission = dict(
+            large_policy,
+            max_zip_members=attachment_count + 3,
+            universal_transfer=dict(
+                output=str(universal_output),
+                import_ref="synthetic-universal-large",
+                max_bytes=32 * 1024**2,
+            ),
+        )
         self.assertEqual(
             run(sign(larger_admission), selected=larger_admission), (0, "")
         )
@@ -889,6 +911,13 @@ class NativeRunnerTests(unittest.TestCase):
             reopened.receipt(binding["plaintext_sha256"])["ciphertext_receipt"],
             binding["receipt"],
         )
+        wire_manifest = json.loads(
+            (universal_output / "private-manifest.json").read_bytes()
+        )
+        wire = (universal_output / "exact-source.frames").read_bytes()
+        self.assertEqual(wire_manifest["wire_sha256"], sha256(wire).hexdigest())
+        self.assertEqual(wire_manifest["wire_bytes"], len(wire))
+        self.assertEqual(wire_manifest["inventory"]["source_occurrences"], 1)
         larger_receipt = reopened.receipt(large_policy["binding"]["plaintext_sha256"])
         self.assertEqual(larger_receipt["members"], attachment_count + 3)
         self.assertEqual(
