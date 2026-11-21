@@ -98,9 +98,27 @@ def verify_guest(test, root, catalog, original, _receipt, start, end):
     )
     expected_terminal = json.loads(batch_receipt(json.loads(terminal), terminal, 0, 0))
 
-    def open_store():
+    projected = {
+        part["role"]: part["component_occurrence_ref"] for part in ops[0]["components"]
+    }
+
+    def expected_child(ordinal):
+        return protected_ref(
+            mapping_key,
+            "native-component-occurrence",
+            scope["source_namespace_ref"],
+            original,
+            ops[0]["occurrence_ref"],
+            ordinal,
+        )
+
+    test.assertEqual(
+        projected, {"diastolic": expected_child(1), "systolic": expected_child(3)}
+    )
+
+    def open_store(filename="native.sqlite3"):
         return TypedStore(
-            guest / "native.sqlite3",
+            guest / filename,
             scope,
             bounds,
             source_manifest["artifact_receipt_ref"],
@@ -296,6 +314,66 @@ def verify_guest(test, root, catalog, original, _receipt, start, end):
     with closing(reopened.connect()) as db:
         with test.assertRaises(sqlite3.OperationalError):
             db.execute("DELETE FROM ops")
+    # Cross the exact cutoff immediately before the real SQLite staging commit.
+    now = start
+    late = open_store("cutoff.sqlite3")
+    late.initialize()
+    server.store = late
+    test.assertEqual(upload.put(1, raw)[0], 201)
+    original_connect = late.connect
+
+    class CommitAtEnd:
+        def __init__(self, connection):
+            self.connection = connection
+
+        def __getattr__(self, name):
+            return getattr(self.connection, name)
+
+        def __enter__(self):
+            return self.connection.__enter__()
+
+        def __exit__(self, exc_type, exc, trace):
+            nonlocal now
+            now = end
+            return self.connection.__exit__(exc_type, exc, trace)
+
+    def cutoff_connect(*, write=False):
+        connection = original_connect(write=write)
+        return CommitAtEnd(connection) if write else connection
+
+    with patch.object(late, "connect", cutoff_connect):
+        test.assertEqual(upload.put(2, terminal), (503, {"error": "indeterminate"}))
+    server.store = open_store("cutoff.sqlite3")
+    with closing(server.store.connect()) as db:
+        test.assertEqual(
+            db.execute("SELECT observed_at FROM batches WHERE seq=2").fetchone(),
+            (None,),
+        )
+    test.assertEqual(readback.receipt(2)[0], 503)
+    test.assertEqual(read.snapshot(purpose, snapshot_id)[0], 503)
+    test.assertEqual(upload.put(2, terminal)[0], 403)
+
+    # Simulate a stop after staging, before the witness write, while still in lease.
+    now = start
+    crashed = open_store("crashed.sqlite3")
+    crashed.initialize()
+    server.store = crashed
+    test.assertEqual(upload.put(1, raw)[0], 201)
+    calls = 0
+
+    def stop_before_witness():
+        nonlocal calls
+        calls += 1
+        if calls == 3:
+            raise OSError("synthetic interruption after staging")
+        return start
+
+    with test.assertRaises(OSError):
+        crashed.ingest(2, terminal, stop_before_witness)
+    server.store = open_store("crashed.sqlite3")
+    test.assertEqual(upload.put(2, terminal)[0], 503)
+    test.assertEqual(readback.receipt(2)[0], 503)
+    test.assertEqual(read.snapshot(purpose, snapshot_id)[0], 503)
     now = read_end
     test.assertEqual(readback.receipt(2)[0], 403)
     test.assertEqual(read.snapshot(purpose, snapshot_id)[0], 403)
@@ -325,7 +403,8 @@ def verify_shared_vector(test, root):
     for seq, entry in enumerate(batches, 1):
         raw = entry["canonical_utf8"].encode()
         test.assertEqual(
-            store.ingest(seq, raw, lambda: None), (201, encoded(entry["receipt"]))
+            store.ingest(seq, raw, lambda: vector["bounds"][0]),
+            (201, encoded(entry["receipt"])),
         )
     descriptor = {
         "terminal_receipt": batches[-1]["receipt"]["receipt_id"],

@@ -130,8 +130,10 @@ class TypedServer(HTTPServer):
             raise
 
     def check_lease(self, role):
-        if not self.start <= self.clock() < self.grants[role][1]:
+        observed = self.clock()
+        if not self.start <= observed < self.grants[role][1]:
             raise Closed("role lease closed")
+        return observed
 
 
 class TypedHandler(BaseHTTPRequestHandler):

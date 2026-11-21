@@ -178,7 +178,11 @@ class NativeRunnerTests(unittest.TestCase):
             archive.writestr(
                 "apple_health_export/export.xml",
                 xml(
-                    correlation(record(SYSTOLIC, "124.50") + record(DIASTOLIC, "81"))
+                    correlation(
+                        record(DIASTOLIC, "81")
+                        + '<MetadataEntry key="test" value="intervening"/>'
+                        + record(SYSTOLIC, "124.50")
+                    )
                     + record(SYSTOLIC, "120")
                     + '<Workout><WorkoutRoute><FileReference path="../opaque.gpx"/></WorkoutRoute></Workout>'
                     + '<Record type="HKClinicalTypeIdentifierLabResultRecord"/>'
@@ -280,6 +284,14 @@ class NativeRunnerTests(unittest.TestCase):
         )
         bound = typed_catalog.receipt(value["plaintext_sha256"])
         self.assertEqual(bound["ciphertext_receipt"], receipt)
+        self.assertEqual(
+            dict(
+                typed_catalog.blood_pressure_component_lineage(
+                    value["plaintext_sha256"], 1, 1
+                )
+            ),
+            {1: "diastolic", 3: "systolic"},
+        )
         self.assertTrue(
             any(
                 row["family"] == "attachment_reference"

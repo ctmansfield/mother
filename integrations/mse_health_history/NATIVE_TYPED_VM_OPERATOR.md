@@ -26,8 +26,12 @@ returned receipt. Every nonterminal batch carries at most 128 operations
 and 1 MiB. The empty final batch binds the artifact and member inventory,
 event bounds, previous digest, batch and byte totals, upsert and deletion
 totals and normalizer. Source occurrence and quarantine counts are
-custodian assertions. The sink verifies accepted batch totals and closes
-the import in the same durable SQLite transaction as the terminal receipt.
+custodian assertions. The sink stages each batch, operations and receipt in one synchronous SQLite
+transaction. After that commit, it observes trusted time and separately
+persists the in-lease durability witness. Only witnessed batches can be
+read as accepted, and only a witnessed terminal batch allows snapshots.
+Keep any staged batch without a witness sealed. Preserve the store and
+journal for operator reconciliation. Exact replay cannot infer acceptance.
 
 Use `TypedClient.receipt` with the independent receipt-reader certificate
 after lost or indeterminate responses and verify the returned receipt
@@ -80,7 +84,8 @@ The synthetic loopback suite covers authenticated import, role and scope
 denials, content digest, sequence and manifest conflict, no visibility
 before terminal, rollback, lost response, exact replay, expiry,
 tombstone suppression and reopened read-only output. The target VM has
-yet to be exercised. Independent reviewers must resolve physical child
-ordinal mapping from normalized component slots before claiming complete
-child lineage. Real-data enablement and backup/restore are outside this
-candidate.
+yet to be exercised. The private catalog records physical child ordinals and roles before
+sorting. Projection derives opaque component occurrence references from that
+private ledger. Use a fresh catalog with the successor package. Any prior
+catalog lacks this child ledger and must be retained for its original scope.
+Real-data enablement and backup/restore are outside this candidate.

@@ -64,6 +64,13 @@ CREATE TABLE sightings (
     PRIMARY KEY(digest, member, ordinal),
     FOREIGN KEY(digest, member) REFERENCES members(digest, ordinal) DEFERRABLE INITIALLY DEFERRED
 );
+CREATE TABLE native_bp_children (
+    digest TEXT NOT NULL, member INTEGER NOT NULL, parent INTEGER NOT NULL,
+    slot INTEGER NOT NULL, child INTEGER NOT NULL, role TEXT NOT NULL,
+    PRIMARY KEY(digest,member,parent,slot),
+    UNIQUE(digest,member,parent,child),
+    FOREIGN KEY(digest,member,parent) REFERENCES sightings(digest,member,ordinal)
+);
 """
 
 
@@ -417,9 +424,10 @@ class _HistoryCatalog:
                 values[3] = first
             if last is not None and (values[4] is None or last > values[4]):
                 values[4] = last
+            child_sightings = []
             try:
                 normalized = self.bp.normalize(
-                    tag, attrs, children, (body, member_index, ordinal)
+                    tag, attrs, children, (body, member_index, ordinal), child_sightings
                 )
             except (ValueError, OverflowError):
                 invalid_bp += 1
@@ -432,6 +440,13 @@ class _HistoryCatalog:
             normalizations[document["pairing"]] += 1
             nested_unmapped += document["unsupported_component_count"]
             self._record_bp(db, body, member_index, ordinal, normalized)
+            db.executemany(
+                "INSERT INTO native_bp_children VALUES (?,?,?,?,?,?)",
+                (
+                    (body, member_index, ordinal, slot, child, role)
+                    for slot, (child, role) in enumerate(child_sightings, 1)
+                ),
+            )
 
         try:
             identity = scan(stage, self.limits, row, member, nested)
@@ -533,6 +548,20 @@ class _HistoryCatalog:
                     "revision": revision,
                     "fact": json.loads(fact),
                 }
+
+    def blood_pressure_component_lineage(self, body, member, ordinal):
+        with self._connection() as db:
+            if not db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='native_bp_children'"
+            ).fetchone():
+                raise InvalidHistory(
+                    "native physical child lineage requires a fresh catalog"
+                )
+            return db.execute(
+                """SELECT child,role FROM native_bp_children
+                   WHERE digest=? AND member=? AND parent=? ORDER BY slot""",
+                (body, member, ordinal),
+            ).fetchall()
 
     def blood_pressure(self, *, current=False):
         with self._connection() as db:
