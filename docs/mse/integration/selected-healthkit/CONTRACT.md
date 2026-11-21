@@ -1,0 +1,53 @@
+# Selected HealthKit archive contract 0.1
+
+[MSE-LIVE-PILOT-PREP-20261121-04 r1](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056948768). Source implementation pin for the next signed build and synthetic review. No real-data admission or route activation. Existing synthetic URL, receipt, HealthArchive and frozen 0.2 remain byte-compatible. Backup and restore remain deferred.
+
+## Wire and identity
+
+[Batch and receipt schemas](selected-healthkit.schema.json). Proposed offline handler seam: scoped PUT/GET `/v2/archive/batches/{batch_id}`, exact UTF-8 application/json bytes. Do not enable this route during source preparation. Grants bind archive, expected scope and explicitly permitted live or synthetic lane outside the request. The phone's live transmission is off by default. Never send current collector files through the existing synthetic facility. Test selected records only with new synthetic authorization and fixtures.
+
+- Batch requires `schema_version`, `batch_id`, `scope` and `records`. Scope is the synthetic or protected pseudonymous subject, `healthkit`, source-store instance and collection `healtharchive-selected`. Derive expected scope from the grant and compare body, URL batch and scope. The scoped store-instance ID is generated and persisted independently of device serial, user name or source-app strings. Do not reuse it for a replaced or separately enrolled store.
+- Record key is (scope, metric, lowercase HealthKit UUID). Upsert has `event_start`, `event_end`, `collector_received_at`, `source_available_at` (always null for this initial mapping), and optional attribution represented as nullable `source_ref`. A non-null source_ref is a store-scoped opaque random token assigned using a protected local mapping. It supports distinguishing overlapping source streams without exporting the source name, bundle, device model, serial or unbounded metadata. Stable UUIDs, timestamps and pseudonyms remain identifying in combination.
+- Delete requires metric, UUID and collector receipt clock at which the deletion was seen. HealthKit's deletion record may have no originating source or deletion timestamp. Do not invent either. Persist the first observed deletion clock so replay of the same deletion remains stable. Unknown-UUID deletes are valid. Keep acquisition anchors opaque, locally protected, per type and store. Never transmit anchor bytes or equate an archive commit to a HealthKit position.
+- Times use real Gregorian UTC with six fractional digits. Preserve start/end as a source interval with start <= end; allow point samples. For temporal queries, assign a point to a half-open window by its instant. For intervals, keep bounds intact even when narrowly projected. Exact source availability is unknown without evidence. Collector receipt, MOTHER receive and authoritative MOTHER commit remain separate clocks.
+- Decimal strings are finite, no exponent, no plus sign, no redundant leading/trailing zeros, and no negative zero. Use shortest round-trippable decimal of the finite value obtained in the pinned unit, expanding exponent to fixed notation. Preserve the emitted decimal exactly in custody and evidence and disclose any later numeric conversion loss in the processed view. Reject malformed/mismatched unit or interval. Do not invent physiological thresholds or alter unusual source values; retain finite out-of-domain source facts separately from model eligibility.
+- Parse unique keys, bounded bytes/records/depth/tokens and reject extra fields. Persist exact serialized bytes and SHA-256 before transmission. Network retries use the same bytes and scoped batch ID, including after restart or uncertain response. Record fixture/admission, exact runtime-selected bounds and backpressure separately; no silent truncation or advancement of a checkpoint past dropped work.
+
+## Selected shapes
+
+| Wire metric | HealthKit source | Unit | Sample semantics |
+| --- | --- | --- | --- |
+| heart_rate | heartRate | bpm | discrete sample, derivation unknown from capture alone |
+| hrv_sdnn | heartRateVariabilitySDNN | ms | discrete vendor SDNN, never RMSSD/raw RR |
+| resting_heart_rate | restingHeartRate | bpm | discrete source-provided estimate; no recomputation |
+| walking_heart_rate_average | walkingHeartRateAverage | bpm | discrete source-provided average; replacement can arrive as delete/add |
+| respiratory_rate | respiratoryRate | breaths/min | discrete rate; retain interval |
+| oxygen_saturation | oxygenSaturation | 1 | discrete fraction in [0,1] for valid processing, e.g. 0.97 means 97%; no percent-point value in the wire |
+| sleeping_wrist_temperature | appleSleepingWristTemperature | degC | discrete source value in Celsius, not user baseline deviation |
+| step_count | stepCount | count | cumulative interval contribution; no total across overlapping sources inferred |
+| walking_running_distance | distanceWalkingRunning | m | cumulative interval contribution |
+| active_energy | activeEnergyBurned | kcal | cumulative interval contribution |
+| basal_energy | basalEnergyBurned | kcal | cumulative interval contribution, distinct from active energy |
+| apple_exercise_time | appleExerciseTime quantity samples | s | cumulative interval contribution converted to seconds, not workout duration or ActivitySummary polling |
+| sleep_analysis | sleepAnalysis | none | category interval, preserve all source overlap |
+| workout | workoutType | explicit per-field units | one summary per workout; no embedded selected-series totals derived by the exporter |
+
+Quantity upserts use `kind: quantity`, `value`, `unit` and `aggregation: discrete|cumulative`. Validate the precise metric/unit/aggregation tuple. The archive stores source-provided sample contributions, without returning a summed total across overlapping sources or across workout and quantity evidence. Cross-source conflict/overlap stays visible. [Apple data types](https://developer.apple.com/documentation/healthkit/data-types) · [Cumulative aggregation](https://developer.apple.com/documentation/healthkit/hkquantityaggregationstyle/cumulative) · [Walking HR](https://developer.apple.com/documentation/healthkit/hkquantitytypeidentifier/walkingheartrateaverage) · [Exercise time](https://developer.apple.com/documentation/healthkit/hkquantitytypeidentifier/appleexercisetime)
+
+Sleep upserts use `kind: sleep` and `category: in_bed|awake|asleep_unspecified|asleep_core|asleep_deep|asleep_rem|unknown`. Legacy asleep maps to asleep_unspecified. An unrecognized raw category maps to unknown plus bounded integer `unknown_category_code`; for known categories that field is null. Preserve source-specific and in-bed/stage overlap. No merging, age-based pruning, sum of in-bed plus stage time, or conversion of gaps to awake. [Apple sleep categories](https://developer.apple.com/documentation/healthkit/hkcategoryvaluesleepanalysis)
+
+Workout upserts use `kind: workout`, numeric HealthKit `activity_code`, `duration_s` and nullable `distance_m`, `energy_kcal`. Preserve the source-recorded duration rather than substituting wall-clock interval length. Optional recorded totals are null if absent or ambiguous; do not approximate them from overlapping samples, routes, workout events or unsupported statistics. Activity code is the SDK's raw value, with unknown display labels left unknown. No routes, ECG, waveforms, reproductive data, metadata dictionaries, notes or location. [Apple workout duration](https://developer.apple.com/documentation/healthkit/hkworkout/duration)
+
+### Availability and retention
+
+Availability is local per type. Record supported/unsupported from the actual device/API. Distinguish last query with visible records, completed empty query with permission/coverage unknown, query error and never queried. No inferred read-permission denial or complete history from an empty result. Optional unavailable types cannot block core reads. Show last successful collection, durable enqueue and authoritative acknowledgment separately. Zero only means an actual zero-valued source fact.
+
+On acceptance retain exact submitted originals, receipt, digest, source facts, processing history and tombstones without automatic age purge. Current-at-cutoff excludes any explicit deletion committed at or before that cutoff. A later upsert under a deleted key cannot resurrect it in this increment. Replacements with new UUIDs are independent adds, with old-key deletion when observed; no inferred deletion or predecessor linkage from timestamp/overlap. Keep unknown-key deletes, and never treat failure, partial page or absent record as deletion.
+
+Derive source fact digest over canonical JSON array `["mse.selected-fact/0.1", scope, record]`; for upserts omit `collector_received_at` from the record digest, retaining it in original and receipt linkage. Exact same keyed source fact deduplicates with sightings retained. Same keyed upsert with changed source facts under unchanged UUID quarantines the conflicting batch without rewriting old evidence; no implicit replacement policy. A separate processing-version change yields new processing lineage while the source identity remains. Canonical digest encoding uses frozen 0.2 compact sorted-key UTF-8 JSON conventions. Roll back no authority when preserving a failed attempt.
+
+Deleting a sample in Health changes the archive's current view after an explicit deletion is received. It does not erase an archived original. Explicit archive deletion/erasure must be separately authorized and defined for every copy. Collection stop, future 48-hour pilot cutoff and retained archive history are independent. Backup/restore is deferred.
+
+### Acknowledgment
+
+A distinct `mse.selected-healthkit-receipt/0.1` binds archive ID, scope, batch, original digest and size, server receipt and commit clocks, commit sequence, receipt identity and status. Hash receipt ID from canonical `["mse.selected-receipt-id/0.1", archive_id, scope, batch_id]`. At normalized status the receipt contains an authoritative `archive_commit_id`; never fill an invented PF-001 run ID for selected shapes. A normalized receipt requires exact reopened original and linked selected facts/processing evidence. Custody-only retains pending outbox state. Quarantine stops automatic progression for that batch and preserves the original; rejection creates no durable acceptance. Same scope/batch and bytes returns the identical stored terminal receipt; different bytes under a bound batch conflicts with no new commitment. The client verifies complete expected identity, digest, length, status and required commitment fields before removing the matching pending entry. Model forwarding is out of scope.
