@@ -28,3 +28,22 @@ Local tests use an exact source blob without a service or VM:
 ```sh
 python3 -B -m unittest discover -s tools/mse_integration/archive_manifest -v
 ```
+
+## Clean reproduction evidence readback
+
+[MSE-ARCHIVE-REPRO-20261121-03 r1](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056841919). Use the [ATLAS cold checklist and private-input inventory](https://github.com/ctmansfield/mother/blob/e5f4cca2ad27c091b9f37ed71ae544c54c436de2/docs/mse/integration/ARCHIVE_CLEAN_REPRO_CHECKLIST.md). The accepted VM and phone sequence 4 are preservation references.
+
+Bind the approved cold image digest and point-in-time hash of the new standalone copy. Record the separate target's initial domain, file and network absence, allocated identity, NIC-free first boot, unique guest identities and exact empty archive root immediately before initialization. The independent operator should retain executed command and input pins, exit/timeout results and per-stage comparison hashes. A source template, private operational values and observed guest state each need their own provenance. Explicitly record missing inputs and any undocumented correction. Compare the reopened fresh initialization marker against the same new archive and neither transplant the prior live marker nor assume the combined catalog hashes are sufficient evidence of empty state.
+
+The r2 package and contract checks use the exact #44 payload. Offline wheels must match the wheel lock in PHOENIX's source, with engine/interpreter and effective service identity measured on the fresh guest. The archive-only network and exact-interface readiness should be read back after reboot. Keep the accepted phone relay closed throughout.
+
+Use this independent, read-only comparator with the verified r2 package on Python's module path. Supply the exact synthetic capture, authenticated normalized receipt and bounded single-commit operator export, then a closed disposable consumer SQLite database from the owning run. Pass authenticated custodian digests from separate receipts. The comparator compares the complete relation rows and projected SQL columns, including artifact/receipt/source/processing identities, exact decimal, unit, operation and cutoff. It rejects the historical phone artifact and reports only safe digests and counts. This verifies exported lineage, not the separate proof of actual guest storage and isolation.
+
+```sh
+PYTHONPATH="/path/to/verified-r2-source" python -B \
+    tools/mse_integration/archive_manifest/verify_fresh_lineage.py \
+    --original "$synthetic_original" --original-sha256 "$original_sha256" \
+    --receipt "$normalized_receipt" --receipt-sha256 "$receipt_sha256" \
+    --export "$operator_export" --export-sha256 "$operator_export_sha256" \
+    --consumer "$closed_disposable_consumer"
+```
