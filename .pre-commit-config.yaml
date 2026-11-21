@@ -11,6 +11,8 @@ repos:
       - id: trailing-whitespace
       - id: check-yaml
       - id: check-json
+        # These intentionally invalid fixtures are asserted by the MSE acceptance suite.
+        exclude: ^tests/fixtures/mse_integration/(malformed|duplicate-json-key)\.json$
       - id: check-toml
       - id: check-added-large-files
 

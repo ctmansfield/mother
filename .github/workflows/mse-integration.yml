@@ -1,0 +1,57 @@
+name: MSE integration
+
+on:
+  push:
+    paths: &semantic_paths
+      - '.github/workflows/mse-integration.yml'
+      - 'docs/mse/integration/contracts/**'
+      - 'integrations/**'
+      - 'mother/physiology/**'
+      - 'research/mse/reference-v0.1.0/**'
+      - 'tests/acceptance/mse_integration/**'
+      - 'tests/fixtures/mse_integration/**'
+      - 'tests/integration/healthbridge/**'
+      - 'tests/integration/mse_ingest/**'
+      - 'tests/integration/mse_snapshot/**'
+  pull_request:
+    paths: *semantic_paths
+
+permissions:
+  contents: read
+
+jobs:
+  mse-semantic-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch frozen ATLAS vector commit
+        run: |
+          pin=3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c
+          git fetch --no-tags --depth=1 origin "$pin"
+          test "$(git rev-parse FETCH_HEAD)" = "$pin"
+      - name: Install pinned test dependencies
+        run: python -m pip install 'pytest==9.2.0' 'jsonschema==4.25.1' 'defusedxml==0.7.1'
+      - name: Run MSE and HealthBridge tests with pinned repository inputs
+        env:
+          MSE_ATLAS_CONTRACT_DIR: ${{ github.workspace }}/docs/mse/integration/contracts
+          MSE_HEALTHBRIDGE_FIXTURES: ${{ github.workspace }}/tests/fixtures/mse_integration
+          MSE_R3_DEPENDENCY_ROOT: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}/research/mse/reference-v0.1.0/prototype
+        run: |
+          export TMPDIR="$(mktemp -d "$RUNNER_TEMP/mse-test.XXXXXX")"
+          python -B -m pytest -q -rs --junitxml="$RUNNER_TEMP/mse-semantic.xml" \
+            tests/acceptance/mse_integration tests/integration/healthbridge \
+            tests/integration/mse_ingest tests/integration/mse_snapshot
+          python - "$RUNNER_TEMP/mse-semantic.xml" <<'PY'
+          import sys
+          from xml.etree import ElementTree
+
+          report = ElementTree.parse(sys.argv[1])
+          if report.find(".//testcase") is None or report.find(".//skipped") is not None:
+              raise SystemExit("The MSE semantic gate requires executed tests with zero skips.")
+          PY

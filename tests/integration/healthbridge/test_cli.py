@@ -1,4 +1,5 @@
 """Verify the offline CLI's deterministic, bounded summary and error behavior."""
+
 import hashlib
 import json
 import subprocess
@@ -9,11 +10,26 @@ import unittest
 class CaptureCLITests(unittest.TestCase):
     def invoke(self, raw, *options):
         return subprocess.run(
-            [sys.executable, "-B", "-m", "integrations.healthbridge",
-             "--subject-id", "synthetic-subject", "--source-instance", "test-store",
-             "--batch-id", "batch-1", "--capture-id", "capture-1",
-             "--capture-kind", "partial", *options],
-            input=raw, capture_output=True, check=False,
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "integrations.healthbridge",
+                "--subject-id",
+                "synthetic-subject",
+                "--source-instance",
+                "test-store",
+                "--batch-id",
+                "batch-1",
+                "--capture-id",
+                "capture-1",
+                "--capture-kind",
+                "partial",
+                *options,
+            ],
+            input=raw,
+            capture_output=True,
+            check=False,
         )
 
     def test_summary_is_deterministic_and_contains_no_source_fields(self):
@@ -40,4 +56,6 @@ class CaptureCLITests(unittest.TestCase):
             with self.subTest(invalid=invalid):
                 result = self.invoke(b"", "--max-depth", invalid)
                 self.assertEqual((result.returncode, result.stdout), (2, b""))
-                self.assertEqual(result.stderr, b"healthbridge: invalid arguments; see --help\n")
+                self.assertEqual(
+                    result.stderr, b"healthbridge: invalid arguments; see --help\n"
+                )
