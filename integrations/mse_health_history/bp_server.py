@@ -15,15 +15,18 @@ from time import monotonic
 
 from .blood_pressure import source_time
 from .bp_transport import BPStore, FEEDS, MAX_BYTES, MAX_PAGES, Sealer, _key
+from .bp_witness import CustodianVerifier
 from .files import private_path
 from .vault import DIGEST, VaultCapacity, VaultClosed, VaultConflict
 from .vault_server import Handler, PRIVATE, Server, _unique
 
-ROLES = {"upload", "receipt", "export"}
+ROLES = {"upload", "receipt", "export", "custodian"}
 LABEL = r"[A-Za-z0-9][A-Za-z0-9_-]{0,95}"
 PAGE = re.compile(
     rf"/v1/bp-history/enrollments/({LABEL})/streams/({LABEL})/pages/([1-9][0-9]{{0,8}})"
 )
+CUSTODY = re.compile(PAGE.pattern + r"/(custody|ciphertext|commit)")
+
 EXPORT = re.compile(
     rf"/v1/bp-history/enrollments/({LABEL})/streams/({LABEL})/export\?from=([1-9][0-9]{{0,8}})&through=([1-9][0-9]{{0,8}})"
 )
@@ -65,7 +68,7 @@ def read_config(path):
     fields = (
         "bind archive_id enrollment_id source_instance streams snapshot "
         "transport_starts_at transport_ends_at enabled max_pages max_bytes reserve_bytes grants "
-        "age_executable age_sha256 recipient_file recipient_sha256 provenance_key_file"
+        "age_executable age_sha256 recipient_file recipient_sha256 provenance_key_file custodian_public_key_file custodian_public_sha256 openssl_executable"
     )
     if not isinstance(config, dict) or set(config) != set(fields.split()):
         raise ValueError("BP config fields mismatch")
@@ -82,7 +85,7 @@ def read_config(path):
         not isinstance(streams, dict)
         or set(streams) != set(FEEDS)
         or not all(map(_key, streams.values()))
-        or len(set(streams.values())) != 3
+        or streams != {name: name for name in FEEDS}
     ):
         raise ValueError("BP enrollment requires three distinct streams")
     snapshot = config["snapshot"]
@@ -224,14 +227,58 @@ class BPHandler(Handler):
 
         self._apply(put)
 
+    def do_POST(self):
+        match = CUSTODY.fullmatch(self.path)
+        if match is None or match[4] != "commit":
+            self.reply(404, {"error": "not_found"})
+            return
+        if not self.grant("custodian") or not self._scope(match):
+            return
+        lengths = self.headers.get_all("Content-Length", [])
+        if (
+            self.headers.get_all("Content-Type") != ["application/json"]
+            or self.headers.get_all("Content-Encoding")
+            or self.headers.get_all("Transfer-Encoding")
+            or len(lengths) != 1
+            or not re.fullmatch(r"[1-9][0-9]{0,3}", lengths[0])
+        ):
+            self.reply(400, {"error": "invalid_witness"})
+            return
+
+        def commit():
+            self.server.store.writable()
+            size = int(lengths[0])
+            raw = self.rfile.read(size)
+            if len(raw) != size:
+                raise ValueError("incomplete witness")
+            proof = json.loads(raw, object_pairs_hook=_unique)
+            if not isinstance(proof, dict) or set(proof) != {"statement", "signature"}:
+                raise ValueError("invalid witness")
+            return self.server.store.commit(
+                match[2], int(match[3]), proof["statement"], proof["signature"]
+            )
+
+        self._apply(commit)
+
     def do_GET(self):
         match = PAGE.fullmatch(self.path)
         export = EXPORT.fullmatch(self.path)
+        custody = CUSTODY.fullmatch(self.path)
         if match:
             if self.grant("receipt") and self._scope(match):
-                self._apply(
-                    lambda: (200, self.server.store.receipt(match[2], int(match[3])))
-                )
+
+                def read():
+                    try:
+                        return 200, self.server.store.receipt(match[2], int(match[3]))
+                    except KeyError:
+                        try:
+                            self.server.store.writable()
+                        except VaultClosed:
+                            raise KeyError("BP receipt absent") from None
+                        self.server.store.custody(match[2], int(match[3]))
+                        return 202, {"status": "pending_custodian_verification"}
+
+                self._apply(read)
         elif export:
             if self.grant("export") and self._scope(export):
                 self._apply(
@@ -239,6 +286,18 @@ class BPHandler(Handler):
                         200,
                         self.server.store.export(
                             export[2], int(export[3]), int(export[4])
+                        ),
+                    )
+                )
+        elif custody and custody[4] != "commit":
+            if self.grant("custodian") and self._scope(custody):
+                self._apply(
+                    lambda: (
+                        200,
+                        self.server.store.custody(
+                            custody[2],
+                            int(custody[3]),
+                            ciphertext=custody[4] == "ciphertext",
                         ),
                     )
                 )
@@ -269,7 +328,19 @@ def main():
             config["recipient_file"],
             config["recipient_sha256"],
         )
-        store = BPStore(args.root, config, sealer, key.read_bytes(), clock=Clock())
+        verifier = CustodianVerifier(
+            config["custodian_public_key_file"],
+            config["custodian_public_sha256"],
+            config["openssl_executable"],
+        )
+        store = BPStore(
+            args.root,
+            config,
+            sealer,
+            key.read_bytes(),
+            clock=Clock(),
+            verify_custodian=verifier,
+        )
         if args.operation == "init":
             store.initialize()
         else:

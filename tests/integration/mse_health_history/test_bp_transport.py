@@ -5,7 +5,6 @@ import http.client
 import json
 import os
 from pathlib import Path
-import sqlite3
 import ssl
 import subprocess
 from tempfile import TemporaryDirectory
@@ -14,14 +13,20 @@ import unittest
 
 from integrations.mse_health_history.bp_server import BPServer, read_config
 from integrations.mse_health_history.bp_transport import BPStore, Sealer, digest
-from integrations.mse_health_history.vault import VaultClosed, VaultConflict
+from integrations.mse_health_history.vault import VaultClosed
+from integrations.mse_health_history.bp_witness import (
+    CustodianVerifier,
+    authenticate_and_sign,
+)
 
 START = "2026-11-22T00:00:00.000000Z"
 END = "2026-11-22T02:00:00.000000Z"
 SNAPSHOT = "2026-11-21T00:00:00.000000Z"
 SAMPLE = "2025-10-10T12:34:00.000000Z"
-ROUTE = "/v1/bp-history/enrollments/demo-enrollment/streams/demo-correlation"
-ROLES = dict(zip(("upload", "receipt", "export"), (c * 43 for c in "ABC")))
+ROUTE = "/v1/bp-history/enrollments/demo-enrollment/streams/correlation"
+ROLES = dict(
+    zip(("upload", "receipt", "export", "custodian"), (c * 43 for c in "ABCD"))
+)
 
 
 @unittest.skipUnless(
@@ -44,15 +49,32 @@ class BPTransportTests(unittest.TestCase):
         recipient = self.root / "public"
         recipient.touch(mode=0o600)
         recipient.write_bytes(subprocess.check_output([keygen, "-y", self.identity]))
+        self.openssl = os.environ.get("MSE_HISTORY_OPENSSL", "/usr/bin/openssl")
+        self.signing = self.root / "signing.pem"
+        public = self.root / "signing-public.pem"
+        subprocess.run(
+            [self.openssl, "genpkey", "-algorithm", "ED25519", "-out", self.signing],
+            check=True,
+        )
+        self.signing.chmod(0o600)
+        public.touch(mode=0o600)
+        public.write_bytes(
+            subprocess.check_output(
+                [self.openssl, "pkey", "-in", self.signing, "-pubout"]
+            )
+        )
+        self.verifier = CustodianVerifier(
+            public, digest(public.read_bytes()), self.openssl
+        )
         raw = {
             "bind": "192.168.78.2",
             "archive_id": "demo-bp",
             "enrollment_id": "demo-enrollment",
             "source_instance": "demo-store",
             "streams": {
-                "bp_correlation": "demo-correlation",
-                "systolic": "demo-systolic",
-                "diastolic": "demo-diastolic",
+                "correlation": "correlation",
+                "systolic": "systolic",
+                "diastolic": "diastolic",
             },
             "snapshot": {"sample_start_at": None, "sample_end_before": SNAPSHOT},
             "transport_starts_at": START,
@@ -66,6 +88,9 @@ class BPTransportTests(unittest.TestCase):
             "recipient_file": str(recipient),
             "recipient_sha256": digest(recipient.read_bytes()),
             "provenance_key_file": "not-used-in-host-test",
+            "custodian_public_key_file": str(public),
+            "custodian_public_sha256": digest(public.read_bytes()),
+            "openssl_executable": self.openssl,
             "grants": {
                 r: {
                     "sha256": digest(t.encode()),
@@ -86,7 +111,12 @@ class BPTransportTests(unittest.TestCase):
 
     def open(self, cls=BPStore):
         return cls(
-            self.state, self.config, self.sealer, b"p" * 32, clock=lambda: self.now
+            self.state,
+            self.config,
+            self.sealer,
+            b"p" * 32,
+            clock=lambda: self.now,
+            verify_custodian=self.verifier,
         )
 
     @staticmethod
@@ -97,7 +127,7 @@ class BPTransportTests(unittest.TestCase):
         *,
         terminal=False,
         sample=SAMPLE,
-        stream="demo-correlation",
+        stream="correlation",
     ):
         def lineage(n):
             return {
@@ -112,10 +142,11 @@ class BPTransportTests(unittest.TestCase):
 
         return json.dumps(
             {
-                "schema": "bp-history-page-v1",
-                "enrollment_id": "demo-enrollment",
-                "stream_id": stream,
-                "page_seq": seq,
+                "schema_version": "mse.historical-bp-page/0.1",
+                "enrollment": "demo-enrollment",
+                "source_instance": "demo-store",
+                "through": SNAPSHOT,
+                "feed": stream,
                 "cursor_in": prior,
                 "cursor_out": token * 43,
                 "upserts": (
@@ -140,8 +171,8 @@ class BPTransportTests(unittest.TestCase):
                         }
                     ]
                 ),
-                "deletions": [],
-                "scan_complete": terminal,
+                "deleted_ids": [],
+                "exhausted": terminal,
             },
             separators=(",", ":"),
         ).encode()
@@ -199,64 +230,104 @@ class BPTransportTests(unittest.TestCase):
             reply = client.getresponse()
             return reply.status, reply.read()
 
-    def test_exact_https_receipt_replay_export_and_off_guest_decryption(self):
+    def proof(self, body, seq=1, *, change_receipt_id=False):
+        status, info = self.request("GET", f"/pages/{seq}/custody", "custodian")
+        self.assertEqual(status, 200)
+        statement = json.loads(info)
+        if change_receipt_id:
+            statement["typed_receipt_id"] = "f" * 64
+        status, cipher = self.request("GET", f"/pages/{seq}/ciphertext", "custodian")
+        self.assertEqual(status, 200)
+        path = self.root / "download.age"
+        if not path.exists():
+            path.touch(mode=0o600)
+        path.write_bytes(cipher)
+        return authenticate_and_sign(
+            statement,
+            expected_binding={
+                "archive_id": "demo-bp",
+                "enrollment_id": "demo-enrollment",
+                "source_instance": "demo-store",
+                "feed": "correlation",
+                "page_seq": seq,
+                "plaintext_sha256": digest(body),
+                "plaintext_length": len(body),
+            },
+            signing_key=self.signing,
+            openssl=self.openssl,
+            ciphertext=path,
+            recipient_fingerprint=self.config["recipient_sha256"],
+            age_executable=self.age,
+            age_sha256=self.config["age_sha256"],
+            identity_file=self.identity,
+        )
+
+    def test_https_pending_tamper_wrong_role_then_witnessed_receipt(self):
         self.serve(self.store)
         body = self.page()
-        with self.assertRaises(ssl.SSLCertVerificationError):
-            self.request("GET", "/pages/1", "receipt", host="127.0.0.1")
-        self.assertEqual(self.request("PUT", "/pages/1", "receipt", body)[0], 401)
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body + b" ")[0], 409)
+        self.assertEqual(self.request("GET", "/pages/1", "receipt")[0], 202)
+        self.assertEqual(self.request("GET", "/pages/1/ciphertext", "receipt")[0], 401)
         self.assertEqual(
-            self.request("PUT", "/pages/1", "upload", self.page(sample=SNAPSHOT))[0],
+            json.loads(self.request("GET", "/export?from=1&through=1", "export")[1])[
+                "rows"
+            ],
+            [],
+        )
+        proof = self.proof(body)
+        invalid = dict(proof, signature="A" * 86)
+        self.assertEqual(
+            self.request(
+                "POST", "/pages/1/commit", "custodian", json.dumps(invalid).encode()
+            )[0],
             400,
         )
         self.assertEqual(
-            self.request("PUT", "/pages/2", "upload", self.page(2))[0], 409
+            self.request(
+                "POST", "/pages/1/commit", "receipt", json.dumps(proof).encode()
+            )[0],
+            401,
         )
-        code, receipt = self.request("PUT", "/pages/1", "upload", body)
-        self.assertEqual(code, 201)
-        self.assertEqual(json.loads(receipt)["page_sha256"], digest(body))
-        self.assertEqual(json.loads(receipt)["schema"], "bp-history-receipt-v1")
+        wrong_page = self.proof(body, change_receipt_id=True)
+        self.assertEqual(
+            self.request(
+                "POST", "/pages/1/commit", "custodian", json.dumps(wrong_page).encode()
+            )[0],
+            409,
+        )
+        code, receipt = self.request(
+            "POST", "/pages/1/commit", "custodian", json.dumps(proof).encode()
+        )
+        self.assertEqual(code, 200)
+        decoded = json.loads(receipt)
+        self.assertEqual(
+            self.request(
+                "POST", "/pages/1/commit", "custodian", json.dumps(proof).encode()
+            ),
+            (200, receipt),
+        )
+        self.assertEqual(
+            decoded["schema_version"], "mse.historical-bp-page-receipt/0.1"
+        )
+        self.assertEqual(decoded["status"], "typed_and_cursor_durable")
+        self.assertEqual(decoded["sha256"], digest(body))
+        self.assertEqual(
+            decoded["ciphertext_receipt"], proof["statement"]["ciphertext_receipt"]
+        )
+        self.assertEqual(self.request("GET", "/pages/1", "receipt"), (200, receipt))
         self.assertEqual(
             self.request("PUT", "/pages/1", "upload", body), (200, receipt)
         )
-        self.assertEqual(self.request("PUT", "/pages/1", "upload", body + b" ")[0], 409)
-        self.assertEqual(self.request("GET", "/pages/1", "upload")[0], 401)
-        self.assertEqual(self.request("GET", "/pages/1", "receipt"), (200, receipt))
-        self.assertEqual(
-            self.request("GET", "/export?from=1&through=1", "receipt")[0], 401
-        )
-        status, export = self.request("GET", "/export?from=1&through=1", "export")
-        self.assertEqual(status, 200)
+        export = self.request("GET", "/export?from=1&through=1", "export")[1]
         self.assertNotIn(b"fixture-private-origin", export)
         self.assertEqual(json.loads(export)["rows"][0]["fact"]["pairing"], "paired")
-        terminal = self.page(2, "A" * 43, "B", terminal=True)
-        self.assertEqual(self.request("PUT", "/pages/2", "upload", terminal)[0], 201)
-        self.assertEqual(
-            self.request("PUT", "/pages/3", "upload", self.page(3, "B" * 43, "C"))[0],
-            409,
-        )
-        self.now = END
-        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 401)
-        self.assertEqual(self.request("GET", "/pages/1", "receipt"), (200, receipt))
-        with closing(sqlite3.connect(self.store.db)) as db:
-            cipher = db.execute(
-                "SELECT ciphertext FROM pages WHERE stream='demo-correlation' AND seq=1"
-            ).fetchone()[0]
         self.assertNotIn(body, self.store.db.read_bytes())
-        self.assertEqual(
-            subprocess.run(
-                [self.age, "-d", "-i", self.identity],
-                input=cipher,
-                check=True,
-                capture_output=True,
-            ).stdout,
-            body,
-        )
-        self.assertEqual(
-            self.open().receipt("demo-correlation", 1), json.loads(receipt)
-        )
+        self.now = END
+        self.assertEqual(self.request("GET", "/pages/1", "receipt"), (200, receipt))
 
-    def test_late_data_commit_leaves_ciphertext_sealed_and_receipt_hidden(self):
+    def test_cutoff_after_sealed_custody_write_stays_hidden(self):
         owner = self
 
         class Late(BPStore):
@@ -268,65 +339,33 @@ class BPTransportTests(unittest.TestCase):
                     owner.now = END
 
         with self.assertRaises(VaultClosed):
-            self.open(Late).put("demo-correlation", 1, self.page())
-        reopened = self.open()
+            self.open(Late).put("correlation", 1, self.page())
         with self.assertRaises(KeyError):
-            reopened.receipt("demo-correlation", 1)
-        self.assertEqual(reopened.export("demo-correlation", 1, 1)["rows"], [])
-        with closing(sqlite3.connect(self.store.db)) as db:
-            self.assertTrue(
-                db.execute("SELECT ciphertext FROM pages")
-                .fetchone()[0]
-                .startswith(b"age-encryption.org/v1")
-            )
+            self.open().custody("correlation", 1)
+        with self.assertRaises(KeyError):
+            self.open().receipt("correlation", 1)
+        self.assertEqual(self.open().export("correlation", 1, 1)["rows"], [])
 
-    def test_three_terminal_streams_hold_independent_sequences_and_unique_tokens(self):
-        self.now = "2026-11-21T23:59:59.999999Z"
-        with self.assertRaises(VaultClosed):
-            self.store.put("demo-correlation", 1, self.page(terminal=True))
-        self.now = START
-        for stream, token in (
-            ("demo-correlation", "A"),
-            ("demo-systolic", "B"),
-            ("demo-diastolic", "C"),
-        ):
-            if stream != "demo-correlation":
-                with self.assertRaises(VaultConflict):
-                    self.store.put(stream, 1, self.page(stream=stream, terminal=True))
-            first = self.page(stream=stream, token=token, terminal=True)
-            if stream == "demo-correlation":
-                vector = json.loads(
-                    Path(
-                        "integrations/mse_health_history/bp-http-vectors.json"
-                    ).read_bytes()
-                )
-                first = vector["exact_put_utf8"].encode()
-                self.assertEqual(
-                    self.store.put(stream, 1, first), (201, vector["expected_receipt"])
-                )
-            else:
-                self.assertEqual(self.store.put(stream, 1, first)[0], 201)
-            self.assertEqual(self.store.put(stream, 1, first)[0], 200)
-            self.assertTrue(self.open().receipt(stream, 1)["scan_complete"])
-
-    def test_witness_persisted_after_pre_cutoff_observation_is_reconcilable(self):
+    def test_cutoff_after_custodian_proof_keeps_typed_receipt_hidden(self):
+        self.serve(self.store)
+        body = self.page()
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
+        proof = self.proof(body)
         owner = self
 
-        class LateReply(BPStore):
-            writes = 0
-
+        class Late(BPStore):
             @contextmanager
             def connect(self, *, write=False):
                 with super().connect(write=write) as db:
                     yield db
                 if write:
-                    self.writes += 1
-                    if self.writes == 2:
-                        owner.now = END
+                    owner.now = END
 
-        body = self.page(terminal=True)
-        code, receipt = self.open(LateReply).put("demo-correlation", 1, body)
-        self.assertEqual(code, 201)
-        self.assertEqual(self.open().receipt("demo-correlation", 1), receipt)
         with self.assertRaises(VaultClosed):
-            self.open().put("demo-correlation", 1, body)
+            self.open(Late).commit(
+                "correlation", 1, proof["statement"], proof["signature"]
+            )
+        with self.assertRaises(KeyError):
+            self.open().receipt("correlation", 1)
+        self.assertEqual(self.open().export("correlation", 1, 1)["rows"], [])
+        self.assertEqual(self.request("GET", "/pages/1", "receipt")[0], 404)

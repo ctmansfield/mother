@@ -3,6 +3,7 @@
 from contextlib import closing, contextmanager
 from hashlib import sha256
 import json
+from io import BytesIO
 import os
 from pathlib import Path
 import re
@@ -10,7 +11,6 @@ import shutil
 import sqlite3
 import subprocess
 
-from integrations.healthbridge.capture import _check_depth, _unique_object
 from mother.physiology.contracts import canonical_json
 
 from . import bp_page
@@ -23,7 +23,7 @@ MAX_ROWS = 512
 MAX_PAGES = 100_000
 FOREVER = "9999-12-31T23:59:59.999999Z"
 FEEDS = {
-    "bp_correlation": "correlation",
+    "correlation": "correlation",
     "systolic": "systolic",
     "diastolic": "diastolic",
 }
@@ -33,7 +33,7 @@ CREATE TABLE identity (body TEXT NOT NULL);
 CREATE TABLE pages (
  stream TEXT NOT NULL, seq INTEGER NOT NULL, digest TEXT NOT NULL,
  raw_size INTEGER NOT NULL, ciphertext BLOB NOT NULL, cipher_digest TEXT NOT NULL,
- receipt TEXT NOT NULL, witness TEXT,
+ receipt TEXT NOT NULL, custody_at TEXT, witness TEXT, custodian_proof TEXT,
  PRIMARY KEY(stream,seq)
 );
 CREATE TABLE checkpoints (
@@ -107,12 +107,13 @@ class Sealer:
 
 
 class BPStore:
-    def __init__(self, root, config, sealer, key, *, clock):
+    def __init__(self, root, config, sealer, key, *, clock, verify_custodian):
         self.root = Path(root).absolute()
         self.db = self.root / "bp-history.sqlite3"
         self.config = config
         self.clock = clock
         self.sealer = sealer
+        self.verify_custodian = verify_custodian
         self.normalizer = BloodPressure(config["source_instance"], key)
         self.identity = canonical_json(
             {
@@ -128,11 +129,12 @@ class BPStore:
                     "recipient_sha256",
                     "age_sha256",
                     "max_pages",
+                    "custodian_public_sha256",
                     "max_bytes",
                     "reserve_bytes",
                 )
             }
-            | {"key_pin": digest(key), "layout": "bp-history-sqlite/1"}
+            | {"key_pin": digest(key), "layout": "bp-history-sqlite/2"}
         )
 
     def writable(self, now=None):
@@ -192,41 +194,14 @@ class BPStore:
     def _parse(self, stream, seq, raw):
         if not isinstance(raw, bytes) or len(raw) > MAX_BYTES:
             raise VaultCapacity("BP page byte cap")
-        text = raw.decode("utf-8")
-        _check_depth(text, 16)
-        page = json.loads(
-            text,
-            object_pairs_hook=_unique_object,
-            parse_float=bp_page._reject_number,
-            parse_constant=bp_page._reject_number,
-        )
-        bp_page._check(
-            page,
-            "schema enrollment_id stream_id page_seq cursor_in cursor_out upserts deletions scan_complete",
+        page = bp_page.read_page(
+            BytesIO(raw), self.config["enrollment_id"], self.config["source_instance"]
         )
         if (
-            page["schema"] != "bp-history-page-v1"
-            or page["enrollment_id"] != self.config["enrollment_id"]
-            or page["stream_id"] != stream
-            or type(page["page_seq"]) is not int
-            or page["page_seq"] != seq
-            or (
-                page["cursor_in"] is not None and not isinstance(page["cursor_in"], str)
-            )
-            or (
-                page["cursor_in"] is not None
-                and not CURSOR.fullmatch(page["cursor_in"])
-            )
-            or not isinstance(page["cursor_out"], str)
-            or not CURSOR.fullmatch(page["cursor_out"])
-            or not isinstance(page["upserts"], list)
-            or not isinstance(page["deletions"], list)
-            or type(page["scan_complete"]) is not bool
-            or page["scan_complete"] != (not page["upserts"] and not page["deletions"])
+            page["feed"] != stream
+            or page["through"] != self.config["snapshot"]["sample_end_before"]
         ):
             raise ValueError("BP page binding mismatch")
-        if len(page["upserts"]) + len(page["deletions"]) > MAX_ROWS:
-            raise VaultCapacity("BP page count cap")
         return page
 
     def _facts(self, stream, page):
@@ -251,7 +226,7 @@ class BPStore:
             seen.add(identity)
             facts.append({"operation": "upsert", "revision": revision, "fact": fact})
         deleted = set()
-        for value in page["deletions"]:
+        for value in page["deleted_ids"]:
             native = source_uuid(value)
             if native is None or native != value or native in deleted:
                 raise ValueError("invalid BP deletion identity")
@@ -273,7 +248,7 @@ class BPStore:
             not self.config["transport_starts_at"]
             <= row[2]
             < self.config["transport_ends_at"]
-            or body["page_sha256"] != row[0]
+            or body["sha256"] != row[0]
         ):
             raise BPUnavailable("BP receipt witness mismatch")
         return body
@@ -283,28 +258,35 @@ class BPStore:
         page = self._parse(stream, seq, raw)
         pin = digest(raw)
         body = {
-            "schema": "bp-history-receipt-v1",
-            "enrollment_id": self.config["enrollment_id"],
-            "stream_id": stream,
-            "page_seq": seq,
-            "page_sha256": pin,
+            "schema_version": "mse.historical-bp-page-receipt/0.1",
+            "status": "typed_and_cursor_durable",
+            "archive_id": self.config["archive_id"],
+            "enrollment": page["enrollment"],
+            "source_instance": page["source_instance"],
+            "feed": stream,
+            "through": page["through"],
+            "sha256": pin,
+            "byte_length": len(raw),
+            "cursor_in": page["cursor_in"],
             "cursor_out": page["cursor_out"],
-            "upsert_count": len(page["upserts"]),
-            "deletion_count": len(page["deletions"]),
-            "scan_complete": page["scan_complete"],
+            "typed_upserts": len(page["upserts"]),
+            "typed_tombstones": len(page["deleted_ids"]),
+            "exhausted": page["exhausted"],
+            "protection": "custodian_verified_ciphertext",
         }
-        body["receipt_id"] = digest(canonical_json(body).encode())
         with self.connect(write=True) as db:
             self.writable()
             previous = db.execute(
-                "SELECT digest,receipt,witness FROM pages WHERE stream=? AND seq=?",
+                "SELECT digest,receipt,witness,custody_at FROM pages WHERE stream=? AND seq=?",
                 (stream, seq),
             ).fetchone()
             if previous is not None:
                 if previous[0] != pin:
                     raise VaultConflict("BP page identity conflict")
                 if previous[2] is None:
-                    raise BPUnavailable("BP page requires sealed reconciliation")
+                    if previous[3] is None:
+                        raise BPUnavailable("BP page requires sealed reconciliation")
+                    return 202, {"status": "pending_custodian_verification"}
                 return 200, json.loads(previous[1])
             if db.execute(
                 "SELECT 1 FROM pages WHERE witness IS NULL LIMIT 1"
@@ -315,13 +297,19 @@ class BPStore:
                    ON p.stream=c.stream AND p.seq=c.seq WHERE c.stream=?""",
                 (stream,),
             ).fetchone()
+            same_terminal_cursor = (
+                page["exhausted"] and page["cursor_out"] == page["cursor_in"]
+            )
             if (
                 seq != (head[0] + 1 if head else 1)
                 or page["cursor_in"] != (head[1] if head else None)
-                or (head and json.loads(head[2])["scan_complete"])
-                or db.execute(
-                    "SELECT 1 FROM cursors WHERE token=?", (page["cursor_out"],)
-                ).fetchone()
+                or (head and json.loads(head[2])["exhausted"])
+                or (
+                    not same_terminal_cursor
+                    and db.execute(
+                        "SELECT 1 FROM cursors WHERE token=?", (page["cursor_out"],)
+                    ).fetchone()
+                )
             ):
                 raise VaultConflict("BP checkpoint conflict")
             if (
@@ -340,9 +328,14 @@ class BPStore:
                 < self.config["reserve_bytes"] + 8 * MAX_BYTES
             ):
                 raise VaultCapacity("BP archive byte quota")
+            raw_receipt = self._raw_receipt(stream, seq, cipher)
+            body["ciphertext_receipt"] = raw_receipt
+            body["receipt_id"] = digest(
+                canonical_json({"seq": seq, "receipt": body}).encode()
+            )
             self.writable()
             db.execute(
-                "INSERT INTO pages VALUES (?,?,?,?,?,?,?,NULL)",
+                "INSERT INTO pages VALUES (?,?,?,?,?,?,?,NULL,NULL,NULL)",
                 (
                     stream,
                     seq,
@@ -360,37 +353,114 @@ class BPStore:
                     for i, fact in enumerate(facts)
                 ],
             )
-            db.execute("INSERT INTO cursors VALUES (?)", (page["cursor_out"],))
-            db.execute(
-                """INSERT INTO checkpoints VALUES (?,?,?)
-                   ON CONFLICT(stream) DO UPDATE SET seq=excluded.seq,cursor=excluded.cursor""",
-                (stream, seq, page["cursor_out"]),
-            )
+            if not same_terminal_cursor:
+                db.execute("INSERT INTO cursors VALUES (?)", (page["cursor_out"],))
             self.writable()
 
-        # The only authoritative observation happens after SQLite FULL commit.
-        # A crash before persisting this witness cannot make a staged page visible.
         verified_at = self.clock()
         self.writable(verified_at)
         with self.connect(write=True) as db:
             self.writable()
+            db.execute(
+                "UPDATE pages SET custody_at=? WHERE stream=? AND seq=?",
+                (verified_at, stream, seq),
+            )
+        return 202, {"status": "pending_custodian_verification"}
+
+    def _raw_receipt(self, stream, seq, cipher):
+        record = {
+            "schema_version": "mse.historical-ciphertext-receipt/0.1",
+            "vault_id": self.config["archive_id"],
+            "import_id": digest(
+                canonical_json([self.config["enrollment_id"], stream, seq]).encode()
+            ),
+            "recipient_fingerprint": self.config["recipient_sha256"],
+            "ciphertext_sha256": digest(cipher),
+            "byte_length": len(cipher),
+            "status": "opaque_ciphertext_durable",
+        }
+        return dict(record, receipt_id=digest(canonical_json(record).encode()))
+
+    def _custody(self, db, stream, seq):
+        row = db.execute(
+            "SELECT digest,raw_size,ciphertext,cipher_digest,receipt,custody_at FROM pages WHERE stream=? AND seq=?",
+            (stream, seq),
+        ).fetchone()
+        if (
+            not row
+            or not row[5]
+            or not self.config["transport_starts_at"]
+            <= row[5]
+            < self.config["transport_ends_at"]
+        ):
+            raise KeyError("BP custody absent")
+        if digest(row[2]) != row[3]:
+            raise BPUnavailable("BP custody digest mismatch")
+        body = json.loads(row[4])
+        if body["ciphertext_receipt"] != self._raw_receipt(stream, seq, row[2]):
+            raise BPUnavailable("BP custody receipt mismatch")
+        return {
+            "schema": "bp-history-custodian-witness-v1",
+            "archive_id": self.config["archive_id"],
+            "enrollment_id": self.config["enrollment_id"],
+            "source_instance": self.config["source_instance"],
+            "feed": stream,
+            "page_seq": seq,
+            "plaintext_sha256": row[0],
+            "plaintext_length": row[1],
+            "ciphertext_receipt": body["ciphertext_receipt"],
+            "typed_receipt_id": body["receipt_id"],
+        }, row[2]
+
+    def custody(self, stream, seq, *, ciphertext=False):
+        with self.connect() as db:
+            return self._custody(db, stream, seq)[int(ciphertext)]
+
+    def commit(self, stream, seq, statement, signature):
+        self.writable()
+        if not self.verify_custodian(canonical_json(statement).encode(), signature):
+            raise ValueError("invalid BP custodian signature")
+        with self.connect(write=True) as db:
+            self.writable()
+            expected, _ = self._custody(db, stream, seq)
+            if expected != statement:
+                raise VaultConflict("BP custodian witness mismatch")
             row = db.execute(
-                "SELECT digest,ciphertext,cipher_digest,receipt FROM pages WHERE stream=? AND seq=?",
+                "SELECT custodian_proof,witness FROM pages WHERE stream=? AND seq=?",
                 (stream, seq),
             ).fetchone()
-            if (
-                row is None
-                or row[0] != pin
-                or digest(row[1]) != row[2]
-                or json.loads(row[3]) != body
-            ):
-                raise BPUnavailable("BP durable page mismatch")
+            if row[1] is not None:
+                return 200, self.receipt(stream, seq)
+            if row[0] is not None:
+                raise BPUnavailable("BP typed decision is sealed")
+            db.execute(
+                "UPDATE pages SET custodian_proof=? WHERE stream=? AND seq=?",
+                (
+                    canonical_json({"statement": statement, "signature": signature}),
+                    stream,
+                    seq,
+                ),
+            )
+            receipt = json.loads(
+                db.execute(
+                    "SELECT receipt FROM pages WHERE stream=? AND seq=?", (stream, seq)
+                ).fetchone()[0]
+            )
+            db.execute(
+                """INSERT INTO checkpoints VALUES (?,?,?)
+                   ON CONFLICT(stream) DO UPDATE SET seq=excluded.seq,cursor=excluded.cursor""",
+                (stream, seq, receipt["cursor_out"]),
+            )
+            self.writable()
+        observed = self.clock()
+        self.writable(observed)
+        with self.connect(write=True) as db:
             self.writable()
             db.execute(
                 "UPDATE pages SET witness=? WHERE stream=? AND seq=?",
-                (verified_at, stream, seq),
+                (observed, stream, seq),
             )
-        return 201, self.receipt(stream, seq)
+        return 200, self.receipt(stream, seq)
 
     def export(self, stream, start, through):
         if not 1 <= start <= through or through - start >= 4:
