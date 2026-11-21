@@ -29,6 +29,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Fetch frozen ATLAS vector commit
+        run: |
+          pin=3fe247446f03b7ee3e8a36a0a18bd19eb5a1329c
+          git fetch --no-tags --depth=1 origin "$pin"
+          test "$(git rev-parse FETCH_HEAD)" = "$pin"
       - name: Install pinned test dependencies
         run: python -m pip install 'pytest==9.2.0' 'jsonschema==4.25.1' 'defusedxml==0.7.1'
       - name: Run MSE and HealthBridge tests with pinned repository inputs
