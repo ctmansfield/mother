@@ -69,3 +69,35 @@ any custody-policy decision. No removal or in-place migration is implemented.
 ```sh
 python -B -m unittest discover -s tests/integration/mse_privacy/custody -v
 ```
+
+## Bootstrap ownership and verification
+
+The trusted local test operator selects the private roots and provisions grants
+once, before handing an opaque credential to each consumer. Keep bootstrap
+and the authority/fence paths outside the consumer interface. The API does
+not authenticate the operating-system caller or authorize arbitrary local
+configuration. A claimed role string is not a credential. Changing the
+initial grant list is a trusted initialization operation for fresh stores.
+Initialization against existing stores fails, and reopening with a supplied
+grant list fails. A caller who can write the authority or fence databases or
+run a different bootstrap against consumer data is outside the application
+boundary.
+
+The trusted fence custodian retains the current fence independently of
+authority and all data restores. A stale authority copy paired with the
+current fence fails closed. Missing, malformed or mismatched fence state also
+fails closed before a projection file opens. If the authority and fence are
+both replaced by their mutually consistent historical versions, local
+state alone provides no current epoch for comparison. An independently
+protected current fence or external trust anchor is required for that
+threat. Files remain plaintext, with no protection claim for readable data
+or a compromised host.
+
+Run the bounded verifier from the candidate checkout with Python 3.10+.
+It uses the standard library, starts no listener and installs nothing.
+The test process has a 30-second deadline. Missing tests, skips, expected
+failures, ordinary failures and timeouts return a nonzero status.
+
+```sh
+python -B integrations/mse_privacy/custody/verify_offline.py
+```

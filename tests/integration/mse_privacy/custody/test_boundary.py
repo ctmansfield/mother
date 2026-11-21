@@ -380,6 +380,48 @@ except StoreUnavailable:
         with self.assertRaises(AccessDenied):
             other.read_projection(self.tokens["reader"], view)
 
+    def test_bootstrap_refuses_grants_for_existing_stores(self):
+        view, expected = self.publish()
+        unapproved = dict(self.grants, claimed_role=self.grants["writer"])
+        for initialize in (False, True):
+            with (
+                self.subTest(initialize=initialize),
+                self.assertRaises((ValueError, StoreUnavailable)),
+            ):
+                open_custody(**self.roots, grants=unapproved, initialize=initialize)
+        self.assertEqual(
+            self.service.read_projection(self.tokens["reader"], view), expected
+        )
+        with self.assertRaises(AccessDenied):
+            self.service.issue_view("projection_writer")
+        with self.assertRaises(AccessDenied):
+            self.service.revoke(self.tokens["reader"])
+
+    def test_invalid_fence_denies_existing_and_reopened_read_before_projection(self):
+        view, expected = self.publish()
+        fence = self.roots["fence_root"] / "store.sqlite3"
+        current = fence.read_bytes()
+        self.assertEqual(
+            self.service.read_projection(self.tokens["reader"], view), expected
+        )
+        for case in ("missing_epoch", "wrong_pair", "unreadable_database"):
+            with self.subTest(case=case):
+                fence.write_bytes(current)
+                if case == "unreadable_database":
+                    fence.write_bytes(b"synthetic damaged database")
+                else:
+                    with sqlite3.connect(fence) as db:
+                        if case == "missing_epoch":
+                            db.execute("DELETE FROM epoch")
+                        else:
+                            db.execute("UPDATE epoch SET pair=?", ("other-synthetic",))
+                with patch.object(self.service._projection, "open") as projection:
+                    with self.assertRaises(StoreUnavailable):
+                        self.service.read_projection(self.tokens["reader"], view)
+                    projection.assert_not_called()
+                with self.assertRaises(StoreUnavailable):
+                    self.boot()
+
     def test_roots_must_be_distinct_and_private(self):
         nested = self.roots["evidence_root"] / "nested"
         nested.mkdir(mode=0o700)
