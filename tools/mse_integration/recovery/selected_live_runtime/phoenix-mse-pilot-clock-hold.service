@@ -1,0 +1,7 @@
+[Unit]
+Description=Hold the selected pilot relay after loss of the qualified clock
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I -B /run/phoenix-mse-pilot-clock/fail_closed_selected_relay.py
+TimeoutStartSec=25

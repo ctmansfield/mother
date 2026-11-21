@@ -1,0 +1,24 @@
+[Unit]
+Description=Protected MSE selected HealthKit pilot HTTPS
+After=systemd-networkd.service
+Requires=systemd-networkd.service
+
+[Service]
+Type=exec
+User=mse-selected-live
+Group=mse-selected-live
+WorkingDirectory=/opt/phoenix-mse-selected-live/source
+UMask=0077
+ExecStartPre=/usr/lib/systemd/systemd-networkd-wait-online --interface=@ARCHIVE_INTERFACE@:routable --ipv4 --timeout=20
+ExecStart=/opt/phoenix-mse-selected-live/venv/bin/python -B -m integrations.mse_archive_service.selected_server serve --root /var/lib/phoenix-mse-selected-live/state --config /etc/phoenix-mse-selected-live/selected.json --bind @ARCHIVE_IPV4@ --port 8446 --cert /etc/phoenix-mse-selected-live/server.pem --key /etc/phoenix-mse-selected-live/server.key
+KillSignal=SIGINT
+TimeoutStopSec=15s
+Restart=no
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/phoenix-mse-selected-live/state
+
+[Install]
+WantedBy=multi-user.target

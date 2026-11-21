@@ -1,0 +1,8 @@
+[Unit]
+Description=Qualify UTC on the exact MSE selected pilot guest
+OnFailure=phoenix-mse-pilot-clock-hold.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I -B /run/phoenix-mse-pilot-clock/pilot_host_clock_sync.py run /run/phoenix-mse-pilot-clock/clock-plan.json /run/phoenix-mse-pilot-clock/guest_positive_clock_step.py
+TimeoutStartSec=25

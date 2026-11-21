@@ -1,0 +1,18 @@
+[Unit]
+Description=Scoped selected-pilot tailnet byte relay
+After=network-online.target tailscaled.service
+
+[Service]
+Type=exec
+DynamicUser=yes
+LoadCredential=relay-config:/var/lib/libvirt/images/phoenix-mse-evidence-20261121/selected-live-relay/relay-config.json
+ExecStartPre=+/usr/bin/python3 -I -B /var/lib/libvirt/images/phoenix-mse-evidence-20261121/selected-live-relay/relay_firewall.py start
+ExecStart=/usr/bin/python3 -I -B /var/lib/libvirt/images/phoenix-mse-evidence-20261121/selected-live-relay/archive_relay.py %d/relay-config
+ExecStopPost=+/usr/bin/python3 -I -B /var/lib/libvirt/images/phoenix-mse-evidence-20261121/selected-live-relay/relay_firewall.py stop
+UMask=0077
+KillMode=control-group
+TimeoutStopSec=10s
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

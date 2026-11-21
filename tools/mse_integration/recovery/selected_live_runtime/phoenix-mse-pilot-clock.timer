@@ -1,0 +1,8 @@
+[Unit]
+Description=Maintain archive guest UTC during the selected pilot
+
+[Timer]
+OnActiveSec=30s
+OnUnitInactiveSec=30s
+AccuracySec=1s
+Unit=phoenix-mse-pilot-clock.service
