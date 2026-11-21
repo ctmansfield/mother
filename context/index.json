@@ -9,6 +9,10 @@
       "path": "tasks/MSE-001-publication-r1.json",
       "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
     },
+    "MSE-ALL-ZIP-DATA-20261121-07": {
+      "path": "tasks/all-zip-data-r1.json",
+      "sha256": "6fbf8c653d5f3fef036a53dc09d24ae761a3bbbe921da87ef8c16a03140e6ae6"
+    },
     "MSE-EVIDENCE-INFRA-20261121-02": {
       "path": "tasks/archive-build-r1.json",
       "sha256": "b6c65b4204ff141096f617c5a2532f50f3f757645f08d2e6cb10777bb675963f"

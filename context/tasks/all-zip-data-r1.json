@@ -1,0 +1,134 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-ALL-ZIP-DATA-20261121-07",
+  "task_revision": "1",
+  "observed_at": "2026-11-21T08:54:37Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Explicit all-ZIP user directive published and read back; eight role-specific assignments delivered."
+  },
+  "goal": "Make every native Health ZIP member and source record retrievable in the protected database for Mother and Coach, with manual real import.",
+  "scope": [
+    "Universal lossless structured XML records and protected attachment payloads, typed family adapters, database query access and manual full-data import script."
+  ],
+  "acceptance": [
+    "Every member and occurrence reconciled as typed, lossless queryable fallback or retained quarantine; content retrieval, deterministic lineage/replay and actual protected VM query/readback.",
+    "Document typed support separately from full-fidelity availability; prepare reviewed exact-pinned user-manual pipeline."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Implement and synthetically qualify all-ZIP protected database path and Mother/Coach queries; prepare user-manual real import."
+    ],
+    "not_authorized": [
+      "Automated real archive mount, unpack, parse, replay or transfer; main merge; real Nightscout access; uncontrolled model forwarding."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Actual real import remains manual/user-owned. Preserve successful BP catalog, originals, private keys off VM and active8446. Backups/restores deferred."
+  ],
+  "instruction_binding": {
+    "id": "MSE-ALL-ZIP-DATA-20261121-07",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060218727",
+    "sha256": "cbfc7718521c92bbf780cbc2383518704e56c1de50e8a7a4219953530e7b72f8",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "ALL-ZIP-DISPATCH-R1",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060218727",
+      "sha256": "cbfc7718521c92bbf780cbc2383518704e56c1de50e8a7a4219953530e7b72f8"
+    },
+    "source": "source",
+    "tests_performed": [
+      "Canonical directive posted and exact readback confirmed; eight role-specific assignments and canonical reference delivered."
+    ],
+    "limitations": [
+      "Implementation, typed coverage, full-data database availability and updated manual script pending."
+    ],
+    "requested_decision": "Only genuine native export or grant steps when ready.",
+    "next_action": "#next_action"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060218727",
+      "sha256": "cbfc7718521c92bbf780cbc2383518704e56c1de50e8a7a4219953530e7b72f8"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "all-zip-availability",
+      "value": "BP-only normalization is insufficient; all records and attachment payloads require retrievable protected representation.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit user correction and expansion."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "ASSIGNED",
+      "detail": "Universal representation and family adapters assigned; existing BP artifacts preserved.",
+      "source": "source"
+    },
+    "test": {
+      "status": "PENDING",
+      "detail": "All-data mixed-family and actual synthetic VM acceptance to implement and independently review.",
+      "source": "source"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge.",
+      "source": "source"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "No real all-data destination activated; existing live pilot preserved.",
+      "source": "source"
+    },
+    "runtime": {
+      "status": "NOT_IMPORTED",
+      "detail": "Successful prior local BP/catalog import does not establish full-data availability.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Exact all-family schemas, fallback/blob query interfaces, storage capacity and coverage reconciliation."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "ATLAS contract, FORGE store/adapters, ORACLE queries, PHOENIX storage, NICKY manual artifact, SENTINEL security, PROVENANCE completeness, LONESTAR board."
+  ],
+  "next_action": {
+    "role": "GADGET and eight existing owners",
+    "action": "Freeze universal contract, implement full-data store and bounded query path, independently verify, then deliver updated user-manual script."
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/all-zip-data-source-r1.json",
+      "sha256": "cbfc7718521c92bbf780cbc2383518704e56c1de50e8a7a4219953530e7b72f8",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact comment readback.",
+        "result": "Posted and visible; worker acknowledgments separate.",
+        "limitations": [
+          "Dispatch is not execution or full-data availability."
+        ],
+        "observed_at": "2026-11-21T08:54:37Z"
+      }
+    }
+  }
+}
