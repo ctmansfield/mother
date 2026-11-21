@@ -1,0 +1,149 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-HEALTH-HISTORY-20261121-06",
+  "task_revision": "1",
+  "observed_at": "2026-11-21T06:24:51Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Current GitHub heads/checks and worker completions reviewed. User confirms export prepared; transfer not confirmed."
+  },
+  "goal": "Archive all accessible historical HealthKit categories with BP priority and prepare scoped Mother/Coach data views.",
+  "scope": [
+    "Separate all-history import, BP-first app/schema preparation, protected raw vault and per-family coverage; Nightscout investigation/synthetic source only."
+  ],
+  "acceptance": [
+    "Protected exact originals, explicit per-family retained/normalized/consumable coverage, pairedBP lineage, live-overlapdedup and reproducible source/config/key interfaces."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "All available historical HealthKit categories to private archive VM, archival retention, BP priority and necessary reviewed source/native capture preparation."
+    ],
+    "not_authorized": [
+      "Real Nightscout endpoint/credentials, vendor cloud signup/cuff reset, LLM forwarding, main merge, unrelated infrastructure changes."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Backups/restores deferred; preserve current live pilot/window. Raw health/identity data remains with custodians and out of shared logs. No anonymity claim."
+  ],
+  "instruction_binding": {
+    "id": "MSE-HEALTH-HISTORY-20261121-06",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057772764",
+    "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "HEALTH-HISTORY-PROGRESS-R2",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-HEALTH-HISTORY-20261121-06",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057772764",
+      "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4"
+    },
+    "source": "progress",
+    "tests_performed": [
+      "Project reader validated; eight worker completion snapshots and canonical owning receipts reviewed; live GitHub heads/check results read."
+    ],
+    "limitations": [
+      "Author tests are not independent cross-wire proof; real export custody not yet confirmed; typed guest runtime and consumer readiness pending."
+    ],
+    "requested_decision": "Only genuine native export or grant steps when ready.",
+    "next_action": "#next_action"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-HEALTH-HISTORY-20261121-06",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057772764",
+      "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4"
+    },
+    "source": "progress"
+  },
+  "decisions": [
+    {
+      "id": "all-healthkit-history",
+      "value": "User explicitly selected all available HealthKit categories/history, especially BP.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "User clarification and BP priority."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "PUSHED",
+      "detail": "Mother#50 a01d478 and MHB#17 cb473b7 pushed drafts; contract reconciliation and CI formatting fixes assigned.",
+      "source": "progress"
+    },
+    "test": {
+      "status": "PENDING",
+      "detail": "Author server18 plus extracted3, app53 reported; independent final cross-wire proof pending. MotherCI passed, precommit failed.",
+      "source": "progress"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge.",
+      "source": "source"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "Ciphertext8447 synthetic qualification passed and route closed; typed8448 service/grants inactive; live8446 preserved.",
+      "source": "progress"
+    },
+    "runtime": {
+      "status": "NOT_IMPORTED",
+      "detail": "No real history/BP/Nightscout import claimed.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Per-family capability and coverage, protected VM receiver qualification, actual historical source bytes, Mother/Coach consumer projection."
+  ],
+  "conflicts": [
+    "ATLAS r4 versus FORGE pending discriminator, expired lookup and signed commit interface require explicit resolution."
+  ],
+  "blockers": [],
+  "dependencies": [
+    "ATLAS coverage/BP contract; ORACLE signed candidate; FORGE bulk/schema; PHOENIX private vault; independent SENTINEL/PROVENANCE; NICKY user native export."
+  ],
+  "next_action": {
+    "action": "Confirm protected local export custody; resolve wire differences and CI; independently qualify exact nonempty app/server/witness chain before real typed transfer.",
+    "role": "GADGET and assigned owners"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/health-history-source-r1.json",
+      "sha256": "2cdcf1b96c37598516189daa0dd15a2aea287a08d5083a1e5506ddd29b7be1e4",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated canonical comment readback.",
+        "result": "Published and visible; recipient acknowledgements separate.",
+        "limitations": [
+          "No full-window completion inferred."
+        ],
+        "observed_at": "2026-11-21T05:16:20Z"
+      }
+    },
+    "progress": {
+      "path": "evidence/health-history-progress-r2.json",
+      "sha256": "2815f7239b120bb4c9bd85ec80037ec03a521679e35aee4255d2320556eb9c7d",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact comment readback.",
+        "result": "Posted and visible; worker acknowledgments separate.",
+        "limitations": [
+          "No real history import or typed guest runtime proof."
+        ],
+        "observed_at": "2026-11-21T06:24:51Z"
+      }
+    }
+  }
+}
