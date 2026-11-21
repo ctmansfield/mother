@@ -1,0 +1,166 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-EVIDENCE-INFRA-20261121-02",
+  "task_revision": "1",
+  "observed_at": "2026-11-21T03:43:55Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Directive and final owning reports read back. Device profile removal is user-confirmed."
+  },
+  "goal": "Build and synthetically qualify a reproducible protected archive VM, private HTTPS intake and operator views/exports.",
+  "scope": [
+    "Approved stages 1\u20134 and 6; backup/restore stage 5 explicitly deferred."
+  ],
+  "acceptance": [
+    "Qualified clone, engine selection, installed private HTTPS service, synthetic phone offline retention and same-batch commit, exact original/receipt/PF001/export reconciliation and controlled guest startup."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Dedicated clone from selected verified cold QA image; scoped runtime/API deployment and synthetic-only phone acceptance; source draft publication."
+    ],
+    "not_authorized": [
+      "Main merge, personal-data transfer, public exposure, watch/APNs/background expansion, unrelated host/IDS changes."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "No personal-data upload, public exposure, main merge, unrelated host/VM/IDS changes or committed fixture replay."
+  ],
+  "instruction_binding": {
+    "id": "MSE-EVIDENCE-INFRA-20261121-02",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056096916",
+    "sha256": "947487b576f2519423aafe3aaf20a98d27c8ee5e28cce57598248d8f658e94ba",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "ARCHIVE-BUILD-CLOSEOUT-R1",
+    "status": "COMPLETED",
+    "instruction_ref": {
+      "id": "MSE-EVIDENCE-INFRA-20261121-02",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056096916",
+      "sha256": "947487b576f2519423aafe3aaf20a98d27c8ee5e28cce57598248d8f658e94ba"
+    },
+    "tests_performed": [
+      "Physical offline retention and one same-batch retry; independent phone/server/PF001/export/downstream reconciliation; controlled same-guest reboot; independent relay closure."
+    ],
+    "limitations": [
+      "Delayed autostart 125.279 seconds after generic network wait failure; full clean-room replay/host reboot untested; backup/restore deferred; inherited precommit failures remain; no real-data/privacy-readiness claim."
+    ],
+    "requested_decision": "None for completed build.",
+    "next_action": "#next_action",
+    "source": "report"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-EVIDENCE-INFRA-20261121-02",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056096916",
+      "sha256": "947487b576f2519423aafe3aaf20a98d27c8ee5e28cce57598248d8f658e94ba"
+    },
+    "source": "report"
+  },
+  "decisions": [
+    {
+      "id": "sqlite-private-https",
+      "value": "SQLite behind private HTTPS; no remote SQL listener.",
+      "source": "report",
+      "supersedes": [],
+      "reason": "Identical synthetic engine comparison and PM selection."
+    },
+    {
+      "id": "cold-qa-image",
+      "value": "User selected verified cold QA image; originals preserved.",
+      "source": "report",
+      "supersedes": [],
+      "reason": "Explicit user baseline selection."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "PUSHED_DRAFT",
+      "detail": "Server branch 08514b7 formatting-only above deployed 86e362f; app b0b9f29; docs source pushed separately.",
+      "source": "report"
+    },
+    "test": {
+      "status": "SYNTHETIC_ACCEPTED",
+      "detail": "Phone offline/retry/exact export/startup persistence and independent closure passed.",
+      "source": "report"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge authorized; application CI passes, inherited pre-commit failures remain.",
+      "source": "report"
+    },
+    "deploy": {
+      "status": "DEPLOYED_PINNED",
+      "detail": "Dedicated archive guest/service retained; phone test relay closed.",
+      "source": "report"
+    },
+    "runtime": {
+      "status": "VERIFIED_WITH_LIMITS",
+      "detail": "Exact synthetic original/receipts/export persisted across guest boot; delayed startup documented.",
+      "source": "report"
+    }
+  },
+  "unknowns": [
+    "Full clean-room template replay untested; readable originals at rest do not establish anonymity."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [],
+  "next_action": {
+    "action": "Preserve evidence and completed build; review source integration, inherited CI cleanup and network wait behavior before broader scope. Do not renew expired synthetic grants or resend committed fixtures.",
+    "role": "GADGET and existing owners"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/archive-build-source-r1.json",
+      "sha256": "947487b576f2519423aafe3aaf20a98d27c8ee5e28cce57598248d8f658e94ba",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub and local documentation checkout",
+        "method": "Read exact canonical comment via authenticated API.",
+        "result": "Published comment visible; acknowledgement separate.",
+        "limitations": [
+          "Readback does not establish recipient acknowledgement."
+        ],
+        "observed_at": "2026-11-21T03:43:55Z"
+      }
+    },
+    "report": {
+      "path": "evidence/archive-build-closeout-r1.json",
+      "sha256": "832146375b57e7bf5f966f89136ca6e67d764c009611f508536186d909696b1d",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub and local documentation checkout",
+        "method": "Read exact canonical comment via authenticated API.",
+        "result": "Published comment visible; acknowledgement separate.",
+        "limitations": [
+          "Readback does not establish recipient acknowledgement."
+        ],
+        "observed_at": "2026-11-21T03:43:55Z"
+      }
+    },
+    "cleanup": {
+      "path": "evidence/archive-build-cleanup-r1.json",
+      "sha256": "8bdfe9ec69ef934d3de67adc2256c0b36d12954bda9423799a0e6ae57d7d1252",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub and local documentation checkout",
+        "method": "Read exact canonical comment via authenticated API.",
+        "result": "Published comment visible; acknowledgement separate.",
+        "limitations": [
+          "Readback does not establish recipient acknowledgement."
+        ],
+        "observed_at": "2026-11-21T03:43:55Z"
+      }
+    }
+  }
+}
