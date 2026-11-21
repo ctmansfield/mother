@@ -1,8 +1,9 @@
 """Synthetic BP API page seam for review with the mobile writer."""
 
 import json
+import re
 
-from integrations.healthbridge.capture import _unique_object
+from integrations.healthbridge.capture import _check_depth, _unique_object
 from mother.physiology.contracts import canonical_json
 
 from .blood_pressure import SCHEMA, clocks, decimal_text, source_time, source_uuid
@@ -12,6 +13,7 @@ VERSION = "mse.historical-bp-page/0.1"
 FEEDS = {role: type_id for type_id, role in BP_TYPES.items()} | {"correlation": BP_TYPE}
 MAX_BYTES = 1024 * 1024
 MAX_ROWS = 128
+CURSOR = re.compile(r"[A-Za-z0-9_-]{43}")
 
 
 def _check(value, keys):
@@ -30,35 +32,38 @@ def _reject_number(_):
     raise ValueError("historical BP API decimals must be strings")
 
 
-def read_page(stream, enrollment, digest_pattern):
+def read_page(stream, enrollment, source_instance):
     stream.seek(0)
     raw = stream.read(MAX_BYTES + 1)
     if len(raw) > MAX_BYTES:
         raise ValueError("historical BP page exceeds byte limit")
+    text = raw.decode("utf-8")
+    _check_depth(text, 16)
     page = json.loads(
-        raw,
+        text,
         object_pairs_hook=_unique_object,
         parse_float=_reject_number,
         parse_constant=_reject_number,
     )
     _check(
         page,
-        "schema_version enrollment through feed prior_cursor_sha256 next_cursor_sha256 upserts deleted_ids exhausted",
+        "schema_version enrollment source_instance through feed cursor_in cursor_out upserts deleted_ids exhausted",
     )
     if (
         page["schema_version"] != VERSION
         or page["enrollment"] != enrollment
+        or page["source_instance"] != source_instance
         or not isinstance(page["feed"], str)
         or page["feed"] not in FEEDS
         or source_time(page["through"]) != page["through"]
     ):
         raise ValueError("historical BP page enrollment or feed mismatch")
-    for field in ("prior_cursor_sha256", "next_cursor_sha256"):
+    for field in ("cursor_in", "cursor_out"):
         value = page[field]
-        if field == "prior_cursor_sha256" and value is None:
+        if field == "cursor_in" and value is None:
             continue
-        if not isinstance(value, str) or not digest_pattern.fullmatch(value):
-            raise ValueError("invalid historical BP cursor digest")
+        if not isinstance(value, str) or not CURSOR.fullmatch(value):
+            raise ValueError("invalid historical BP checkpoint token")
     if (
         not isinstance(page["upserts"], list)
         or not isinstance(page["deleted_ids"], list)

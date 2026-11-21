@@ -216,19 +216,6 @@
             "diastolic"
           ]
         },
-        "prior_cursor_sha256": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/digest"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "next_cursor_sha256": {
-          "$ref": "#/$defs/digest"
-        },
         "exhausted": {
           "type": "boolean"
         },
@@ -242,6 +229,22 @@
             "$ref": "#/$defs/uuid"
           },
           "maxItems": 128
+        },
+        "cursor_in": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/cursor_token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor_out": {
+          "$ref": "#/$defs/cursor_token"
+        },
+        "source_instance": {
+          "$ref": "#/$defs/label"
         }
       },
       "required": [
@@ -249,11 +252,12 @@
         "enrollment",
         "through",
         "feed",
-        "prior_cursor_sha256",
-        "next_cursor_sha256",
         "exhausted",
         "upserts",
-        "deleted_ids"
+        "deleted_ids",
+        "cursor_in",
+        "cursor_out",
+        "source_instance"
       ],
       "additionalProperties": false,
       "allOf": [
@@ -348,19 +352,6 @@
             "diastolic"
           ]
         },
-        "prior_cursor_sha256": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/digest"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "next_cursor_sha256": {
-          "$ref": "#/$defs/digest"
-        },
         "exhausted": {
           "type": "boolean"
         },
@@ -393,6 +384,22 @@
         },
         "ciphertext_receipt": {
           "$ref": "#/$defs/vault_receipt"
+        },
+        "cursor_in": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/cursor_token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor_out": {
+          "$ref": "#/$defs/cursor_token"
+        },
+        "source_instance": {
+          "$ref": "#/$defs/label"
         }
       },
       "required": [
@@ -402,15 +409,16 @@
         "enrollment",
         "through",
         "feed",
-        "prior_cursor_sha256",
-        "next_cursor_sha256",
         "exhausted",
         "receipt_id",
         "sha256",
         "byte_length",
         "typed_upserts",
         "typed_tombstones",
-        "protection"
+        "protection",
+        "cursor_in",
+        "cursor_out",
+        "source_instance"
       ],
       "additionalProperties": false,
       "if": {
@@ -432,6 +440,10 @@
           ]
         }
       }
+    },
+    "cursor_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
     }
   }
 }

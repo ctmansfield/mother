@@ -49,8 +49,12 @@ CREATE TABLE bp_deletions (
 );
 CREATE INDEX bp_deleted_key ON bp_deletions(native_ref);
 CREATE TABLE bp_cursors (
-    feed TEXT PRIMARY KEY, through TEXT NOT NULL, anchor_sha256 TEXT NOT NULL,
+    feed TEXT PRIMARY KEY, through TEXT NOT NULL, cursor_token TEXT NOT NULL,
     exhausted INTEGER NOT NULL CHECK(exhausted IN (0,1))
+);
+CREATE TABLE bp_cursor_tokens (
+    feed TEXT NOT NULL, token TEXT NOT NULL,
+    PRIMARY KEY(feed,token)
 );
 CREATE TABLE sightings (
     digest TEXT NOT NULL, member INTEGER NOT NULL, ordinal INTEGER NOT NULL,
@@ -80,6 +84,7 @@ class SyntheticHistoryCatalog:
         limits=Limits(),
         archive_id="synthetic-bp-custody",
         bp_cutoff=None,
+        source_instance="synthetic-healthkit-store",
     ):
         if not isinstance(enrollment, str) or not re.fullmatch(
             r"synthetic-[A-Za-z0-9-]{1,100}", enrollment
@@ -92,14 +97,24 @@ class SyntheticHistoryCatalog:
             r"synthetic-[A-Za-z0-9-]{1,100}", archive_id
         ):
             raise ValueError("synthetic history archive identity required")
+        if not isinstance(source_instance, str) or not re.fullmatch(
+            r"synthetic-[A-Za-z0-9-]{1,100}", source_instance
+        ):
+            raise ValueError("synthetic history source instance required")
         self.archive_id = archive_id
         self.enrollment = enrollment
+        self.source_instance = source_instance
         if bp_cutoff is not None and source_time(bp_cutoff) != bp_cutoff:
             raise ValueError("historical BP cutoff requires canonical UTC")
         self.bp_cutoff = bp_cutoff
-        self.bp = BloodPressure(enrollment, key)
+        self.bp = BloodPressure(canonical_json([enrollment, source_instance]), key)
         self.owner = protected_ref(
-            key, "historical-catalog/0.1", archive_id, enrollment, bp_cutoff
+            key,
+            "historical-catalog/0.1",
+            archive_id,
+            enrollment,
+            source_instance,
+            bp_cutoff,
         )
         self.limits = limits
 
@@ -238,14 +253,14 @@ class SyntheticHistoryCatalog:
         )
 
     def _bp_page(self, db, stage, body, size, *, raw=None):
-        page = bp_page.read_page(stage, self.enrollment, DIGEST)
+        page = bp_page.read_page(stage, self.enrollment, self.source_instance)
         if page["through"] != self.bp_cutoff:
             raise InvalidHistory(
                 "historical BP cutoff differs from configured enrollment"
             )
         feed = page["feed"]
         previous = db.execute(
-            "SELECT through,anchor_sha256,exhausted FROM bp_cursors WHERE feed=?",
+            "SELECT through,cursor_token,exhausted FROM bp_cursors WHERE feed=?",
             (feed,),
         ).fetchone()
         enrolled = db.execute("SELECT through FROM bp_cursors LIMIT 1").fetchone()
@@ -253,12 +268,21 @@ class SyntheticHistoryCatalog:
             raise InvalidHistory("historical BP enrollment cutoff changed")
         if previous and previous[2]:
             raise InvalidHistory("historical BP feed already completed")
-        if page["prior_cursor_sha256"] != (previous[1] if previous else None):
-            raise InvalidHistory("historical BP cursor digest mismatch")
+        if page["cursor_in"] != (previous[1] if previous else None):
+            raise InvalidHistory("historical BP checkpoint token mismatch")
         if (page["upserts"] or page["deleted_ids"]) and (
-            page["next_cursor_sha256"] == page["prior_cursor_sha256"]
+            page["cursor_out"] == page["cursor_in"]
         ):
             raise InvalidHistory("nonempty historical BP page did not advance")
+        if page["cursor_out"] != page["cursor_in"]:
+            if db.execute(
+                "SELECT 1 FROM bp_cursor_tokens WHERE feed=? AND token=?",
+                (feed, page["cursor_out"]),
+            ).fetchone():
+                raise InvalidHistory("historical BP checkpoint token reused")
+            db.execute(
+                "INSERT INTO bp_cursor_tokens VALUES (?,?)", (feed, page["cursor_out"])
+            )
         db.execute("INSERT INTO artifacts VALUES (?,?)", (body, "{}"))
         db.execute(
             "INSERT INTO members VALUES (?,1,NULL,'bp_api_page',?,?)",
@@ -281,15 +305,16 @@ class SyntheticHistoryCatalog:
         )
         db.execute(
             """INSERT INTO bp_cursors VALUES (?,?,?,?)
-               ON CONFLICT(feed) DO UPDATE SET anchor_sha256=excluded.anchor_sha256,
+               ON CONFLICT(feed) DO UPDATE SET cursor_token=excluded.cursor_token,
                    exhausted=excluded.exhausted""",
-            (feed, page["through"], page["next_cursor_sha256"], page["exhausted"]),
+            (feed, page["through"], page["cursor_out"], page["exhausted"]),
         )
         receipt = {
             "schema_version": "mse.historical-bp-page-receipt/0.1",
             "status": "typed_and_cursor_durable",
             "archive_id": self.archive_id,
             "enrollment": self.enrollment,
+            "source_instance": self.source_instance,
             "exhausted": page["exhausted"],
             "receipt_id": protected_ref(
                 self.bp.key, "history-bp-page", self.owner, body
@@ -303,8 +328,8 @@ class SyntheticHistoryCatalog:
             ),
             "feed": feed,
             "through": page["through"],
-            "prior_cursor_sha256": page["prior_cursor_sha256"],
-            "next_cursor_sha256": page["next_cursor_sha256"],
+            "cursor_in": page["cursor_in"],
+            "cursor_out": page["cursor_out"],
             "typed_upserts": len(seen),
             "typed_tombstones": len(deleted),
         }

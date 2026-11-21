@@ -34,8 +34,13 @@ owned entitlement gaps, and supplemental API capture remain unqualified.
 
 Draft wire `mse.historical-bp-page/0.1` binds a separate enrollment and
 canonical UTC cutoff, feed (`correlation`, `systolic`, `diastolic`), prior
-and next SHA-256 cursor digests, typed upserts and deleted UUIDs. Initial
-prior cursor digest is JSON null. Canonical sample times have six UTC
+and next opaque checkpoint tokens, typed upserts and deleted UUIDs. The scope
+also binds the enrolled source-store instance. The initial `cursor_in` is
+JSON null. For subsequent pages, `cursor_in` matches the last receipted
+`cursor_out` within that feed. Generate a fresh random 32-byte
+base64url-unpadded token (43 characters) for advancement. Never derive it
+from a HealthKit anchor or upload the anchor bytes. Keep the token-to-anchor
+mapping and staged exact page in protected local state. Canonical sample times have six UTC
 fractional digits and canonical BP scalar strings express mmHg. A nullable
 scalar cannot complete a pair. Correlation membership is explicit.
 Unassociated pulse is not attached to a BP pair. Each API UUID and its
@@ -49,18 +54,19 @@ existing 14-type pilot has no BP feed, and broader cross-live linkage needs
 separate source namespace proof and qualification.
 
 A terminal empty page sets `exhausted:true`, includes no upserts/deletes,
-and still binds its next digest. It may keep the prior digest. A nonempty
+and still binds its next token. It may keep the prior token. A nonempty
 page must advance. A completed feed accepts exact retry only. The backend
 does not read or store opaque phone anchor bytes. A successful typed receipt
 has `schema_version:mse.historical-bp-page-receipt/0.1` and
 `status:typed_and_cursor_durable`, exact plaintext digest/length, archive,
-enrollment, cutoff, feed, prior and next cursor digests and exhaustion.
+enrollment, source instance, cutoff, feed, both checkpoint tokens and exhaustion.
 The authorized sealed route additionally binds the independent durable
 ciphertext receipt for the exact authenticated plaintext. The custodian
 decrypts off-guest with the verified age executable and detached key. The
 typed/cursor transaction begins after successful authenticated decrypt and
 plaintext pin match. Exact retry reproduces the receipt. The client must
-validate it before advancing its locally protected cursor.
+validate it before publishing the staged local token-to-anchor mapping. Three exhausted
+feeds are query completion, separate from permission and source coverage.
 This seam still needs ATLAS/ORACLE wire signoff and independent signed-app
 data-to-page verification.
 

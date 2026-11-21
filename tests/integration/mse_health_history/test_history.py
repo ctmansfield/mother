@@ -13,6 +13,8 @@ from tempfile import TemporaryDirectory
 import unittest
 from zipfile import ZipFile, ZipInfo
 
+from jsonschema import Draft202012Validator
+
 from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
 from integrations.mse_health_history.files import InvalidHistory
 from integrations.mse_health_history.inventory import BP_TYPE, BP_TYPES, Limits
@@ -79,10 +81,11 @@ def api_page(
     return {
         "schema_version": "mse.historical-bp-page/0.1",
         "enrollment": "synthetic-history-test",
+        "source_instance": "synthetic-healthkit-store",
         "through": THROUGH,
         "feed": feed,
-        "prior_cursor_sha256": prior,
-        "next_cursor_sha256": next_value * 64,
+        "cursor_in": prior,
+        "cursor_out": next_value * 43,
         "upserts": [pair] if feed == "correlation" and not deleted else [],
         "deleted_ids": list(deleted),
         "exhausted": feed != "correlation" and not deleted,
@@ -246,13 +249,24 @@ class HistoryTests(unittest.TestCase):
                 self.file(json.dumps(page).encode())
             )
 
-        first = add(api_page())
-        self.assertEqual(add(api_page()), first)
+        schema = json.loads(
+            Path("integrations/mse_health_history/bp-page.schema.json").read_bytes()
+        )
+        Draft202012Validator.check_schema(schema)
+        validator = Draft202012Validator(schema)
+        page = api_page()
+        validator.validate(page)
+        first = add(page)
+        validator.validate(first)
+        self.assertEqual(first["cursor_in"], page["cursor_in"])
+        self.assertEqual(first["cursor_out"], page["cursor_out"])
+        self.assertEqual(first["source_instance"], page["source_instance"])
+        self.assertEqual(add(page), first)
         self.assertEqual(first["typed_upserts"], 1)
         self.assertEqual(len(list(self.catalog.blood_pressure(current=True))), 1)
-        with self.assertRaisesRegex(InvalidHistory, "cursor"):
+        with self.assertRaisesRegex(InvalidHistory, "checkpoint token"):
             add(api_page(next_value="b"))
-        broken = api_page(prior="a" * 64, next_value="b", value="not-decimal")
+        broken = api_page(prior="a" * 43, next_value="b", value="not-decimal")
         with self.assertRaisesRegex(ValueError, "decimal"):
             add(broken)
         self.assertEqual(len(list(self.catalog.blood_pressure(current=True))), 1)
@@ -260,14 +274,32 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(deletion["typed_tombstones"], 1)
         self.assertEqual(len(list(self.catalog.blood_pressure())), 1)
         self.assertFalse(list(self.catalog.blood_pressure(current=True)))
-        terminal = api_page(prior="a" * 64, next_value="a")
+        terminal = api_page(prior="a" * 43, next_value="a")
         terminal.update(upserts=[], exhausted=True)
         end = add(terminal)
         self.assertEqual(add(terminal), end)
         self.assertEqual(end["status"], "typed_and_cursor_durable")
         self.assertTrue(end["exhausted"])
         with self.assertRaisesRegex(InvalidHistory, "feed already completed"):
-            add(api_page(prior="a" * 64, next_value="d"))
+            add(api_page(prior="a" * 43, next_value="d"))
+
+    def test_token_chain_locks_store_and_refuses_reuse_within_feed(self):
+        def add(page):
+            return self.catalog.ingest_bp_page(self.file(json.dumps(page).encode()))
+
+        page = api_page()
+        with self.assertRaisesRegex(ValueError, "enrollment or feed mismatch"):
+            add(dict(page, source_instance="synthetic-other-store"))
+        add(page)
+        add(api_page(prior="a" * 43, next_value="b"))
+        with self.assertRaisesRegex(InvalidHistory, "token reused"):
+            add(api_page(prior="b" * 43, next_value="a"))
+        terminal = api_page(prior="b" * 43, next_value="b")
+        terminal.update(upserts=[], exhausted=True)
+        self.assertTrue(add(terminal)["exhausted"])
+        other_feed = add(api_page("systolic", next_value="a", deleted=[UUIDS[1]]))
+        self.assertEqual(other_feed["cursor_out"], "a" * 43)
+        self.assertFalse(other_feed["exhausted"])
 
     def test_projection_has_purpose_specific_ids_and_no_raw_lineage(self):
         self.catalog.ingest_bp_page(self.file(json.dumps(api_page()).encode()))
