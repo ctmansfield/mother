@@ -1,0 +1,20 @@
+{
+  "anchors": {
+    "synthetic": "b3BhcXVlLXFhLWFuY2hvcg=="
+  },
+  "backfillStart": 784999880,
+  "readings": [
+    {
+      "bundleID": "org.example.synthetic.mse",
+      "end": 785000003,
+      "id": "C0DE0000-0000-4000-8000-000000000002",
+      "kind": "HRV (SDNN)",
+      "receivedAt": 785000010,
+      "source": "Synthetic QA",
+      "start": 785000002,
+      "unit": "ms",
+      "value": 41.5
+    }
+  ],
+  "tombstones": {}
+}
