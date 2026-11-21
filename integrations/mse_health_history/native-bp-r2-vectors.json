@@ -1,0 +1,64 @@
+{
+  "admitted_deletions": [
+    [
+      "component",
+      "top-component"
+    ]
+  ],
+  "batches": [
+    {
+      "canonical_utf8": "{\"batch_seq\":1,\"enrollment_id\":\"synthetic-vector\",\"final\":false,\"import_ref\":\"synthetic-three-op\",\"manifest\":null,\"normalization_version\":\"native-bp-0_1\",\"ops\":[{\"components\":[{\"component_occurrence_ref\":\"top-occurrence\",\"component_ref\":\"top-component\",\"event_end\":\"2026-11-21T00:15:00.000000Z\",\"event_start\":\"2026-11-21T00:15:00.000000Z\",\"role\":\"systolic\",\"value_mmhg\":\"124.5\"},{\"component_occurrence_ref\":\"bottom-occurrence\",\"component_ref\":\"bottom-component\",\"event_end\":\"2026-11-21T00:15:00.000000Z\",\"event_start\":\"2026-11-21T00:15:00.000000Z\",\"role\":\"diastolic\",\"value_mmhg\":\"81\"}],\"event_end\":\"2026-11-21T00:15:00.000000Z\",\"event_start\":\"2026-11-21T00:15:00.000000Z\",\"kind\":\"correlation\",\"logical_ref\":\"paired-logical\",\"occurrence_ref\":\"paired-occurrence\",\"op\":\"upsert\",\"pairing\":\"paired\",\"revision_ref\":\"paired-revision\"},{\"components\":[{\"component_occurrence_ref\":\"orphan-occurrence\",\"component_ref\":\"orphan-component\",\"event_end\":\"2026-11-21T00:15:00.000000Z\",\"event_start\":\"2026-11-21T00:15:00.000000Z\",\"role\":\"systolic\",\"value_mmhg\":\"120\"}],\"event_end\":\"2026-11-21T00:15:00.000000Z\",\"event_start\":\"2026-11-21T00:15:00.000000Z\",\"kind\":\"standalone\",\"logical_ref\":\"standalone-logical\",\"occurrence_ref\":\"standalone-occurrence\",\"op\":\"upsert\",\"pairing\":\"unpaired\",\"revision_ref\":\"standalone-revision\"},{\"occurrence_ref\":\"delete-occurrence\",\"op\":\"delete\",\"target_kind\":\"component\",\"target_ref\":\"top-component\"}],\"prev_batch_sha256\":null,\"schema_version\":\"mse.native-bp-typed-batch/0.1\",\"source_namespace_ref\":\"synthetic-namespace\",\"store_id\":\"synthetic-vector\"}",
+      "receipt": {
+        "batch_seq": 1,
+        "batch_sha256": "b1ec7d3da4e600663b2bcf9eb4f6b2e3482a0b303f622f189fa031a40694522e",
+        "byte_length": 1565,
+        "delete_count": 1,
+        "enrollment_id": "synthetic-vector",
+        "final": false,
+        "import_ref": "synthetic-three-op",
+        "manifest_sha256": null,
+        "normalization_version": "native-bp-0_1",
+        "prev_batch_sha256": null,
+        "receipt_id": "842260490e297a5334948f02821c247a665383f5b4f7219a6d510e3baa8d5bdd",
+        "schema_version": "mse.native-bp-typed-receipt/0.1",
+        "source_namespace_ref": "synthetic-namespace",
+        "status": "typed_batch_durable",
+        "store_id": "synthetic-vector",
+        "upsert_count": 2
+      }
+    },
+    {
+      "canonical_utf8": "{\"batch_seq\":2,\"enrollment_id\":\"synthetic-vector\",\"final\":true,\"import_ref\":\"synthetic-three-op\",\"manifest\":{\"artifact_receipt_ref\":\"synthetic-artifact-ref\",\"delete_count\":1,\"event_end_exclusive\":\"2026-11-22T00:00:00.000000Z\",\"event_start_inclusive\":\"2026-11-21T00:00:00.000000Z\",\"last_nonterminal_sha256\":\"b1ec7d3da4e600663b2bcf9eb4f6b2e3482a0b303f622f189fa031a40694522e\",\"member_inventory_ref\":\"synthetic-inventory-ref\",\"nonterminal_batches\":1,\"nonterminal_bytes\":1565,\"normalizer_version\":\"native-bp-0_1\",\"quarantined_count\":0,\"schema_version\":\"mse.native-bp-typed-manifest/0.1\",\"source_occurrence_count\":2,\"upsert_count\":2},\"normalization_version\":\"native-bp-0_1\",\"ops\":[],\"prev_batch_sha256\":\"b1ec7d3da4e600663b2bcf9eb4f6b2e3482a0b303f622f189fa031a40694522e\",\"schema_version\":\"mse.native-bp-typed-batch/0.1\",\"source_namespace_ref\":\"synthetic-namespace\",\"store_id\":\"synthetic-vector\"}",
+      "receipt": {
+        "batch_seq": 2,
+        "batch_sha256": "a8737f81fda224f8dc43f4f0bcdce1b8c94cc0cf82eb8c98bda771a21fa81834",
+        "byte_length": 888,
+        "delete_count": 0,
+        "enrollment_id": "synthetic-vector",
+        "final": true,
+        "import_ref": "synthetic-three-op",
+        "manifest_sha256": "98504428dd109eeba3b09ab999a75d53520a6051a62c7f446113f60c6001f903",
+        "normalization_version": "native-bp-0_1",
+        "prev_batch_sha256": "b1ec7d3da4e600663b2bcf9eb4f6b2e3482a0b303f622f189fa031a40694522e",
+        "receipt_id": "a9e9c2ca1fa1e75260efe59b0beec015f24a6c36b7ae25150101059c194fe881",
+        "schema_version": "mse.native-bp-typed-receipt/0.1",
+        "source_namespace_ref": "synthetic-namespace",
+        "status": "typed_batch_durable",
+        "store_id": "synthetic-vector",
+        "upsert_count": 0
+      }
+    }
+  ],
+  "bounds": [
+    "2026-11-21T00:00:00.000000Z",
+    "2026-11-22T00:00:00.000000Z"
+  ],
+  "expected_consumer_pairs": 0,
+  "scope": {
+    "enrollment_id": "synthetic-vector",
+    "import_ref": "synthetic-three-op",
+    "normalization_version": "native-bp-0_1",
+    "source_namespace_ref": "synthetic-namespace",
+    "store_id": "synthetic-vector"
+  }
+}

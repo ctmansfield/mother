@@ -13,6 +13,7 @@ CATEGORIES = frozenset(
         "ARCHIVE_OR_XML",
         "CATALOG",
         "PRECOMMIT_WINDOW",
+        "PROJECTION",
         "COMMIT",
         "READBACK",
         "INVENTORY_LIMIT",

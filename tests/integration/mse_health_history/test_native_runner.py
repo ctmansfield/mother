@@ -31,9 +31,16 @@ from test_history import (
     xml,
 )
 
+from test_typed_vm_support import (
+    verify_admitted_guest,
+    verify_projection_window,
+    verify_shared_vector,
+)
+
 from mother.physiology.contracts import canonical_json
 
 from integrations.mse_health_history import native_custodian, native_status
+from integrations.mse_health_history.blood_pressure import protected_ref
 from integrations.mse_health_history.catalog import (
     SyntheticHistoryCatalog,
     _HistoryCatalog,
@@ -327,6 +334,41 @@ class NativeRunnerTests(unittest.TestCase):
                 native_status.capture_status(1, b"", stderr), ("REFUSED", kind.value)
             )
 
+    def test_reviewed_projection_boundary_and_terminal_vectors(self):
+        verify_projection_window(self, self.root)
+        verify_shared_vector(self, self.root)
+
+    def test_parent_only_catalog_refuses_fresh_import_before_authentication(self):
+        dest = self.root / "legacy-shaped-catalog"
+        dest.mkdir(mode=0o700)
+        catalog = SyntheticHistoryCatalog(
+            dest, enrollment="synthetic-legacy-shape", key=b"q" * 32
+        )
+        catalog.initialize()
+        original = self.root / "legacy-source.xml"
+        original.write_bytes(
+            xml(correlation(record(SYSTOLIC, "124") + record(DIASTOLIC, "81")))
+        )
+        receipt = catalog.ingest(original)
+        with catalog._connection(write=True) as db:
+            db.execute("DROP TABLE native_bp_children")
+        with (
+            patch(
+                "integrations.mse_health_history.catalog.authenticate_export",
+                side_effect=AssertionError("authenticated"),
+            ),
+            self.assertRaisesRegex(InvalidHistory, "requires a fresh catalog"),
+        ):
+            catalog.ingest_sealed_export(
+                plaintext_sha256=receipt["sha256"],
+                plaintext_length=receipt["byte_length"],
+                receipt={},
+            )
+        self.assertEqual(catalog.receipt(receipt["sha256"]), receipt)
+        self.assertEqual(
+            len(list(catalog.blood_pressure_lineage(receipt["sha256"]))), 1
+        )
+
     def test_large_stream_inventory_does_not_retain_xml_or_nested_elements(self):
         count = 80_000
         path = self.root / "large.zip"
@@ -417,7 +459,11 @@ class NativeRunnerTests(unittest.TestCase):
             archive.writestr(
                 "apple_health_export/export.xml",
                 xml(
-                    correlation(record(SYSTOLIC, "124.50") + record(DIASTOLIC, "81"))
+                    correlation(
+                        record(DIASTOLIC, "81")
+                        + '<MetadataEntry key="test" value="intervening"/>'
+                        + record(SYSTOLIC, "124.50")
+                    )
                     + record(SYSTOLIC, "120")
                     + '<Workout><WorkoutRoute><FileReference path="../opaque.gpx"/></WorkoutRoute></Workout>'
                     + '<Record type="HKClinicalTypeIdentifierLabResultRecord"/>'
@@ -519,6 +565,14 @@ class NativeRunnerTests(unittest.TestCase):
         )
         bound = typed_catalog.receipt(value["plaintext_sha256"])
         self.assertEqual(bound["ciphertext_receipt"], receipt)
+        self.assertEqual(
+            dict(
+                typed_catalog.blood_pressure_component_lineage(
+                    value["plaintext_sha256"], 1, 1
+                )
+            ),
+            {1: "diastolic", 3: "systolic"},
+        )
         self.assertTrue(
             any(
                 row["family"] == "attachment_reference"
@@ -789,8 +843,40 @@ class NativeRunnerTests(unittest.TestCase):
             run(sign(larger_admission), selected=larger_admission), (0, "")
         )
 
-        selected = dict(policy, max_zip_members=2)
+        child_key = self.root / "fabricated-mapping-key"
+        child_key.touch(mode=0o600)
+        child_key.write_bytes(b"m" * 32)
+        projected = self.root / "protected-projection"
+        projection = {
+            "scope": {
+                "store_id": "fabricated-admitted-guest",
+                "enrollment_id": policy["enrollment"],
+                "source_namespace_ref": protected_ref(
+                    b"m" * 32,
+                    "native-namespace",
+                    policy["enrollment"],
+                    policy["source_instance"],
+                ),
+                "import_ref": "fabricated-exact-import",
+                "normalization_version": "native-bp-0_1",
+            },
+            "bounds": [UTC, THROUGH],
+            "mapping_key_file": str(child_key),
+            "output": str(projected),
+            "max_batches": 4,
+            "max_bytes": 1024**2,
+        }
+        selected = dict(policy, max_zip_members=2, projection=projection)
         self.assertEqual(run(sign(selected), selected=selected), (0, ""))
+        ledger = json.loads((projected / "private-accounting.json").read_bytes())
+        self.assertEqual(ledger["accounting"]["emitted_upsert_count"], 2)
+        self.assertEqual(len(ledger["batches"]), 2)
+        for batch in ledger["batches"]:
+            path = projected / "batches" / batch["file"]
+            self.assertEqual(sha256(path.read_bytes()).hexdigest(), batch["sha256"])
+        self.assertTrue(
+            json.loads((projected / "batches" / "0002.json").read_bytes())["final"]
+        )
         self.assertEqual(run(sign(policy)), (0, ""))
         reopened = _HistoryCatalog(
             catalog,
@@ -810,3 +896,15 @@ class NativeRunnerTests(unittest.TestCase):
         )
         self.assertFalse(list(scratch.iterdir()))
         self.assertFalse(list(reopened.objects.iterdir()))
+        verify_admitted_guest(
+            self,
+            self.root / "admitted-loopback",
+            reopened,
+            binding["plaintext_sha256"],
+            UTC,
+            THROUGH,
+            tuple(
+                (projected / "batches" / name).read_bytes()
+                for name in ("0001.json", "0002.json")
+            ),
+        )
