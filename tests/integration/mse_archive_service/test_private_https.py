@@ -12,7 +12,9 @@ import unittest
 from unittest.mock import patch
 
 from integrations.mse_archive_service.server import (
-    ArchiveServer, main, tls_context,
+    ArchiveServer,
+    main,
+    tls_context,
 )
 from integrations.mse_archive_service.store import PrivateArchive
 from integrations.mse_archive_service.load_export import load
@@ -285,9 +287,18 @@ class PrivateHTTPSTests(unittest.TestCase):
             "expires_at": self.config["expires_at"].strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
         command = [
-            "server", "serve", "--config", str(config_path),
-            "--root", str(self.root / "store"), "--port", "8443",
-            "--cert", str(self.cert), "--key", str(self.key),
+            "server",
+            "serve",
+            "--config",
+            str(config_path),
+            "--root",
+            str(self.root / "store"),
+            "--port",
+            "8443",
+            "--cert",
+            str(self.cert),
+            "--key",
+            str(self.key),
         ]
         for expected, bind, allowed in (
             (None, "100.64.0.2", True),
@@ -311,7 +322,9 @@ class PrivateHTTPSTests(unittest.TestCase):
                 with (
                     patch("sys.argv", [*command, "--bind", bind]),
                     patch("sys.stderr"),
-                    patch("integrations.mse_archive_service.server.ArchiveServer") as server,
+                    patch(
+                        "integrations.mse_archive_service.server.ArchiveServer"
+                    ) as server,
                 ):
                     self.assertEqual(main(), None if allowed else 1)
                     if allowed:
