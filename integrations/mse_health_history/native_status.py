@@ -22,6 +22,7 @@ CATEGORIES = frozenset(
         "FILESYSTEM_FULL",
         "FILESYSTEM_QUOTA",
         "SQLITE_FULL",
+        "UNIVERSAL_TRANSFER",
         *(kind.value for kind in LimitKind),
     }
 )
