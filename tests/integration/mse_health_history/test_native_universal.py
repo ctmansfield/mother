@@ -413,6 +413,47 @@ def verify_universal_transfer(test, root, catalog, artifact, start, end):
     test.assertEqual(
         reopened.restricted_occurrences(), catalog.source_occurrences(artifact)
     )
+    occurrences = reopened.restricted_occurrences()
+    quantity = next(
+        row
+        for row in occurrences
+        if row["adapter"] == "quantity"
+        and json.loads(row["typed_json"])["value"] == "9"
+    )
+    test.assertEqual(quantity["level"], "typed")
+    test.assertEqual(
+        json.loads(quantity["typed_json"])["clocks"]["creationDate"],
+        {
+            "source": "bad-quantity",
+            "utc": None,
+            "status": "invalid",
+            "reason": "invalid_creation_date",
+        },
+    )
+    pair = next(
+        row
+        for row in occurrences
+        if row["adapter"] == "blood_pressure"
+        and json.loads(row["typed_json"])["pairing"] == "paired"
+    )
+    typed_pair = json.loads(pair["typed_json"])
+    component = next(
+        row for row in typed_pair["components"] if row["role"] == "diastolic"
+    )
+    for clocks, text in [
+        (typed_pair["clocks"], "bad-root"),
+        (component["clocks"], "bad-component"),
+    ]:
+        test.assertEqual(clocks["source_creation"], text)
+        test.assertIsNone(clocks["created_at"])
+        test.assertEqual(clocks["creation_status"], "invalid")
+        test.assertEqual(clocks["creation_reason"], "invalid_creation_date")
+    event_json = " ".join(
+        row["data_json"]
+        for row in reopened.restricted_events(pair["member"], pair["ordinal"])
+    )
+    test.assertIn("bad-root", event_json)
+    test.assertIn("bad-component", event_json)
     attachment = next(
         row for row in reopened.restricted_members() if row["kind"] == "attachment"
     )

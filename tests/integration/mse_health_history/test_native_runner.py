@@ -461,15 +461,19 @@ class NativeRunnerTests(unittest.TestCase):
                 "apple_health_export/export.xml",
                 xml(
                     correlation(
-                        record(DIASTOLIC, "81")
+                        record(DIASTOLIC, "81").replace(
+                            "/>", ' creationDate="bad-component"/>'
+                        )
                         + '<MetadataEntry key="test" value="intervening"/>'
                         + record(SYSTOLIC, "124.50")
+                    ).replace(
+                        "<Correlation ", '<Correlation creationDate="bad-root" ', 1
                     )
                     + record(SYSTOLIC, "120")
                     + '<Workout><WorkoutRoute><FileReference path="../opaque.gpx"/></WorkoutRoute></Workout>'
                     + '<Record type="HKClinicalTypeIdentifierLabResultRecord"/>'
                     + "<MedicationRecord/>"
-                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="9" unit="count" '
+                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="9" unit="count" creationDate="bad-quantity" '
                     'startDate="2026-11-21 10:00:00 +1000" endDate="2026-11-21 10:00:00 +1000"/>'
                     + '<Record type="HKQuantityTypeIdentifierStepCount" value="10" unit="count" '
                     'startDate="2026-11-21 10:00:00 +1000" endDate="2026-11-21 10:00:00 +1000"/>'

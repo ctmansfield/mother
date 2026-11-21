@@ -85,10 +85,16 @@ def adapt(family, source_type, tag, attrs):
                 clocks[name] = {"source": attrs[name], "utc": source_time(attrs[name])}
             except ValueError:
                 clocks[name] = {"source": attrs[name], "utc": None}
+                if name == "creationDate":
+                    clocks[name].update(
+                        status="invalid", reason="invalid_creation_date"
+                    )
     base = {"clocks": clocks}
     if family == "auxiliary_xml":
         return "fallback", base
-    if any(clock["utc"] is None for clock in clocks.values()):
+    if any(
+        clock["utc"] is None for name, clock in clocks.items() if name != "creationDate"
+    ):
         return "quarantine", dict(base, reason="invalid_source_clock")
     if "startDate" in clocks and "endDate" in clocks:
         if clocks["endDate"]["utc"] < clocks["startDate"]["utc"]:

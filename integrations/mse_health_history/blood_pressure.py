@@ -66,19 +66,26 @@ def clocks(attrs):
     try:
         start = source_time(attrs.get("startDate"))
         end = source_time(attrs.get("endDate"))
-        created_at = source_time(creation) if creation is not None else None
     except ValueError:
         raise SourceClockError("invalid_source_clock") from None
     if end < start:
         raise SourceClockError("reversed_source_interval")
-    return {
+    result = {
         "source_start": attrs["startDate"],
         "source_end": attrs["endDate"],
         "source_creation": creation,
         "event_start": start,
         "event_end": end,
-        "created_at": created_at,
+        "created_at": None,
     }
+    if creation is not None:
+        try:
+            result["created_at"] = source_time(creation)
+        except ValueError:
+            result.update(
+                creation_status="invalid", creation_reason="invalid_creation_date"
+            )
+    return result
 
 
 def decimal_text(value):

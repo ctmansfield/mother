@@ -263,7 +263,8 @@ class UniversalServer(HTTPServer):
                     WHERE artifact=? AND adapter IN ({slots}) AND source_type IN ({type_slots})
                       AND NOT EXISTS (
                           SELECT 1 FROM json_each(typed,'$.clocks') AS source_clock
-                          WHERE json_type(typed,source_clock.fullkey || '.utc')='null'
+                          WHERE source_clock.key != 'creationDate'
+                            AND json_type(typed,source_clock.fullkey || '.utc')='null'
                       )
                       AND NOT coalesce(
                           json_extract(typed,'$.clocks.endDate.utc') <
