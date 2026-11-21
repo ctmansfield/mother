@@ -1,6 +1,6 @@
 # Proposed synthetic destination setup
 
-**Source-only package. Destination NOT READY.** This is the PHOENIX implementation under [MSE integration r4](https://github.com/ctmansfield/mother/pull/23#issuecomment-7042142491) following the [readiness audit](https://github.com/ctmansfield/mother/pull/33). No host directory, service account, listener, route, database or backup allocation exists by virtue of this proposal.
+**Source-only package. Destination NOT READY.** This is the PHOENIX implementation under [MSE integration r5](https://github.com/ctmansfield/mother/pull/23#issuecomment-7045375231) following the [readiness audit](https://github.com/ctmansfield/mother/pull/33). No host directory, service account, listener, route, database or backup allocation exists by virtue of this proposal.
 
 ## Allocation and permissions
 
@@ -17,22 +17,39 @@ Evaluate a dedicated allocation on the established LLM host's local ext4 data mo
 
 Provisioning inputs still required are the exact mount/device and parent real path, writer UID/GID, backup and restore roots, quota and minimum free headroom, approved archive/scope, and authorized operator. Require safe parent ownership, no symlink traversal, regular files, same mount identity at start, and an explicit failure path for unsupported locking. A service, listener and credentials are outside this offline setup. Later inference receives versioned approved snapshots through a separate boundary and must be able to remain offline.
 
+## Source-only installation and preflight
+
+Preview candidate paths with the planner. The following values are examples, including the writer IDs. Substitute approved values for private review. The planner performs lexical validation without inspecting or touching any supplied path.
+
+```sh
+python3 -I -B tools/mse_integration/recovery/destination.py plan \
+  --allocation /mnt/example-data/mse-synthetic \
+  --backup /mnt/example-backup/mse-synthetic \
+  --restore /mnt/example-restore/mse-synthetic --uid 950 --gid 950
+
+python3 -I -B tools/mse_integration/recovery/destination.py local-dry-run
+```
+
+The plan rejects relative, non-normalized, overlapping and known protected paths and root writer IDs. The dry run creates the proposed directory shape and permission markers only inside a generated local scratch directory. It checks actual current-user ownership and modes, rejects a symlink and FIFO without opening them, then removes that disposable layout. It has no installation mode against caller-supplied paths.
+
+A later authorized operator must verify the approved mount identity and real parent paths before creating anything. Use same-filesystem exclusive creation under verified parents, with a guarded recheck after creation, reject any unexpected existing path or inode, verify the dedicated UID/GID and modes, and retain baseline plus an exact owned-resource inventory. Create only the empty state and staging directories. FORGE initializes the two databases using the reviewed synthetic entry under the writer identity. Do not attach a consumer until the sealed generation restores into a separate verified location. Filesystem inspection, actual dedicated-UID enforcement, quotas, backup destination durability and operator provisioning remain required later.
+
 ## Rehearse locally
 
 ```sh
 python3 -I -B tools/mse_integration/recovery/paired.py --plan
-python3 -I -B tools/mse_integration/recovery/paired.py --forge-checkout /path/to/clean-pinned-forge
+python3 -I -B tools/mse_integration/recovery/paired.py --combined-checkout /path/to/clean-pinned-nicky
 ```
 
-Use Python 3.12 with FORGE/PF-001's `jsonschema` dependency. The checkout must be clean and detached at [FORGE #31](https://github.com/ctmansfield/mother/pull/31) `d2441050726f1b3f50c928d5f8205d5ea179276d`, with [PF-001 #18](https://github.com/ctmansfield/mother/pull/18) `b4e70b7123689ec164ba09e2974645ae36b184a2` as its physiology source. Fetch the sibling PR refs into the same Git object store and retain the following exact commits:
+Use Python 3.12 with FORGE/PF-001's `jsonschema` dependency. For direct reproduction use [NICKY candidate #34](https://github.com/ctmansfield/mother/pull/34) at `877eeb66ae2c26ab8ee2144d34adeba87c988e8f`, tree `6dadd8cd94ffb4a0091f76624fdd0afd7baad507`, in a clean detached checkout whose object store also contains the frozen ATLAS pin. The alternative `--forge-checkout /path/to/clean-pinned-forge` assembles exact sibling sources from the object store. That checkout must be clean and detached at [FORGE #31](https://github.com/ctmansfield/mother/pull/31) `ceeb92157f4d7179a3ad5cd3d4af9e9aa4ff6b4f`, with [PF-001 #18](https://github.com/ctmansfield/mother/pull/18) `b4e70b7123689ec164ba09e2974645ae36b184a2` as its physiology source. Fetch the sibling PR refs into the same Git object store and retain the following exact commits:
 
 | Component | Rehearsal pin |
 | --- | --- |
 | [ATLAS contract #28](https://github.com/ctmansfield/mother/pull/28) | `769a0966da251da4d08633cc7663af9869da70e6` |
-| [ORACLE capture #30](https://github.com/ctmansfield/mother/pull/30) | `c26180c1cbf78a9d2e1915d0e83241b1d36cdac9` |
-| [PROVENANCE bridge #27](https://github.com/ctmansfield/mother/pull/27) | `089e627bccf93513d52a04c7eb45d27800c0817e` |
+| [ORACLE capture #30](https://github.com/ctmansfield/mother/pull/30) | `7825b02093d280321af34af88aed96da44b33594` |
+| [PROVENANCE bridge #27](https://github.com/ctmansfield/mother/pull/27) | `7be9ea31c6c68643573afdf37ccfa0a41901a368` |
 
-The plan prints placeholders. The rehearsal exports only pinned sibling source into a temporary directory, uses actual ORACLE export, FORGE `ConnectedIngest` and the PROVENANCE/MSE replay verifier, and creates fresh synthetic batch identities. It reads original synthetic bytes from the ATLAS vector and keeps source files unchanged. Every backup, restore and inference store is disposable.
+The plan prints placeholders. The rehearsal exports only pinned sibling source into a temporary directory, uses ORACLE’s public `ingest_capture` entry, FORGE `ConnectedIngest` and the PROVENANCE/MSE replay verifier, and creates fresh synthetic batch identities. It reads original synthetic bytes from the ATLAS vector and keeps source files unchanged. Every backup, restore and inference store is disposable.
 
 1. Quiesce writers at an acceptance boundary. Record durable receipt identity and archive/ledger binding. Write both SQLite application backups into a new generation, seal them as standalone files and verify all member digests. Keep the custody copy, PF-001 BLOB and backup inventory linked.
 2. Reopen into fresh isolation. Verify both SQLite integrity and foreign-key checks, exact originals and authoritative receipts against the restored journal and archive. Compare the complete cutoff snapshot, replay output and lineage before and after restore. Recover a committed PF-001 run with an unpublished final receipt without recommitting the archive, and verify that the earlier cutoff still excludes the pending evidence.
