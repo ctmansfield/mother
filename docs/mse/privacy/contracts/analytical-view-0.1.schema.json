@@ -44,7 +44,8 @@
           },
           "mean_value": {
             "type": "string",
-            "pattern": "^(?:0\\.[1-9]|[1-9][0-9]*\\.[0-9])$"
+            "pattern": "^(?:0\\.[1-9]|[1-9][0-9]*\\.[0-9])$",
+            "maxLength": 512
           }
         },
         "required": [
@@ -108,5 +109,43 @@
   ],
   "additionalProperties": false,
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "MSE purpose-scoped synthetic analytical view 0.1"
+  "title": "MSE purpose-scoped synthetic analytical view 0.1",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "rows": {
+            "minItems": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "projection_loss": {
+            "allOf": [
+              {
+                "contains": {
+                  "const": "relative_time_binning"
+                }
+              },
+              {
+                "contains": {
+                  "const": "value_aggregation_and_rounding"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "projection_loss": {
+            "contains": {
+              "const": "coverage_unknown"
+            }
+          }
+        }
+      }
+    }
+  ]
 }

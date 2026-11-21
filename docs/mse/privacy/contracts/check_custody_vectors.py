@@ -21,7 +21,7 @@ class CustodyVectors(unittest.TestCase):
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name).resolve()
-        roots = {f"{name}_root": root / name for name in ("evidence", "vault", "projection")}
+        roots = {f"{name}_root": root / name for name in ("authority", "fence", "projection", "evidence", "vault")}
         for path in roots.values():
             path.mkdir(mode=0o700)
         example_path = Path(__file__).with_name("analytical-view-examples.json")
@@ -31,6 +31,7 @@ class CustodyVectors(unittest.TestCase):
         writer = Grant("projection_writer", scope, self.payload["purpose"],
                        self.payload["policy_version"], 1, "vector-recipient", expiry)
         reader = replace(writer, role="analyst")
+        self.serving_roots = {key: roots[key] for key in ("authority_root", "fence_root", "projection_root")}
         self.custody, self.credentials = open_custody(
             **roots, initialize=True, clock=lambda: self.now,
             grants=dict(writer=writer, reader=reader,
@@ -67,6 +68,16 @@ class CustodyVectors(unittest.TestCase):
             self.credentials["auditor"], self.view, operation="resolve"
         )
         self.assertEqual((decision["recipient"], decision["generation"]), ("vector-recipient", 1))
+
+    def test_aggregate_only_reopen_and_durable_revocation(self):
+        self.custody.put_projection(self.credentials["writer"], self.view, self.payload)
+        service, credentials = open_custody(**self.serving_roots, clock=lambda: self.now)
+        self.assertEqual(credentials, {})
+        self.assertEqual(service.read_projection(self.credentials["reader"], self.view), self.payload)
+        self.custody.revoke(self.credentials["recovery"])
+        service, _ = open_custody(**self.serving_roots, clock=lambda: self.now)
+        with self.assertRaises(AccessDenied):
+            service.read_projection(self.credentials["reader"], self.view)
 
     def test_expiry_boundary_and_live_revocation(self):
         self.custody.put_projection(self.credentials["writer"], self.view, self.payload)
