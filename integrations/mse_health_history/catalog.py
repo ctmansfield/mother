@@ -14,7 +14,7 @@ from zlib import error as DeflateError
 from mother.physiology.contracts import canonical_json
 
 from . import bp_page
-from .blood_pressure import BloodPressure, protected_ref, source_time
+from .blood_pressure import BloodPressure, SourceClockError, protected_ref, source_time
 from .files import (
     CHUNK,
     InvalidHistory,
@@ -464,7 +464,7 @@ class _HistoryCatalog:
             if last is not None and (values[4] is None or last > values[4]):
                 values[4] = last
             child_sightings = []
-            invalid_record = False
+            bp_reason = None
             try:
                 normalized = (
                     None
@@ -477,10 +477,14 @@ class _HistoryCatalog:
                         child_sightings,
                     )
                 )
-            except (ValueError, OverflowError):
-                invalid_bp += 1
-                invalid_record = True
+            except SourceClockError as error:
+                bp_reason = str(error)
                 normalized = None
+            except (ValueError, OverflowError):
+                bp_reason = "invalid_bp_source"
+                normalized = None
+            if bp_reason is not None:
+                invalid_bp += 1
             source.occurrence(
                 member_index,
                 ordinal,
@@ -489,7 +493,7 @@ class _HistoryCatalog:
                 tag,
                 attrs,
                 bp=normalized[2] if normalized is not None else None,
-                invalid_bp=invalid_record,
+                bp_reason=bp_reason,
             )
             if normalized is None:
                 values[2] += 1

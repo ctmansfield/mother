@@ -26,34 +26,66 @@ def source_uuid(value):
 
 
 def source_time(raw):
-    if not isinstance(raw, str) or not re.fullmatch(
-        r"[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2}"
-        r"(?:\.[0-9]{1,6})? ?(?:Z|[+-][0-9]{2}:?[0-9]{2})",
-        raw,
-    ):
+    if not isinstance(raw, str):
         raise ValueError("unusable HealthData clock")
-    return (
-        datetime.fromisoformat(raw.replace("Z", "+00:00"))
-        .astimezone(timezone.utc)
-        .isoformat(timespec="microseconds")
-        .replace("+00:00", "Z")
+    match = re.fullmatch(
+        r"([0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2})"
+        r"(?:\.([0-9]{1,6}))? ?(Z|([+-])([0-9]{2}):?([0-9]{2}))",
+        raw,
     )
+    if match is None:
+        raise ValueError("unusable HealthData clock")
+    base, fraction, zone, sign, hours, minutes = match.groups()
+    if zone == "Z":
+        offset = "+00:00"
+    else:
+        if int(hours) > 23 or int(minutes) > 59:
+            raise ValueError("unusable HealthData offset")
+        offset = f"{sign}{hours}:{minutes}"
+    # Python 3.9 only accepts colon-separated offsets and fixed fractional widths.
+    canonical_input = (
+        f"{base.replace(' ', 'T')}.{(fraction or '').ljust(6, '0')}{offset}"
+    )
+    try:
+        return (
+            datetime.fromisoformat(canonical_input)
+            .astimezone(timezone.utc)
+            .isoformat(timespec="microseconds")
+            .replace("+00:00", "Z")
+        )
+    except OverflowError:
+        raise ValueError("unusable HealthData clock") from None
+
+
+class SourceClockError(ValueError):
+    """A BP source clock failed qualification."""
 
 
 def clocks(attrs):
-    start = source_time(attrs.get("startDate"))
-    end = source_time(attrs.get("endDate"))
-    if end < start:
-        raise ValueError("reversed HealthData interval")
     creation = attrs.get("creationDate")
-    return {
+    try:
+        start = source_time(attrs.get("startDate"))
+        end = source_time(attrs.get("endDate"))
+    except ValueError:
+        raise SourceClockError("invalid_source_clock") from None
+    if end < start:
+        raise SourceClockError("reversed_source_interval")
+    result = {
         "source_start": attrs["startDate"],
         "source_end": attrs["endDate"],
         "source_creation": creation,
         "event_start": start,
         "event_end": end,
-        "created_at": source_time(creation) if creation is not None else None,
+        "created_at": None,
     }
+    if creation is not None:
+        try:
+            result["created_at"] = source_time(creation)
+        except ValueError:
+            result.update(
+                creation_status="invalid", creation_reason="invalid_creation_date"
+            )
+    return result
 
 
 def decimal_text(value):

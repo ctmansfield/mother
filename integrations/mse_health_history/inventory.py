@@ -390,7 +390,19 @@ def scan(
                 ):
                     probe = member.read(4096)
                     member.seek(0)
-                    if probe.removeprefix(b"\xef\xbb\xbf").lstrip().startswith(b"<"):
+                    if probe.startswith((b"\xff\xfe", b"\xfe\xff")):
+                        xml_prefix = (
+                            probe.decode("utf-16", errors="replace")
+                            .lstrip()
+                            .startswith("<")
+                        )
+                    else:
+                        xml_prefix = probe.startswith((b"<\x00", b"\x00<")) or (
+                            probe.removeprefix(b"\xef\xbb\xbf")
+                            .lstrip()
+                            .startswith(b"<")
+                        )
+                    if xml_prefix:
                         kind = "source_xml"
                 if kind in ("healthdata_xml", "source_xml"):
 

@@ -461,16 +461,27 @@ class NativeRunnerTests(unittest.TestCase):
                 "apple_health_export/export.xml",
                 xml(
                     correlation(
-                        record(DIASTOLIC, "81")
+                        record(DIASTOLIC, "81").replace(
+                            "/>", ' creationDate="bad-component"/>'
+                        )
                         + '<MetadataEntry key="test" value="intervening"/>'
                         + record(SYSTOLIC, "124.50")
+                    ).replace(
+                        "<Correlation ", '<Correlation creationDate="bad-root" ', 1
                     )
                     + record(SYSTOLIC, "120")
                     + '<Workout><WorkoutRoute><FileReference path="../opaque.gpx"/></WorkoutRoute></Workout>'
                     + '<Record type="HKClinicalTypeIdentifierLabResultRecord"/>'
                     + "<MedicationRecord/>"
-                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="9" unit="count" '
+                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="9" unit="count" creationDate="bad-quantity" '
                     'startDate="2026-11-21 10:00:00 +1000" endDate="2026-11-21 10:00:00 +1000"/>'
+                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="10" unit="count" '
+                    'startDate="2026-11-21 10:00:00 +1000" endDate="2026-11-21 10:00:00 +1000"/>'
+                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="100" unit="filtered"/>'
+                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="101" unit="count" '
+                    'startDate="invalid"/>'
+                    + '<Record type="HKQuantityTypeIdentifierStepCount" value="102" unit="filtered" '
+                    'startDate="2026-11-21 10:01:00 +1000"/>'
                     + '<Record type="HKCategoryTypeIdentifierSleepAnalysis" value="FabricatedState"/>'
                 ),
             )
@@ -561,7 +572,7 @@ class NativeRunnerTests(unittest.TestCase):
         first = json.loads(run("import", *import_args).stdout)
         self.assertEqual(first, json.loads(run("import", *import_args).stdout))
         self.assertEqual(first["normalized_bp_rows"], 2)
-        self.assertEqual(first["unnormalized_top_level_rows"], 5)
+        self.assertEqual(first["unnormalized_top_level_rows"], 9)
         self.assertFalse(list((typed / "originals").iterdir()))
         self.assertFalse(list(scratch.iterdir()))
         typed_catalog = SyntheticHistoryCatalog(

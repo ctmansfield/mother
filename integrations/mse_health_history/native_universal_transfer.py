@@ -195,6 +195,9 @@ class UniversalStore:
                     CREATE TABLE universal_publication (
                         slot INTEGER PRIMARY KEY CHECK(slot=1), receipt BLOB NOT NULL, witness TEXT
                     );
+                    CREATE TABLE universal_access_usage (
+                        grant_id TEXT PRIMARY KEY, bytes INTEGER NOT NULL
+                    );
                 """
                 )
                 db.execute("INSERT INTO identity VALUES (?)", (self.identity,))
@@ -337,19 +340,23 @@ class UniversalStore:
             and receipt["source_inventory"] == inventory,
             "universal source receipt mismatch",
         )
-        observed, typed, fallback, quarantine = db.execute(
-            """SELECT count(*),coalesce(sum(adapter NOT IN ('fallback','quarantine')),0),
-                      coalesce(sum(adapter='fallback'),0),coalesce(sum(adapter='quarantine'),0)
-               FROM native_source_occurrences WHERE artifact=?""",
-            (artifact,),
-        ).fetchone()
+        levels = dict(
+            db.execute(
+                f"""SELECT {native_source.LEVEL_SQL},count(*) FROM native_source_occurrences
+                WHERE artifact=? GROUP BY 1""",
+                (artifact,),
+            )
+        )
         require(
-            (observed, typed, fallback, quarantine)
-            == (
-                inventory["source_occurrences"],
-                inventory["typed_occurrences"],
-                inventory["fallback_occurrences"],
-                inventory["quarantined_occurrences"],
+            sum(levels.values()) == inventory["source_occurrences"]
+            and all(
+                levels.get(level, 0) == inventory[key]
+                for level, key in (
+                    ("typed", "typed_occurrences"),
+                    ("descriptor", "descriptor_occurrences"),
+                    ("fallback", "fallback_occurrences"),
+                    ("quarantine", "quarantined_occurrences"),
+                )
             ),
             "universal occurrence reconciliation mismatch",
         )
@@ -383,19 +390,10 @@ class UniversalStore:
         )
         writer = native_source.SourceWriter(db, artifact)
         writer.verify_members()
-        events = sha256()
-        count = 0
-        for event in db.execute(
-            """SELECT member,seq,occurrence,element,depth,kind,data FROM native_source_events
-               WHERE artifact=? ORDER BY member,seq""",
-            (artifact,),
-        ):
-            events.update(encoded(event) + b"\n")
-            count += 1
+        structure = native_source.verify_structure(db, artifact)
         require(
-            count == inventory["ordered_events"]
-            and events.hexdigest() == inventory["event_sha256"],
-            "universal event reconciliation mismatch",
+            all(inventory.get(key) == value for key, value in structure.items()),
+            "universal parser and stored structure reconciliation mismatch",
         )
         require(
             db.execute("PRAGMA foreign_key_check").fetchone() is None,
@@ -492,3 +490,59 @@ class UniversalStore:
             return native_source.members(
                 db, self.manifest["artifact"], after=after, limit=limit
             )
+
+    def restricted_references(self, member, **page):
+        self.receipt()
+        with closing(self.connect()) as db:
+            return native_source.references(
+                db, self.manifest["artifact"], member, **page
+            )
+
+    def approved_fallback(self, member, ordinal, element, fields):
+        self.receipt()
+        with closing(self.connect()) as db:
+            row = db.execute(
+                f"""SELECT e.attributes,{native_source.LEVEL_SQL},parent.parent
+                   FROM native_source_elements e JOIN native_source_occurrences o
+                     ON o.artifact=e.artifact AND o.member=e.member AND o.ordinal=e.occurrence
+                   LEFT JOIN native_source_elements parent
+                     ON parent.artifact=e.artifact AND parent.member=e.member
+                    AND parent.element=e.parent
+                   WHERE e.artifact=? AND e.member=? AND e.occurrence=? AND e.element=?""",
+                (self.manifest["artifact"], member, ordinal, element),
+            ).fetchone()
+        if row is None or not (
+            row[1] in ("fallback", "descriptor")
+            or (row[1] == "typed" and row[2] is not None)
+        ):
+            raise KeyError("approved structured fallback absent")
+        data = dict(json.loads(row[0]))
+        require(
+            all(field in data for field in fields), "approved fallback field absent"
+        )
+        payload = encoded({"fields": {field: data[field] for field in fields}})
+        if len(payload) > native_source.MAX_PAGE_BYTES:
+            raise Capacity("approved fallback response exceeds bound")
+        return payload
+
+    def approved_payload(self, grant_id, budget, member, expected, offset, length):
+        self.receipt()
+        # The protected store, not a process-local counter, enforces total bytes.
+        with closing(self.connect(write=True)) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            current = db.execute(
+                "SELECT bytes FROM universal_access_usage WHERE grant_id=?",
+                (grant_id,),
+            ).fetchone()
+            used = current[0] if current else 0
+            if used + length > budget:
+                raise Capacity("approved attachment budget exhausted")
+            raw = native_source.member_range(
+                db, self.manifest["artifact"], member, expected, offset, length
+            )
+            db.execute(
+                """INSERT INTO universal_access_usage VALUES (?,?)
+                   ON CONFLICT(grant_id) DO UPDATE SET bytes=excluded.bytes""",
+                (grant_id, used + len(raw)),
+            )
+        return raw
