@@ -21,9 +21,10 @@ from mother.physiology.contracts import canonical_json
 
 from .blood_pressure import source_time
 from .catalog import _HistoryCatalog
-from .files import HistoryLimit, private_path
+from .files import HistoryLimit, LimitKind, NamedHistoryLimit, private_path
 from .inventory import Limits
 from .native_runner import private_bytes
+from .native_status import CATEGORIES, DIAGNOSTIC_PREFIX, SUCCESS
 from .protected_export import ExportAuthenticationError
 from .vault import DIGEST, TOKEN
 
@@ -149,13 +150,20 @@ def paths_on_encrypted_volume(policy):
 
 def ensure_space(policy, catalog, *, extra=0):
     if shutil.disk_usage(catalog).free < policy["reserve_bytes"] + extra:
-        raise HistoryLimit("protected filesystem reserve insufficient")
+        raise NamedHistoryLimit(
+            LimitKind.FILESYSTEM_RESERVE, "protected filesystem reserve insufficient"
+        )
     database = catalog / "history.sqlite3"
     for path in (database, catalog / "history.sqlite3-journal"):
         if os.path.lexists(path):
             private_path(path, directory=False)
             if path.stat().st_size > policy["catalog_bytes"]:
-                raise HistoryLimit("protected catalog bound exceeded")
+                kind = (
+                    LimitKind.CATALOG_BYTES
+                    if path == database
+                    else LimitKind.JOURNAL_BYTES
+                )
+                raise NamedHistoryLimit(kind, "protected catalog bound exceeded")
     if any(os.path.lexists(str(database) + suffix) for suffix in ("-wal", "-shm")):
         raise ValueError("protected catalog requires rollback journal mode")
 
@@ -165,7 +173,34 @@ def timeout(_signal, _frame):
 
 
 def file_limit(_signal, _frame):
-    raise HistoryLimit("protected file-size deadline")
+    raise NamedHistoryLimit(LimitKind.FILE_SIZE, "protected file-size deadline")
+
+
+def diagnostic_category(error, phase):
+    if isinstance(error, TimeoutError):
+        return "RUNTIME_LIMIT"
+    if isinstance(error, ExportAuthenticationError):
+        return "AUTHENTICATION"
+    if isinstance(error, NamedHistoryLimit):
+        return error.kind.value
+    if isinstance(error, HistoryLimit):
+        return "INVENTORY_LIMIT" if phase == "ARCHIVE_OR_XML" else "RESOURCE_LIMIT"
+    if isinstance(error, OSError):
+        category = {
+            errno.ENOSPC: "FILESYSTEM_FULL",
+            errno.EDQUOT: "FILESYSTEM_QUOTA",
+            errno.EFBIG: LimitKind.FILE_SIZE.value,
+        }.get(error.errno)
+        if category is not None:
+            return category
+    if isinstance(error, sqlite3.Error):
+        if getattr(error, "sqlite_errorcode", None) == getattr(
+            sqlite3, "SQLITE_FULL", 13
+        ):
+            return "SQLITE_FULL"
+        if phase == "ARCHIVE_OR_XML":
+            return "CATALOG"
+    return phase
 
 
 def main():
@@ -210,7 +245,9 @@ def main():
         cap = max(binding["plaintext_length"], policy["catalog_bytes"])
         _, hard = resource.getrlimit(resource.RLIMIT_FSIZE)
         if hard != resource.RLIM_INFINITY and cap > hard:
-            raise HistoryLimit("protected file limit unavailable")
+            raise NamedHistoryLimit(
+                LimitKind.FILE_SIZE_CONFIGURATION, "protected file limit unavailable"
+            )
         resource.setrlimit(resource.RLIMIT_FSIZE, (cap, hard))
         signal.signal(signal.SIGXFSZ, file_limit)
         signal.signal(signal.SIGALRM, timeout)
@@ -247,7 +284,7 @@ def main():
         report_phase("READBACK")
         if catalog.receipt(binding["plaintext_sha256"]) != receipt:
             raise ValueError("reopened catalog receipt mismatch")
-        print("Protected native catalog receipt verified")
+        print(SUCCESS.decode("ascii"), end="")
     except (
         AttributeError,
         KeyError,
@@ -258,23 +295,10 @@ def main():
         subprocess.SubprocessError,
     ) as error:
         if args.diagnostic_category:
-            if isinstance(error, TimeoutError):
-                phase = "RUNTIME_LIMIT"
-            elif isinstance(error, ExportAuthenticationError):
-                phase = "AUTHENTICATION"
-            elif isinstance(error, HistoryLimit) and phase == "ARCHIVE_OR_XML":
-                phase = "INVENTORY_LIMIT"
-            elif (
-                isinstance(error, HistoryLimit)
-                or getattr(error, "errno", None)
-                in (errno.ENOSPC, errno.EDQUOT, errno.EFBIG)
-                or getattr(error, "sqlite_errorcode", None)
-                == getattr(sqlite3, "SQLITE_FULL", 13)
-            ):
-                phase = "RESOURCE_LIMIT"
-            elif isinstance(error, sqlite3.Error) and phase == "ARCHIVE_OR_XML":
-                phase = "CATALOG"
-            print(f"Protected native import category {phase}", file=sys.stderr)
+            category = diagnostic_category(error, phase)
+            if category not in CATEGORIES:
+                category = "CATALOG"
+            print(DIAGNOSTIC_PREFIX.decode("ascii") + category, file=sys.stderr)
         else:
             print(
                 "Protected native import refused or requires receipt reconciliation",

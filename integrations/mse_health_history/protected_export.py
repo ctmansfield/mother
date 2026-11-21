@@ -10,7 +10,7 @@ from threading import Timer
 
 from mother.physiology.contracts import canonical_json
 
-from .files import CHUNK, HistoryLimit, hash_stream, private_path
+from .files import CHUNK, LimitKind, NamedHistoryLimit, hash_stream, private_path
 from .vault import DIGEST, TOKEN
 
 
@@ -75,7 +75,10 @@ def authenticate_export(
         raise ValueError("protected export receipt identity mismatch")
     age = Path(age_executable).resolve(strict=True)
     with age.open("rb") as file:
-        if hash_stream(file, 64 * 1024**2)[0] != age_sha256:
+        if (
+            hash_stream(file, 64 * 1024**2, kind=LimitKind.BINDING_BYTES)[0]
+            != age_sha256
+        ):
             raise ValueError("protected export age pin mismatch")
     identity, cipher, scratch = (
         Path(path).absolute() for path in (identity_file, ciphertext, scratch_root)
@@ -84,10 +87,15 @@ def authenticate_export(
     private_path(cipher, directory=False)
     private_path(scratch, directory=True)
     if shutil.disk_usage(scratch).free < plaintext_length + 64 * 1024**2:
-        raise HistoryLimit("protected export scratch capacity insufficient")
+        raise NamedHistoryLimit(
+            LimitKind.SCRATCH_CAPACITY, "protected export scratch capacity insufficient"
+        )
     expected = (receipt["ciphertext_sha256"], receipt["byte_length"])
     with cipher.open("rb") as source, TemporaryFile(dir=scratch) as stage:
-        if hash_stream(source, limit + 16 * 1024**2) != expected:
+        if (
+            hash_stream(source, limit + 16 * 1024**2, kind=LimitKind.BINDING_BYTES)
+            != expected
+        ):
             raise ValueError("protected export ciphertext digest mismatch")
         source.seek(0)
         with subprocess.Popen(
@@ -118,7 +126,10 @@ def authenticate_export(
             finally:
                 timer.cancel()
         source.seek(0)
-        if hash_stream(source, limit + 16 * 1024**2) != expected:
+        if (
+            hash_stream(source, limit + 16 * 1024**2, kind=LimitKind.BINDING_BYTES)
+            != expected
+        ):
             raise ValueError("protected export ciphertext changed")
         if (digest.hexdigest(), count) != (plaintext_sha256, plaintext_length):
             raise ValueError("protected export exact plaintext pin mismatch")
