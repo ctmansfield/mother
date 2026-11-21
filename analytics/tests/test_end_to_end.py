@@ -13,10 +13,9 @@ def test_e2e_parquet_to_rules(tmp_path):
     # Create minimal CGM & treatments
     cgm = pd.DataFrame(
         {
-            "ts": pd.date_range("2025-01-01", periods=200, freq="5T", tz="UTC").astype(
-                "int64"
-            )
-            // 1_000_000,
+            "ts": pd.date_range("2025-01-01", periods=200, freq="5min", tz="UTC")
+            .as_unit("ms")
+            .asi8,
             "sgv": np.concatenate(
                 [np.linspace(100, 60, 100), np.linspace(60, 120, 100)]
             ),

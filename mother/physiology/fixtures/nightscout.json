@@ -1,0 +1,6 @@
+[
+ {"_id":"synthetic-old-cgm","date":1748736000000,"sgv":102,"units":"mg/dL","type":"sgv","device":"synthetic-source"},
+ {"_id":"synthetic-cgm-1","date":1768028100000,"sgv":100,"units":"mg/dL","type":"sgv","device":"synthetic-source"},
+ {"_id":"synthetic-cgm-2","date":1768028400000,"sgv":105,"units":"mg/dL","type":"sgv","device":"synthetic-source"},
+ {"_id":"synthetic-cgm-3","date":1768029300000,"sgv":108,"units":"mg/dL","type":"sgv","device":"synthetic-source"}
+]

@@ -13,14 +13,24 @@ keys = [r["key"] for r in references]
 assert len(keys) == len(set(keys)), "Duplicate canonical source keys"
 assert len(rows) == len(references), "CSV/JSON row-count mismatch"
 assert {r["key"] for r in rows} == set(keys), "CSV/JSON key set mismatch"
-assert all(r["doi"] == r["key"][4:] and r["url"] == "https://doi.org/" + r["doi"]
-           for r in references if r["doi"]), "DOI key/URL mismatch"
+assert all(
+    r["doi"] == r["key"][4:] and r["url"] == "https://doi.org/" + r["doi"]
+    for r in references
+    if r["doi"]
+), "DOI key/URL mismatch"
 counts = data["source_counts"]
 assert counts["unique_source_records"] == len(references), "Record-count mismatch"
-assert counts["unique_dois"] == sum(bool(r["doi"]) for r in references), "DOI-count mismatch"
+assert counts["unique_dois"] == sum(
+    bool(r["doi"]) for r in references
+), "DOI-count mismatch"
 aliases = {a for r in references for a in r["legacy_ids"]}
-for prefix, count, pad in [("D:S", 72, 2), ("W:R", 70, 2), ("DRAFT02:", 27, 0),
-                           ("MSE:S", 17, 0), ("MSE-SEED:", 7, 0)]:
+for prefix, count, pad in [
+    ("D:S", 72, 2),
+    ("W:R", 70, 2),
+    ("DRAFT02:", 27, 0),
+    ("MSE:S", 17, 0),
+    ("MSE-SEED:", 7, 0),
+]:
     for i in range(1, count + 1):
         alias = prefix + (str(i).zfill(pad) if pad else str(i))
         assert alias in aliases or any(a.startswith(alias + "/") for a in aliases), (
@@ -33,6 +43,8 @@ for prior, published in data["predecessor_doi_to_published_doi"].items():
     assert target is not None and ("PREPRINT-DOI:" + prior) in target["legacy_ids"], (
         "Missing linked preprint predecessor " + prior
     )
-print("PASS: {} unique sources; {} DOI sources; {} Scout attributions; 5 legacy registers reconciled".format(
-    len(references), counts["unique_dois"], actual_scout
-))
+print(
+    "PASS: {} unique sources; {} DOI sources; {} Scout attributions; 5 legacy registers reconciled".format(
+        len(references), counts["unique_dois"], actual_scout
+    )
+)

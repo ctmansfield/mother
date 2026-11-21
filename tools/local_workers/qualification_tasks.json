@@ -1,0 +1,531 @@
+{
+  "version": "lw002-tasks/1.0.0",
+  "tasks": [
+    {
+      "id": "contract_mapping",
+      "title": "Map synthetic observations to constructor fields",
+      "owned_paths": [
+        "fixtures/lw002/mapped_observations.json"
+      ],
+      "prompt": "You own only the proposed fixture mapping in fixtures/lw002/mapped_observations.json. Return task_id \"contract_mapping\" and payload.observations, in input order. This is a synthetic software exercise, not a physiological plausibility evaluation.\n\nUse Coach/Mother observation contract 1.0.0: payload entries are keyword arguments to make_observation, whose other defaults remain unchanged. Map each source into these fields: id, subject_id, source_revision_id, channel, measurement_start, measurement_end, source_available_at, first_seen_at, ingested_at, original_value, original_unit, value, unit, value_status, epistemic_type, measurement_group_id, lineage, clock.original_timestamp. Normalize known times to UTC with Z; retain the original measurement timestamp verbatim in clock.original_timestamp. Measurement time, source availability, first observation by this system, and ingestion are separate clocks. Unknown availability stays null. Measurement end is unknown. Preserve zero as a measured valid value; a missing numeric value stays null with value_status missing. These are measured source observations, not inferred states. Lineage includes that observation's source revision. Use each provided identity exactly. Both rows use channel glucose, subject_id synthetic-subject, original_unit and unit mg/dL, with no unit conversion.\n\nSynthetic inputs:\n1. id obs-zero; source_revision_id rev-zero; measurement_group_id group-zero; measurement timestamp 2026-01-15T07:30:00-05:00; value 0; source availability unknown; first_seen_at 2026-01-15T12:35:00Z; ingested_at 2026-01-15T12:35:01Z.\n2. id obs-missing; source_revision_id rev-missing; measurement_group_id group-missing; measurement timestamp 2026-01-15T22:40:00+10:00; value missing; source availability unknown; first_seen_at 2026-01-15T12:45:00Z; ingested_at 2026-01-15T12:45:02Z.\n\nReturn only the schema-conforming JSON artifact. Do not include prose, commands or code fences.",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "enum": [
+              "contract_mapping"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "observations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "subject_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "source_revision_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "channel": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "measurement_start": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "measurement_end": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "maxLength": 100
+                    },
+                    "source_available_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "maxLength": 100
+                    },
+                    "first_seen_at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "ingested_at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "original_value": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "original_unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 30
+                    },
+                    "value": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 30
+                    },
+                    "value_status": {
+                      "type": "string",
+                      "enum": [
+                        "valid",
+                        "missing",
+                        "invalid",
+                        "unobserved"
+                      ]
+                    },
+                    "epistemic_type": {
+                      "type": "string",
+                      "enum": [
+                        "measured",
+                        "vendor_derived",
+                        "derived",
+                        "imputed",
+                        "inferred",
+                        "clinical_interpretation",
+                        "reported"
+                      ]
+                    },
+                    "measurement_group_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "lineage": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      },
+                      "minItems": 1,
+                      "maxItems": 5
+                    },
+                    "clock": {
+                      "type": "object",
+                      "properties": {
+                        "original_timestamp": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "original_timestamp"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "subject_id",
+                    "source_revision_id",
+                    "channel",
+                    "measurement_start",
+                    "measurement_end",
+                    "source_available_at",
+                    "first_seen_at",
+                    "ingested_at",
+                    "original_value",
+                    "original_unit",
+                    "value",
+                    "unit",
+                    "value_status",
+                    "epistemic_type",
+                    "measurement_group_id",
+                    "lineage",
+                    "clock"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "observations"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "task_id",
+          "payload"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "timestamp_repair",
+      "title": "Propose a timestamp normalization repair",
+      "owned_paths": [
+        "fixtures/lw002/time_adapter.py"
+      ],
+      "prompt": "You own only fixtures/lw002/time_adapter.py. Return task_id \"timestamp_repair\" and payload.path plus payload.replacement_source. replacement_source is a complete proposed Python module as text, not executable instructions for this runner. Use standard-library datetime imports only, one function normalize_iso(value), and no other functions or top-level work.\n\nRequired behavior: Accept nonempty string ISO timestamps with a date, a time of day, and either an explicit UTC offset or trailing Z. Return their same instant as an aware UTC ISO string ending in Z; preserve fractional seconds when present. Reject naive timestamps, date-only strings, malformed input and non-string values with ValueError. Never infer the host timezone. Inputs are strings only; numeric epochs are outside this fixture. Do not change the public function name or signature.\n\nDefective current module:\nfrom datetime import datetime, timezone\n\ndef normalize_iso(value):\n    parsed = datetime.fromisoformat(value.replace(\"Z\", \"+00:00\"))\n    return parsed.replace(tzinfo=timezone.utc).isoformat().replace(\"+00:00\", \"Z\")\n\nExplain the defect briefly in payload.rationale. Supply the full corrected module in payload.replacement_source, and no other artifact. No generated source is executed by this qualification runner.",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "enum": [
+              "timestamp_repair"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "enum": [
+                  "fixtures/lw002/time_adapter.py"
+                ]
+              },
+              "replacement_source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 6000
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 900
+              }
+            },
+            "required": [
+              "path",
+              "replacement_source",
+              "rationale"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "task_id",
+          "payload"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "archive_tests",
+      "title": "Propose durable archive regression vectors",
+      "owned_paths": [
+        "fixtures/lw002/archive_test_vectors.json"
+      ],
+      "prompt": "You own only fixtures/lw002/archive_test_vectors.json. Return task_id \"archive_tests\" and payload.cases containing exactly one case of each kind: duplicate, correction, interruption_replay. Supply input/output test vectors as data, not executable test code. Use short synthetic IDs, positive integer cursors and revisions, and numeric or null values.\n\nReference requirements for each independent case: Start with an empty durable archive and checkpoint 0. A row's identity is the pair (id, revision). Reimporting the identical pair and payload adds no revision. A correction keeps the same id with a higher revision and adds a new retained original; older revisions remain available. Latest means the greatest revision for each id. Pages arrive as ordered steps with cursor, rows and interrupt_after. For a page, durably retain rows in order. If interrupt_after is N, stop the page immediately after N rows, even when N equals the page length; the page has not committed its checkpoint. A null interrupt_after lets the whole page finish and then updates the checkpoint to its cursor. Each subsequent step models restarting the importer and retains durable state from prior steps. Replaying an interrupted page must not add duplicate revisions.\n\nFor duplicate, repeat the same complete page. For correction, ingest an original then a correction with the same id and higher revision. For interruption_replay, interrupt a two-row page after the first durable row; then replay that complete page; then interrupt a later page after one durable row. Give expected_revision_count, expected_checkpoint and expected_latest for the final state of each case. The last interruption must leave the last completed checkpoint unchanged.\n\nThe faulty candidate being challenged advances checkpoint at page start and stores only one record per id, overwriting prior revisions. Cases should expose the resulting history-loss and premature-checkpoint defects while checking idempotent replay. Explain how the cases discriminate against the faulty candidate in payload.rationale. Return only the requested JSON artifact.",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "enum": [
+              "archive_tests"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "cases": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "duplicate",
+                        "correction",
+                        "interruption_replay"
+                      ]
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "steps": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cursor": {
+                            "type": "integer"
+                          },
+                          "rows": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 40
+                                },
+                                "revision": {
+                                  "type": "integer"
+                                },
+                                "value": {
+                                  "type": [
+                                    "number",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "revision",
+                                "value"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "minItems": 1,
+                            "maxItems": 3
+                          },
+                          "interrupt_after": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "cursor",
+                          "rows",
+                          "interrupt_after"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 4
+                    },
+                    "expected_revision_count": {
+                      "type": "integer"
+                    },
+                    "expected_checkpoint": {
+                      "type": "integer"
+                    },
+                    "expected_latest": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          },
+                          "revision": {
+                            "type": "integer"
+                          },
+                          "value": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "revision",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 3
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name",
+                    "steps",
+                    "expected_revision_count",
+                    "expected_checkpoint",
+                    "expected_latest"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 3,
+                "maxItems": 3
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1200
+              }
+            },
+            "required": [
+              "cases",
+              "rationale"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "task_id",
+          "payload"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "review_release",
+      "title": "Review evidence semantics and release claims",
+      "owned_paths": [
+        "fixtures/lw002/review_candidate.py",
+        "fixtures/lw002/release_notes.md"
+      ],
+      "prompt": "You own only a review proposal for fixtures/lw002/review_candidate.py and release instructions for this fixture. Return task_id \"review_release\" with findings, install_action_ids, verify_action_ids, evidence_levels_claimed and release_notes.\n\nProject rules: For as-of features, an observation must have a measurement timestamp at or before the cutoff, known source availability at or before the cutoff, and a first_seen_at at or before the cutoff. Unknown availability must not be silently treated as available. Numeric zero is valid; missing values remain missing and an all-missing set has an unknown mean. Acknowledgment and an action actually performed are distinct events. A missing outcome remains unknown. This exercise does not define a clinical endpoint or treatment policy.\n\nCandidate source (numbers are review anchors):\n1  def mean_as_of(rows, cutoff):\n2      selected = [r for r in rows if r[\"measurement_at\"] <= cutoff]\n3      values = [r[\"value\"] or 0 for r in selected]\n4      return sum(values) / max(1, len(values))\n5\n6  def action_summary(event):\n7      performed = event.get(\"acknowledged_at\") is not None\n8      outcome = event.get(\"outcome\") or \"no_effect\"\n9      return {\"performed\": performed, \"outcome\": outcome}\n\nAssume timestamp values are already comparable aware datetimes; timestamp parsing is outside this review. Give concrete findings anchored to the candidate line numbers, their consequence and a proposed correction. Do not invent unrelated defects.\n\nRelease evidence actually available: source inspection and 12 passing isolated synthetic tests of the pre-existing fixture harness. No tests of a corrected implementation have been run. No end-to-end integration, deployment or live device behavior has been verified. Do not claim the proposed corrections have passed tests.\n\nInstallation action catalog: prepare_isolated_checkout, apply_reviewed_patch, review_diff, commit_reviewed_change. Verification action catalog: run_offline_fixture_tests, check_exact_revisions, inspect_diff_scope, record_unverified_integration. Return suitable ordered action IDs from those catalogs, not shell commands; separate planned verification from completed evidence in release_notes. Allowed evidence-level labels are source_inspection, isolated_synthetic_tests, integration_tests, deployed, live_verified. Return only the JSON artifact.",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "enum": [
+              "review_release"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "findings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line_start": {
+                      "type": "integer"
+                    },
+                    "line_end": {
+                      "type": "integer"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "high",
+                        "medium",
+                        "low"
+                      ]
+                    },
+                    "problem": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 900
+                    },
+                    "fix": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 900
+                    }
+                  },
+                  "required": [
+                    "line_start",
+                    "line_end",
+                    "severity",
+                    "problem",
+                    "fix"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 8
+              },
+              "install_action_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "prepare_isolated_checkout",
+                    "apply_reviewed_patch",
+                    "review_diff",
+                    "commit_reviewed_change"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "verify_action_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "run_offline_fixture_tests",
+                    "check_exact_revisions",
+                    "inspect_diff_scope",
+                    "record_unverified_integration"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "evidence_levels_claimed": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "source_inspection",
+                    "isolated_synthetic_tests",
+                    "integration_tests",
+                    "deployed",
+                    "live_verified"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 5
+              },
+              "release_notes": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2200
+              }
+            },
+            "required": [
+              "findings",
+              "install_action_ids",
+              "verify_action_ids",
+              "evidence_levels_claimed",
+              "release_notes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "task_id",
+          "payload"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+name: I01 delivery-state reconciliation (read-only)
+
+on:
+  pull_request:
+    paths:
+      - 'mother/physiology/delivery_state.py'
+      - 'tests/physiology/test_delivery_state.py'
+      - '.github/workflows/i01-delivery-state.yml'
+  push:
+    branches:
+      - 'work/i01-delivery-state-readonly'
+    paths:
+      - 'mother/physiology/delivery_state.py'
+      - 'tests/physiology/test_delivery_state.py'
+      - '.github/workflows/i01-delivery-state.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  readonly:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Checkout exact Coach UI sender
+        uses: actions/checkout@v4
+        with:
+          repository: ctmansfield/coach
+          ref: 34554b07e0edb531074daa1bd77a28ac301409e9
+          path: paired-coach
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install versioned contract dependency
+        run: python -m pip install 'jsonschema>=4.18,<5'
+      - name: Verify pinned sender commit
+        run: |
+          actual=$(git -C paired-coach rev-parse HEAD)
+          test "$actual" = "34554b07e0edb531074daa1bd77a28ac301409e9"
+      - name: Run read-only reconciliation acceptance
+        env:
+          COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/paired-coach
+        run: python -m unittest discover -s tests/physiology -p test_delivery_state.py -v
+      - name: Test actual Mother report as interpreted by Coach viewer
+        env:
+          COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/paired-coach
+        run: python -m unittest discover -s tests/physiology -p test_delivery_state_coach.py -v
+      - name: Repeat bounded recovery suite
+        env:
+          COACH_CHECKOUT: ${{ github.workspace }}/paired-coach
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/paired-coach
+        run: python -m unittest discover -s tests/physiology -p test_receipt_recovery.py -v
