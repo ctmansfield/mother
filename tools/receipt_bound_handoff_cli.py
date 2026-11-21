@@ -124,20 +124,28 @@ def main() -> int:
     try:
         candidate_bytes = args.candidate.read_bytes()
     except OSError:
-        out = _candidate_output(result, "unreadable_candidate", ["unreadable_candidate"])
+        out = _candidate_output(
+            result, "unreadable_candidate", ["unreadable_candidate"]
+        )
         print(json.dumps(out, sort_keys=True))
         return 2
 
     # Parse candidate JSON
     try:
-        candidate = json.loads(candidate_bytes.decode("utf-8"), object_pairs_hook=_unique_object)
+        candidate = json.loads(
+            candidate_bytes.decode("utf-8"), object_pairs_hook=_unique_object
+        )
     except (ValueError, RecursionError, UnicodeDecodeError):
-        out = _candidate_output(result, "invalid_candidate_document", ["malformed_candidate"])
+        out = _candidate_output(
+            result, "invalid_candidate_document", ["malformed_candidate"]
+        )
         print(json.dumps(out, sort_keys=True))
         return 2
 
     if not isinstance(candidate, dict):
-        out = _candidate_output(result, "invalid_candidate_document", ["malformed_candidate"])
+        out = _candidate_output(
+            result, "invalid_candidate_document", ["malformed_candidate"]
+        )
         print(json.dumps(out, sort_keys=True))
         return 2
 
