@@ -1,0 +1,750 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Selected HealthKit archive 0.1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/batch"
+    },
+    {
+      "$ref": "#/$defs/receipt"
+    }
+  ],
+  "$defs": {
+    "scope": {
+      "type": "object",
+      "properties": {
+        "subject_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "source_system": {
+          "const": "healthkit"
+        },
+        "source_instance": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "collection": {
+          "const": "healtharchive-selected"
+        }
+      },
+      "required": [
+        "subject_id",
+        "source_system",
+        "source_instance",
+        "collection"
+      ],
+      "additionalProperties": false
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{6}Z$"
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
+    },
+    "decimal": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^(?:0|-?(?:[1-9][0-9]*(?:\\.[0-9]*[1-9])?|0\\.[0-9]*[1-9]))$"
+    },
+    "quantity": {
+      "type": "object",
+      "properties": {
+        "native_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "collector_received_at": {
+          "$ref": "#/$defs/utc"
+        },
+        "operation": {
+          "const": "upsert"
+        },
+        "event_start": {
+          "$ref": "#/$defs/utc"
+        },
+        "event_end": {
+          "$ref": "#/$defs/utc"
+        },
+        "source_available_at": {
+          "const": null
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "const": "quantity"
+        },
+        "metric": {
+          "enum": [
+            "heart_rate",
+            "hrv_sdnn",
+            "resting_heart_rate",
+            "walking_heart_rate_average",
+            "respiratory_rate",
+            "oxygen_saturation",
+            "sleeping_wrist_temperature",
+            "step_count",
+            "walking_running_distance",
+            "active_energy",
+            "basal_energy",
+            "apple_exercise_time"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/decimal"
+        },
+        "unit": {
+          "enum": [
+            "1",
+            "bpm",
+            "breaths/min",
+            "count",
+            "degC",
+            "kcal",
+            "m",
+            "ms",
+            "s"
+          ]
+        },
+        "aggregation": {
+          "enum": [
+            "discrete",
+            "cumulative"
+          ]
+        }
+      },
+      "required": [
+        "native_id",
+        "collector_received_at",
+        "operation",
+        "event_start",
+        "event_end",
+        "source_available_at",
+        "source_ref",
+        "kind",
+        "metric",
+        "value",
+        "unit",
+        "aggregation"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "metric": {
+              "const": "heart_rate"
+            },
+            "unit": {
+              "const": "bpm"
+            },
+            "aggregation": {
+              "const": "discrete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "hrv_sdnn"
+            },
+            "unit": {
+              "const": "ms"
+            },
+            "aggregation": {
+              "const": "discrete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "resting_heart_rate"
+            },
+            "unit": {
+              "const": "bpm"
+            },
+            "aggregation": {
+              "const": "discrete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "walking_heart_rate_average"
+            },
+            "unit": {
+              "const": "bpm"
+            },
+            "aggregation": {
+              "const": "discrete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "respiratory_rate"
+            },
+            "unit": {
+              "const": "breaths/min"
+            },
+            "aggregation": {
+              "const": "discrete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "oxygen_saturation"
+            },
+            "unit": {
+              "const": "1"
+            },
+            "aggregation": {
+              "const": "discrete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "sleeping_wrist_temperature"
+            },
+            "unit": {
+              "const": "degC"
+            },
+            "aggregation": {
+              "const": "discrete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "step_count"
+            },
+            "unit": {
+              "const": "count"
+            },
+            "aggregation": {
+              "const": "cumulative"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "walking_running_distance"
+            },
+            "unit": {
+              "const": "m"
+            },
+            "aggregation": {
+              "const": "cumulative"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "active_energy"
+            },
+            "unit": {
+              "const": "kcal"
+            },
+            "aggregation": {
+              "const": "cumulative"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "basal_energy"
+            },
+            "unit": {
+              "const": "kcal"
+            },
+            "aggregation": {
+              "const": "cumulative"
+            }
+          }
+        },
+        {
+          "properties": {
+            "metric": {
+              "const": "apple_exercise_time"
+            },
+            "unit": {
+              "const": "s"
+            },
+            "aggregation": {
+              "const": "cumulative"
+            }
+          }
+        }
+      ]
+    },
+    "sleep": {
+      "type": "object",
+      "properties": {
+        "native_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "collector_received_at": {
+          "$ref": "#/$defs/utc"
+        },
+        "operation": {
+          "const": "upsert"
+        },
+        "event_start": {
+          "$ref": "#/$defs/utc"
+        },
+        "event_end": {
+          "$ref": "#/$defs/utc"
+        },
+        "source_available_at": {
+          "const": null
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "const": "sleep"
+        },
+        "metric": {
+          "const": "sleep_analysis"
+        },
+        "category": {
+          "enum": [
+            "in_bed",
+            "awake",
+            "asleep_unspecified",
+            "asleep_core",
+            "asleep_deep",
+            "asleep_rem",
+            "unknown"
+          ]
+        },
+        "unknown_category_code": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "native_id",
+        "collector_received_at",
+        "operation",
+        "event_start",
+        "event_end",
+        "source_available_at",
+        "source_ref",
+        "kind",
+        "metric",
+        "category",
+        "unknown_category_code"
+      ],
+      "additionalProperties": false,
+      "if": {
+        "properties": {
+          "category": {
+            "const": "unknown"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "unknown_category_code": {
+            "type": "integer"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "unknown_category_code": {
+            "const": null
+          }
+        }
+      }
+    },
+    "workout": {
+      "type": "object",
+      "properties": {
+        "native_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "collector_received_at": {
+          "$ref": "#/$defs/utc"
+        },
+        "operation": {
+          "const": "upsert"
+        },
+        "event_start": {
+          "$ref": "#/$defs/utc"
+        },
+        "event_end": {
+          "$ref": "#/$defs/utc"
+        },
+        "source_available_at": {
+          "const": null
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "const": "workout"
+        },
+        "metric": {
+          "const": "workout"
+        },
+        "activity_code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "duration_s": {
+          "$ref": "#/$defs/decimal"
+        },
+        "distance_m": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/decimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "energy_kcal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/decimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "native_id",
+        "collector_received_at",
+        "operation",
+        "event_start",
+        "event_end",
+        "source_available_at",
+        "source_ref",
+        "kind",
+        "metric",
+        "activity_code",
+        "duration_s",
+        "distance_m",
+        "energy_kcal"
+      ],
+      "additionalProperties": false
+    },
+    "delete": {
+      "type": "object",
+      "properties": {
+        "native_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "collector_received_at": {
+          "$ref": "#/$defs/utc"
+        },
+        "operation": {
+          "const": "delete"
+        },
+        "metric": {
+          "enum": [
+            "heart_rate",
+            "hrv_sdnn",
+            "resting_heart_rate",
+            "walking_heart_rate_average",
+            "respiratory_rate",
+            "oxygen_saturation",
+            "sleeping_wrist_temperature",
+            "step_count",
+            "walking_running_distance",
+            "active_energy",
+            "basal_energy",
+            "apple_exercise_time",
+            "sleep_analysis",
+            "workout"
+          ]
+        }
+      },
+      "required": [
+        "native_id",
+        "collector_received_at",
+        "operation",
+        "metric"
+      ],
+      "additionalProperties": false
+    },
+    "batch": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "mse.selected-healthkit-batch/0.1"
+        },
+        "batch_id": {
+          "$ref": "#/$defs/token"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "records": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/quantity"
+              },
+              {
+                "$ref": "#/$defs/sleep"
+              },
+              {
+                "$ref": "#/$defs/workout"
+              },
+              {
+                "$ref": "#/$defs/delete"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "batch_id",
+        "scope",
+        "records"
+      ],
+      "additionalProperties": false
+    },
+    "receipt": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "mse.selected-healthkit-receipt/0.1"
+        },
+        "archive_id": {
+          "$ref": "#/$defs/token"
+        },
+        "batch_id": {
+          "$ref": "#/$defs/token"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "artifact_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "receipt_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "mother_received_at": {
+          "$ref": "#/$defs/utc"
+        },
+        "committed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/utc"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commit_sequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "durably_received",
+            "normalized",
+            "quarantined",
+            "rejected"
+          ]
+        },
+        "archive_commit_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "archive_id",
+        "batch_id",
+        "scope",
+        "artifact_sha256",
+        "byte_length",
+        "receipt_id",
+        "mother_received_at",
+        "committed_at",
+        "commit_sequence",
+        "status",
+        "archive_commit_id",
+        "reason_code"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "status": {
+              "const": "durably_received"
+            },
+            "committed_at": {
+              "$ref": "#/$defs/utc"
+            },
+            "commit_sequence": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "archive_commit_id": {
+              "const": null
+            },
+            "reason_code": {
+              "const": null
+            }
+          }
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "normalized"
+            },
+            "committed_at": {
+              "$ref": "#/$defs/utc"
+            },
+            "commit_sequence": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "archive_commit_id": {
+              "$ref": "#/$defs/token"
+            },
+            "reason_code": {
+              "const": null
+            }
+          }
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "quarantined"
+            },
+            "committed_at": {
+              "$ref": "#/$defs/utc"
+            },
+            "commit_sequence": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "archive_commit_id": {
+              "const": null
+            },
+            "reason_code": {
+              "$ref": "#/$defs/token"
+            }
+          }
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "rejected"
+            },
+            "committed_at": {
+              "const": null
+            },
+            "commit_sequence": {
+              "const": null
+            },
+            "archive_commit_id": {
+              "const": null
+            },
+            "reason_code": {
+              "$ref": "#/$defs/token"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
