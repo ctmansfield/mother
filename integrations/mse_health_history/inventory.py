@@ -105,6 +105,7 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
     ordinal = 0
     elements = 0
     pending = None
+    child_ordinal = 0
     root_seen = False
     dtd_start = None
 
@@ -130,7 +131,7 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
             _forbidden()
 
     def start(tag, attrs):
-        nonlocal depth, pending, root_seen, elements
+        nonlocal depth, pending, root_seen, elements, child_ordinal
         elements += 1
         if elements > limits.total_xml_elements:
             raise InvalidHistory("XML total element limit exceeded")
@@ -148,6 +149,7 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
             root_seen = True
         elif depth == 2:
             pending = [tag, attrs, []]
+            child_ordinal = 0
         elif (
             depth == 3
             and pending[0] == "Correlation"
@@ -157,7 +159,8 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
                 raise InvalidHistory(
                     "blood pressure correlation component limit exceeded"
                 )
-            pending[2].append((tag, attrs))
+            child_ordinal += 1
+            pending[2].append((child_ordinal, tag, attrs))
 
     def end(_tag):
         nonlocal depth, ordinal, pending

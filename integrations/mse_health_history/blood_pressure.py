@@ -116,19 +116,26 @@ class BloodPressure:
             "clocks": clocks(attrs),
         }
 
-    def normalize(self, tag, attrs, children, locator):
+    def normalize(self, tag, attrs, children, locator, child_sightings):
         type_id = attrs.get("type")
         if tag == "Correlation" and type_id == BP_TYPE:
             matching = [
-                child
-                for child_tag, child in children
+                (ordinal, child)
+                for ordinal, child_tag, child in children
                 if child_tag == "Record" and child.get("type") in BP_TYPES
             ]
             unexpected = sum(
                 child_tag == "Record" and child.get("type") not in BP_TYPES
-                for child_tag, child in children
+                for _, child_tag, child in children
             )
-            components = [self._component(child) for child in matching]
+            ordered = sorted(
+                ((self._component(child), ordinal) for ordinal, child in matching),
+                key=lambda located: canonical_json(located[0]),
+            )
+            components = [component for component, _ in ordered]
+            child_sightings.extend(
+                (ordinal, component["role"]) for component, ordinal in ordered
+            )
             roles = [component["role"] for component in components]
             state = (
                 "paired" if sorted(roles) == ["diastolic", "systolic"] else "incomplete"
@@ -136,7 +143,7 @@ class BloodPressure:
             if unexpected or len(roles) != len(set(roles)):
                 state = "ambiguous"
             elif state == "paired":
-                native_ids = [source_uuid(child.get("uuid")) for child in matching]
+                native_ids = [source_uuid(child.get("uuid")) for _, child in matching]
                 if None not in native_ids and native_ids[0] == native_ids[1]:
                     state = "ambiguous"
         elif tag == "Record" and type_id in BP_TYPES:

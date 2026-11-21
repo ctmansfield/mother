@@ -91,6 +91,10 @@ class ScopeDenied(ValueError):
     pass
 
 
+class Indeterminate(OSError):
+    pass
+
+
 def encoded(value):
     # Wire fields admit ASCII strings, booleans, null and bounded integers.
     # Canonical JSON and RFC 8785 are identical for this subset.
@@ -350,8 +354,18 @@ def project(catalog, original_sha256, scope, bounds, *, mapping_key):
                 lineage["ordinal"],
             )
             components = []
-            for index, part in enumerate(fact["components"], 1):
-                occurrence_child = ref("native-component-occurrence", occurrence, index)
+            physical = catalog.blood_pressure_component_lineage(
+                original_sha256, lineage["member"], lineage["ordinal"]
+            )
+            if fact["pairing"] == "unpaired":
+                physical = [(None, fact["components"][0]["role"])]
+            require(
+                len(physical) == len(fact["components"]),
+                "native child lineage unavailable",
+            )
+            for part, (child, role) in zip(fact["components"], physical):
+                require(part["role"] == role, "native child lineage role mismatch")
+                occurrence_child = ref("native-component-occurrence", occurrence, child)
                 components.append(
                     {
                         "component_occurrence_ref": occurrence_child,
@@ -435,6 +449,7 @@ class TypedStore:
         self.admitted_deletions = frozenset(map(tuple, admitted_deletions))
         self.identity = encoded(
             [
+                "native-bp-store-witness/0.1",
                 BATCH,
                 scope,
                 bounds,
@@ -457,7 +472,7 @@ class TypedStore:
                     CREATE TABLE identity (body BLOB NOT NULL);
                     CREATE TABLE batches (
                         seq INTEGER PRIMARY KEY, digest TEXT, size INTEGER, receipt BLOB,
-                        final INTEGER, upserts INTEGER, deletes INTEGER
+                        final INTEGER, upserts INTEGER, deletes INTEGER, observed_at TEXT
                     );
                     CREATE TABLE ops (
                         occurrence TEXT PRIMARY KEY, op TEXT, logical TEXT, revision TEXT, body BLOB
@@ -540,12 +555,16 @@ class TypedStore:
             db.execute("BEGIN IMMEDIATE")
             writable()
             accepted = db.execute(
-                "SELECT digest,receipt FROM batches WHERE seq=?", (seq,)
+                "SELECT digest,receipt,observed_at FROM batches WHERE seq=?", (seq,)
             ).fetchone()
             if accepted is not None:
                 if accepted[0] != pin:
                     raise Conflict("batch identity conflict")
+                if accepted[2] is None:
+                    raise Indeterminate("guest batch has no durability witness")
                 return 200, accepted[1]
+            if db.execute("SELECT 1 FROM batches WHERE observed_at IS NULL").fetchone():
+                raise Indeterminate("guest store has an unwitnessed batch")
             batch = parse_batch(raw, self.scope, self.bounds, seq)
             last = db.execute(
                 "SELECT seq,digest,final FROM batches ORDER BY seq DESC LIMIT 1"
@@ -579,7 +598,7 @@ class TypedStore:
             total_deletes = len(batch["ops"]) - total_upserts
             body = batch_receipt(batch, raw, total_upserts, total_deletes)
             db.execute(
-                "INSERT INTO batches VALUES (?,?,?,?,?,?,?)",
+                "INSERT INTO batches VALUES (?,?,?,?,?,?,?,NULL)",
                 (
                     seq,
                     pin,
@@ -591,24 +610,43 @@ class TypedStore:
                 ),
             )
             writable()
+        try:
+            # This observation comes after the FULL-synchronous staging commit.
+            observed = writable()
+            if not valid_clock(observed):
+                raise ValueError("invalid durability observation")
+        except ValueError as error:
+            raise Indeterminate(
+                "guest commit lacks an in-lease durability observation"
+            ) from error
+        with closing(self.connect(write=True)) as db, db:
+            updated = db.execute(
+                """UPDATE batches SET observed_at=?
+                   WHERE seq=? AND digest=? AND observed_at IS NULL""",
+                (observed, seq, pin),
+            )
+            if updated.rowcount != 1:
+                raise Indeterminate("guest durability witness cannot be recorded")
         if self.receipt(seq) != body:
-            raise OSError("committed batch receipt readback mismatch")
+            raise Indeterminate("committed batch receipt readback mismatch")
         return 201, body
 
     def receipt(self, seq):
         with closing(self.connect()) as db:
             row = db.execute(
-                "SELECT receipt FROM batches WHERE seq=?", (seq,)
+                "SELECT receipt,observed_at FROM batches WHERE seq=?", (seq,)
             ).fetchone()
         if row is None:
             raise KeyError("guest batch absent")
+        if row[1] is None:
+            raise Indeterminate("guest batch has no durability witness")
         return row[0]
 
     def snapshot(self, descriptor):
         with closing(self.connect()) as db:
             db.execute("BEGIN")
             terminal = db.execute(
-                "SELECT receipt FROM batches WHERE final=1"
+                "SELECT receipt,observed_at FROM batches WHERE final=1"
             ).fetchone()
             if (
                 terminal is None
@@ -616,6 +654,8 @@ class TypedStore:
                 != descriptor["terminal_receipt"]
             ):
                 raise KeyError("snapshot terminal unavailable")
+            if terminal[1] is None:
+                raise Indeterminate("guest terminal has no durability witness")
             deletions = {
                 (value["target_kind"], value["target_ref"])
                 for (raw,) in db.execute("SELECT body FROM ops WHERE op='delete'")
