@@ -98,11 +98,11 @@ class LineageResolver:
             raise LineageDenied(_DENIED)
         return ViewBinding(**decision)
 
-    def bind(self, credential, view_id, *, ledger, snapshot_bytes, projection_bytes,
+    def bind(self, credential, view_id, *, open_ledger, snapshot_bytes, projection_bytes,
              max_snapshot_bytes, max_projection_bytes):
         """Privately bind an authorized projection to a verified exact snapshot.
 
-        The bootstrap supplies the trusted ledger and custody implementations.
+        The bootstrap supplies the trusted lazy ledger opener and custody service.
         The authoritative archive is read only through its complete verifier.
         The established projection path owns analytical schema/semantic checks.
         """
@@ -124,7 +124,7 @@ class LineageResolver:
                     or projection.get("schema_version") != "mse.analytics-view/0.1"
                     or projection.get("projection_version") != "relative-hour-mean/0.1"):
                 raise LineageDenied(_DENIED)
-            if ledger.verify_snapshot(snapshot) is not True:
+            if open_ledger().verify_snapshot(snapshot) is not True:
                 raise LineageDenied(_DENIED)
             lineage = ExactLineage(
                 binding=binding, archive_id=self._archive_id,
@@ -160,7 +160,7 @@ class LineageResolver:
         except (ValueError, OSError, RuntimeError, TypeError, KeyError, sqlite3.Error):
             raise LineageDenied(_DENIED) from None
 
-    def verify_replay(self, credential, view_id, *, ledger, snapshot_bytes, result_bytes,
+    def verify_replay(self, credential, view_id, *, open_ledger, snapshot_bytes, result_bytes,
                       projection_bytes, max_bytes, max_members, max_manifest_bytes,
                       max_projection_bytes):
         """Verify exact authorized input, output projection bytes and a saved MSE run."""
@@ -168,14 +168,16 @@ class LineageResolver:
 
         try:
             evidence = self.resolve(credential, view_id)
-            if (type(max_projection_bytes) is not int
-                    or not 0 < max_projection_bytes
+            limits = (max_bytes, max_members, max_manifest_bytes, max_projection_bytes)
+            if (any(type(n) is not int or n <= 0 for n in limits)
+                    or len(snapshot_bytes) > max_bytes
+                    or len(result_bytes) > max_manifest_bytes
                     or len(projection_bytes) > max_projection_bytes
                     or _digest(snapshot_bytes) != evidence.snapshot_sha256
                     or _digest(projection_bytes) != evidence.projection_sha256):
                 raise LineageDenied(_DENIED)
             result = verify_ledger_replay_manifest(
-                snapshot_bytes, result_bytes, ledger=ledger,
+                snapshot_bytes, result_bytes, ledger=open_ledger(),
                 expected_scope=evidence.binding.scope,
                 expected_archive_id=evidence.archive_id,
                 max_bytes=max_bytes, max_members=max_members, max_manifest_bytes=max_manifest_bytes,

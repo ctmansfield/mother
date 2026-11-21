@@ -32,7 +32,7 @@ class ScopedAuthority:
         return deepcopy(self.binding)
 
 
-class LineageTests(unittest.TestCase):
+class ReplayFixture:
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -44,6 +44,7 @@ class LineageTests(unittest.TestCase):
         scope = vectors["snapshot"]["scope"]
         archive_id = self.archive_id = vectors["snapshot"]["archive_id"]
 
+        self.schema = schema
         self.ledger = ConnectedIngest(
             self.root / "evidence", archive_id=archive_id, scope=Scope(**scope), schema=schema,
         )
@@ -58,6 +59,31 @@ class LineageTests(unittest.TestCase):
             normalizer_version=NORMALIZER_VERSION,
         )
         self.raw = canonical(snapshot).encode()
+        self.bounds = {"max_bytes": 64_000, "max_members": 128}
+        self.result = replay_ledger_snapshot(
+            self.raw, ledger=self.ledger, expected_scope=scope,
+            expected_archive_id=archive_id, **self.bounds,
+        )
+
+    def bind(self, credential="worker"):
+        return self.resolver.bind(
+            credential, self.handle, open_ledger=lambda: self.ledger,
+            snapshot_bytes=self.raw, projection_bytes=canonical(self.projection).encode(),
+            max_snapshot_bytes=64_000, max_projection_bytes=8192,
+        )
+
+    def verify(self, result=None):
+        return self.resolver.verify_replay(
+            "audit", self.handle, open_ledger=lambda: self.ledger, snapshot_bytes=self.raw,
+            result_bytes=canonical(self.result if result is None else result).encode(),
+            projection_bytes=canonical(self.projection).encode(),
+            max_manifest_bytes=128_000, max_projection_bytes=8192, **self.bounds,
+        )
+
+class LineageTests(ReplayFixture, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        scope = self.ledger.scope.fields()
         self.authority = ScopedAuthority({
             "scope": scope,
             "purpose": "aggregate_hr_sdnn", "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
@@ -72,27 +98,6 @@ class LineageTests(unittest.TestCase):
             "time_basis": "relative_60_minute_bucket", "rows": [],
             "loss_codes": ["insufficient_coverage"],
         }
-        self.bounds = {"max_bytes": 64_000, "max_members": 128}
-        self.result = replay_ledger_snapshot(
-            self.raw, ledger=self.ledger, expected_scope=scope,
-            expected_archive_id=archive_id, **self.bounds,
-        )
-
-    def bind(self, credential="worker"):
-        return self.resolver.bind(
-            credential, self.handle, ledger=self.ledger,
-            snapshot_bytes=self.raw, projection_bytes=canonical(self.projection).encode(),
-            max_snapshot_bytes=64_000, max_projection_bytes=8192,
-        )
-
-    def verify(self, result=None):
-        return self.resolver.verify_replay(
-            "audit", self.handle, ledger=self.ledger, snapshot_bytes=self.raw,
-            result_bytes=canonical(self.result if result is None else result).encode(),
-            projection_bytes=canonical(self.projection).encode(),
-            max_manifest_bytes=128_000, max_projection_bytes=8192, **self.bounds,
-        )
-
     def test_verified_private_replay_and_cross_role_errors(self):
         self.assertIsNone(self.bind())
         self.assertIsNone(self.bind())
