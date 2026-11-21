@@ -114,7 +114,7 @@ fabricated input before authorizing any manual use with the real archive.
 
 ### Signed ZIP member allowance
 
-A fresh signed policy may include `max_zip_members` from 1 to 16,384.
+A fresh signed policy may include `max_zip_members` from 1 to 25,000.
 A policy without the field retains the 4,096 default. Directories count
 toward the total. The authority should pin the actual verified member
 count when a larger allowance is needed. Never substitute the ceiling
@@ -139,8 +139,8 @@ count check still applies. Per-member bytes, aggregate expansion, ratio,
 paths, XML quotas, catalog and operational budgets retain their previous
 limits.
 
-A fabricated ceiling-sized ZIP with 16,384 entries and a 4,144,975-byte
-central directory peaked at 16,271,321 traced Python bytes during the
+A fabricated ceiling-sized ZIP with 25,000 entries and a 4,099,912-byte
+central directory peaked at 21,699,747 traced Python bytes during the
 inventory-only scan on the qualification Mac. This measures allocations
 made in that scan. It excludes whole-process memory, native allocations,
 SQLite, and the authenticated import workload.

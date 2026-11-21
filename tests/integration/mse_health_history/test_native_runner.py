@@ -762,7 +762,7 @@ class NativeRunnerTests(unittest.TestCase):
                 self.assertFalse(list(scratch.iterdir()))
 
         large_fixture = BytesIO()
-        attachment_count = DEFAULT_ZIP_MEMBERS
+        attachment_count = 24_675 - 3
         with ZipFile(large_fixture, "w", ZIP_DEFLATED) as archive:
             archive.writestr("apple_health_export/", "")
             archive.writestr("apple_health_export/workout-routes/", "")
