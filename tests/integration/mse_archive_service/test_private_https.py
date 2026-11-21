@@ -9,8 +9,11 @@ import subprocess
 from tempfile import TemporaryDirectory
 from threading import Thread
 import unittest
+from unittest.mock import patch
 
-from integrations.mse_archive_service.server import ArchiveServer, tls_context
+from integrations.mse_archive_service.server import (
+    ArchiveServer, main, tls_context,
+)
 from integrations.mse_archive_service.store import PrivateArchive
 from integrations.mse_archive_service.load_export import load
 from integrations.mse_ingest import Scope
@@ -271,3 +274,47 @@ class PrivateHTTPSTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "mismatch"):
             other.check_startup()
+
+    def test_cli_bind_requires_exact_private_address(self):
+        config_path = self.root / "config.json"
+        config_path.touch(mode=0o600)
+        config = {
+            **self.config,
+            "archive_id": "trial-archive",
+            "scope": vars(self.scope),
+            "expires_at": self.config["expires_at"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+        command = [
+            "server", "serve", "--config", str(config_path),
+            "--root", str(self.root / "store"), "--port", "8443",
+            "--cert", str(self.cert), "--key", str(self.key),
+        ]
+        for expected, bind, allowed in (
+            (None, "100.64.0.2", True),
+            (None, "192.168.80.2", False),
+            ("192.168.80.2", "192.168.80.2", True),
+            ("192.168.80.2", "192.168.80.3", False),
+            ("192.168.80.2", "100.64.0.2", False),
+            ("192.168.80.2", "0.0.0.0", False),
+            ("192.168.80.2", "127.0.0.1", False),
+            ("192.168.80.2", "::", False),
+            ("0.0.0.0", "0.0.0.0", False),
+            ("8.8.8.8", "8.8.8.8", False),
+            ("100.64.0.2", "100.64.0.2", False),
+            (123, "192.168.80.2", False),
+        ):
+            with self.subTest(expected=expected, bind=bind):
+                settings = dict(config)
+                if expected is not None:
+                    settings["expected_guest_ipv4"] = expected
+                config_path.write_text(json.dumps(settings))
+                with (
+                    patch("sys.argv", [*command, "--bind", bind]),
+                    patch("sys.stderr"),
+                    patch("integrations.mse_archive_service.server.ArchiveServer") as server,
+                ):
+                    self.assertEqual(main(), None if allowed else 1)
+                    if allowed:
+                        self.assertEqual(server.call_args.args[0], (bind, 8443))
+                    else:
+                        server.assert_not_called()

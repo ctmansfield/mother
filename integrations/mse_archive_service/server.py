@@ -19,6 +19,10 @@ from mother.physiology.contracts import canonical_json
 
 from .store import CapacityExceeded, PrivateArchive, UnknownBatch
 
+TAILNET = ipaddress.IPv4Network("100.64.0.0/10")
+GUEST_NETWORKS = tuple(
+    map(ipaddress.IPv4Network, ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+)
 ROLES = ("phone", "reader", "exporter", "evidence")
 HEX = re.compile(r"[0-9a-f]{64}")
 BEARER = re.compile(r"Bearer ([A-Za-z0-9_-]{43})")
@@ -46,8 +50,16 @@ def load_configuration(path):
         "allowed_artifact_sha256",
         "expires_at",
     }
-    if not isinstance(value, dict) or set(value) != required:
+    if not isinstance(value, dict) or not required <= value.keys() <= (
+        required | {"expected_guest_ipv4"}
+    ):
         raise ValueError("invalid configuration")
+    if "expected_guest_ipv4" in value:
+        expected = value["expected_guest_ipv4"]
+        if not isinstance(expected, str) or not any(
+            ipaddress.IPv4Address(expected) in network for network in GUEST_NETWORKS
+        ):
+            raise ValueError("expected guest bind must be an RFC1918 IPv4 address")
     if not isinstance(value["archive_id"], str) or not TOKEN.fullmatch(
         value["archive_id"]
     ):
@@ -98,6 +110,16 @@ def load_configuration(path):
     if value["expires_at"] <= datetime.now(timezone.utc):
         raise ValueError("stage expired")
     return value
+
+
+def validate_bind(bind, config):
+    address = ipaddress.IPv4Address(bind)
+    expected = config.get("expected_guest_ipv4")
+    if expected is None:
+        if address not in TAILNET:
+            raise ValueError("explicit tailnet IPv4 bind required")
+    elif str(address) != expected:
+        raise ValueError("bind must match the configured guest IPv4 address")
 
 
 def tls_context(cert, key):
@@ -330,8 +352,7 @@ def main():
             return 0
         if not all((args.bind, args.port, args.cert, args.key)):
             raise ValueError("private bind and TLS configuration required")
-        if ipaddress.ip_address(args.bind) not in ipaddress.ip_network("100.64.0.0/10"):
-            raise ValueError("explicit tailnet IPv4 bind required")
+        validate_bind(args.bind, config)
         archive.check_startup()
         context = tls_context(args.cert, args.key)
         with ArchiveServer(

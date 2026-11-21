@@ -80,8 +80,8 @@ provides no admission authority.
 Use an explicitly allocated private absolute path on verified local
 persistent storage, under a caller-owned canonical parent. The root is 0700,
 database paths are owned single-link regular files at 0600. The guest
-service operator verifies the persistent mount and the exact assigned tailnet
-interface/address before start. Tailnet access controls and any host ACL are
+service operator verifies the persistent mount and the exact assigned private
+interface and address before start. Tailnet access controls and any host ACL are
 managed outside this module. Run one service instance. The server handles
 requests serially. Never run a second instance against the same stores.
 
@@ -101,11 +101,19 @@ An ordinary restart uses the same root and identity and runs no initializer.
 
 ```sh
 python -B -m integrations.mse_archive_service.server serve \
-  --config "$config" --root "$archive_root" --bind "$tailnet_ipv4" --port "$port" \
+  --config "$config" --root "$archive_root" --bind "$bind_ipv4" --port "$port" \
   --cert "$server_certificate_chain" --key "$private_key_file"
 ```
 
-The entry point requires an explicit tailnet-range IPv4 bind and a TLS
+For a directly attached tailnet guest, set `bind_ipv4` to its assigned
+tailnet IPv4 address. For the forwarded profile, add
+`"expected_guest_ipv4": "<assigned RFC1918 IPv4>"` to the private JSON
+configuration and set `bind_ipv4` to the same address on the dedicated
+guest interface. With this option, startup requires an exact match and
+rejects other bind addresses. The host restricts forwarding to approved
+tailnet peers and forwards raw TCP to this guest address and service port.
+Configure the client hostname and guest certificate for the host-facing
+HTTPS name. TLS terminates in the guest. Both profiles require a TLS
 certificate/key. It never binds a plaintext listener. Clients use a
 configured HTTPS hostname matching the certificate and its approved trust
 chain. There is no remote database TLS configuration in this SQLite profile
