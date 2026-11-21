@@ -1,0 +1,8 @@
+{
+  "report_id": "SENTINEL-V3-HANDOFF-R2",
+  "report_url": "https://github.com/ctmansfield/mother/pull/24",
+  "document": "docs/mse/integration/SENTINEL_V3_HANDOFF.md",
+  "document_sha256": "48b2073dd30717eff38b72fec3859ec6a940238e361afa24ee3ec7d82c872f0a",
+  "outcome": "PR64 source HOLD; PR65 observed but independent review pending. No real data actions.",
+  "next": "Verify PR #65 exact package and fabricated pagination, event/index parity, scoped retrieval and multi-family purpose queries."
+}

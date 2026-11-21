@@ -1,0 +1,6 @@
+{
+  "instruction_id": "MSE-ALL-ZIP-DATA-20261121-07",
+  "revision": "2",
+  "url": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+  "scope": "Source, documentation and ordinary isolated fabricated functional tests. All real-data operations, evidence readback, admissions and cleanup are user-run only. No live or adversarial probing."
+}

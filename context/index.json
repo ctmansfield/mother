@@ -8,6 +8,10 @@
     "MSE-001-publication": {
       "path": "tasks/MSE-001-publication-r1.json",
       "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
+    },
+    "MSE-ALL-ZIP-DATA-20261121-07": {
+      "path": "tasks/mse-all-zip-sentinel-v3-r2.json",
+      "sha256": "eecb4a207969256002ea2251f3fe7bf228dd5a94c615c854b9817125734f63dd"
     }
   },
   "version": 1

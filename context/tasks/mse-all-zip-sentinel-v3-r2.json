@@ -1,0 +1,149 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-ALL-ZIP-DATA-20261121-07",
+  "task_revision": "2",
+  "observed_at": "2026-11-21T09:39:10Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Canonical revision 2 read back. Recheck before acting."
+  },
+  "goal": "Independently review the user-manual full Health ZIP pipeline.",
+  "scope": [
+    "Independent source, documentation and ordinary fabricated-only review."
+  ],
+  "acceptance": [
+    "Protected retrieval of every source occurrence and member payload, typed support distinguished from fallback and quarantine, bounded purpose queries, and a verified user-run manual launcher."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Source, docs and ordinary fabricated tests in isolated development."
+    ],
+    "not_authorized": [
+      "Any actual personal-data access, preparation, verification, admissions or cleanup; live or adversarial probing."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "User alone runs all personal-data steps. Preserve originals, successful catalog and existing runtime. Backups and restores deferred."
+  ],
+  "instruction_binding": {
+    "id": "MSE-ALL-ZIP-DATA-20261121-07",
+    "revision": "2",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+    "sha256": "4d7be9dc1a413d35ddabb804e7b7947d6be97c318047b1a69963bfbd2c288784",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "SENTINEL-V3-HANDOFF-R2",
+    "status": "DELEGATED",
+    "instruction_ref": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+      "sha256": "4d7be9dc1a413d35ddabb804e7b7947d6be97c318047b1a69963bfbd2c288784"
+    },
+    "tests_performed": [
+      "PR64 fabricated source, replay and reopen checks; handoff documentation and source pin readback."
+    ],
+    "limitations": [
+      "PR65 independent review pending; no current runtime check or real-data action."
+    ],
+    "requested_decision": "Confirm scope on successor intake.",
+    "next_action": "#next_action",
+    "source": "report"
+  },
+  "receipt": {
+    "state": "ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+      "sha256": "4d7be9dc1a413d35ddabb804e7b7947d6be97c318047b1a69963bfbd2c288784"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "user-manual-only",
+      "value": "All actual personal-data work is user-run.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit revision 2 authority correction."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "REVIEW_PENDING",
+      "detail": "PR65 observed; PR64 remains held.",
+      "source": "report"
+    },
+    "test": {
+      "status": "FABRICATED_ONLY",
+      "detail": "PR64 checks do not qualify PR65.",
+      "source": "report"
+    },
+    "merge": {
+      "status": "DRAFT_UNMERGED",
+      "detail": "No main merge.",
+      "source": "report"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "No runtime mutation during handoff.",
+      "source": "report"
+    },
+    "runtime": {
+      "status": "NOT_RUN",
+      "detail": "Prior receipts are historical only.",
+      "source": "report"
+    }
+  },
+  "unknowns": [
+    "PR65 independent source and functional disposition, universal qualification, and final manual launcher."
+  ],
+  "conflicts": [],
+  "blockers": [
+    "Universal source and full manual release remain pending."
+  ],
+  "dependencies": [
+    "ATLAS contract, FORGE exact source, PROVENANCE completeness review, ORACLE purpose interface, PHOENIX design evidence, NICKY user-run launcher."
+  ],
+  "next_action": {
+    "action": "Verify PR #65 exact package and fabricated pagination, event/index parity, scoped retrieval and multi-family purpose queries.",
+    "role": "SENTINELv3"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/mse-all-zip-sentinel-v3-source-r2.json",
+      "sha256": "4d7be9dc1a413d35ddabb804e7b7947d6be97c318047b1a69963bfbd2c288784",
+      "observation": {
+        "kind": "labeled_source_projection",
+        "environment": "GitHub source and review checkout",
+        "method": "Read canonical directive and preserve scoped review state.",
+        "result": "Public-safe handoff prepared.",
+        "limitations": [
+          "No real verification or runtime authority."
+        ],
+        "observed_at": "2026-11-21T09:39:10Z"
+      }
+    },
+    "report": {
+      "path": "evidence/mse-all-zip-sentinel-v3-report-r2.json",
+      "sha256": "652c4cf73c3f3a5be4d0e0da4875d90791b15fff22fa6a61eaff6e94c129d34c",
+      "observation": {
+        "kind": "labeled_source_projection",
+        "environment": "GitHub source and review checkout",
+        "method": "Read canonical directive and preserve scoped review state.",
+        "result": "Public-safe handoff prepared.",
+        "limitations": [
+          "No real verification or runtime authority."
+        ],
+        "observed_at": "2026-11-21T09:39:10Z"
+      }
+    }
+  }
+}
