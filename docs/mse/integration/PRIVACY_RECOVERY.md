@@ -62,3 +62,27 @@ Recovery is split five ways. Evidence and identity vault remain restricted. Proj
 - Before a later authorized cutover, verify the separate live fence/revocation source before publishing anything. A coherent current authority paired with that fence is a prerequisite. Failure to reconcile must leave serving disabled while evidence is preserved for the custodians.
 
 This connected result is scoped to the pinned source assembly and disposable SQLite backups. It does not demonstrate protection if both authority and fence are rolled back, or if one process has plaintext filesystem access to the stores. No host writes, production keys, role isolation or real-data privacy qualification were performed.
+
+## Round 10 candidate package and operational choices
+
+Use a clean detached NICKY review checkout and set `candidate`, `commit` and `tree` to its independently relayed checkout path and full Git pins. Its Git object store must also contain the round 10 pinned component commits documented above and the privacy contract `1d608b50f3dfa95fe344bf190eda6b9c8f3ab69d`. The helpers reject a dirty checkout, mismatching tree, or differences from the pinned base runtime, privacy components and privacy contract. The exact acceptance candidate does not authorize installation.
+
+```sh
+python3 -I -B tools/mse_integration/recovery/source_package.py \
+  --checkout "$candidate" --privacy-commit "$commit" --privacy-tree "$tree"
+python3 -I -B tools/mse_integration/recovery/privacy_stores.py \
+  --object-store "$candidate" --connected --candidate-commit "$commit" --candidate-tree "$tree"
+python3 -I -B tools/mse_integration/recovery/privacy_stores.py \
+  --object-store "$candidate" --connected --candidate-commit "$commit" --candidate-tree "$tree" \
+  --coupled-rollback-limit
+```
+
+The source package contains a fixed 33-member allowlist plus a SHA-256 manifest tied to the exact commit and tree. The dry run verifies byte-identical builds, rejects a changed member even with a recomputed manifest, checks installed permissions and actual imports, and rolls back only the temporary installation. It packages no database, private artifacts, prior fixtures or secrets. Restore uses SQLite application backups and the actual custody, projection and lineage APIs. The coupled rollback test is separate from the four acceptance cases. It deliberately restores both an old authority and its matching old fence after revocation and confirms that the old grant reopens. This demonstrates why the fence must stay in an independently anchored trust domain.
+
+| Decision | Recommended for the next qualification | Owner confirmation still required |
+| --- | --- | --- |
+| Normal backups | Quiesce writers at a named generation. Seal authority, projection, evidence, identity vault and lineage registry as individually inventoried runs, with distinct access and separate manifests. Keep exact receipt/evidence cross-store linkage. Exclude the live fence from every restorable generation of those stores. | Name recovery operator and custodians, real backup roots, separation, retention and actual restore capacity. Confirm that an ordinary recovery credential cannot replace or rewind the fence. |
+| Fence and revocation | Prefer an independently administered current fence with an external monotonic checkpoint for adversarial rollback protection. A same-UID independent root is enough for a synthetic rehearsal. It cannot protect against a process or operator that can rewind both roots. | Select the independent administrative boundary, checkpoint mechanism and fault model. If fence state is missing, corrupt or cannot be independently reconciled, keep service disabled. No reset-to-zero or stale bootstrap fallback. |
+| Keys and recovery | Use separate evidence, identity, projection/lineage and authority key domains with separate recovery access. Do not include key material in a backup bundle. Recover the fence under a distinct duty and verification process. | Approve platform, custodians and recovery quorum, protected reference/version inventory, backup authentication, and rotation/revocation rules. Exercise lost-key denial and approved recovery before making claims. This package configures no keys. |
+| Serving restore | Verify the live fence and pair first. Stage a coherently current authority and compare epoch before enabling projection. Verify aggregate-only access with protected stores and exact ledger unavailable. Verify lineage and evidence separately under authorized roles. | Select policy on epoch mismatch or isolated fence loss. Require owner-bound reconciliation and independent verification prior to accepting a new authority or re-publishing a restored projection. |
+| Retention and evidence | Start from the proposed two complete generations, 30-day synthetic evidence cap and seven-day projection cache. Keep the independent revocation history beyond the oldest potentially restorable mapping. Preserve failed or mixed generation evidence under custody. | Approve exceptions, deletion and downstream invalidation rules, quota and RPO/RTO. No retention job or deletion is part of the package. |

@@ -32,6 +32,34 @@ def git(checkout, *args):
     return subprocess.check_output(["git", "-C", str(checkout), *args])
 
 
+def verify_aligned_candidate(checkout, commit, tree):
+    """Bind a reviewer-supplied immutable candidate to the approved component bytes."""
+    if (
+        git(checkout, "rev-parse", "HEAD").decode().strip() != commit
+        or git(checkout, "rev-parse", "HEAD^{tree}").decode().strip() != tree
+        or git(checkout, "status", "--porcelain", "--untracked-files=all").strip()
+    ):
+        raise ValueError("Candidate is not the exact clean commit and tree")
+    for base, *paths in (
+        (
+            BASE,
+            "integrations/healthbridge",
+            "integrations/mse_ingest",
+            "integrations/mse_snapshot",
+            "mother/physiology",
+            "mother/__init__.py",
+            REFERENCE,
+            CONTRACT,
+        ),
+        ("1d608b50f3dfa95fe344bf190eda6b9c8f3ab69d", "docs/mse/privacy"),
+        (CONNECTED_PINS[0], "integrations/mse_privacy/custody"),
+        (CONNECTED_PINS[1], "integrations/mse_privacy/export"),
+        (CONNECTED_PINS[2], "integrations/mse_privacy/lineage"),
+    ):
+        if git(checkout, "diff", "--name-only", base, commit, "--", *paths).strip():
+            raise ValueError("Candidate component bytes differ from approved pins")
+
+
 def load_sources(checkout, root, *, connected):
     custody, export, lineage = (
         CONNECTED_PINS if connected else (CUSTODY, EXPORT, LINEAGE)
@@ -71,8 +99,13 @@ def sqlite_copy(source, destination):
                 raise ValueError("Invalid backup member")
 
 
-def rehearse(checkout, source_root, *, connected):
-    load_sources(checkout, source_root, connected=connected)
+def rehearse(checkout, source_root, *, connected, candidate=None, coupled=False):
+    if candidate:
+        verify_aligned_candidate(checkout, *candidate)
+        source_root = checkout
+        sys.path[:0] = [str(checkout), str(checkout / REFERENCE)]
+    else:
+        load_sources(checkout, source_root, connected=connected)
     from integrations.healthbridge.ingest import ingest_capture
     from integrations.mse_ingest import Scope
     from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
@@ -392,12 +425,35 @@ def rehearse(checkout, source_root, *, connected):
             with self.assertRaises((AccessDenied, StoreUnavailable)):
                 self.boot(aggregate_only=True)
 
+        def test_limit_coupled_rollback_reopens_old_grant(self):
+            fence_backup = self.backup_root / "fence-limitation-only"
+            sqlite_copy(self.stores()["fence_root"], fence_backup)
+            self.assertEqual(self.service.revoke(self.creds["revoke"]), 2)
+            self.recover("authority_root", "projection_root", "registry")
+            with self.assertRaises((AccessDenied, StoreUnavailable)):
+                self.boot(aggregate_only=True)
+            # Deliberately violate the documented trust boundary in this fixture.
+            fence = self.stores()["fence_root"]
+            fence.unlink()
+            sqlite_copy(fence_backup, fence)
+            reopened, reissued = self.boot(aggregate_only=True)
+            self.assertEqual(reissued, {})
+            self.assertEqual(
+                reopened.read_projection(self.creds["reader"], self.view), self.payload
+            )
+
     tests = unittest.defaultTestLoader.getTestCaseNames(PublishedComponentRecovery)
-    suite = unittest.TestSuite(
-        PublishedComponentRecovery(name)
-        for name in tests
-        if name.startswith("test_connected_") == connected
-    )
+    if coupled:
+        tests = [name for name in tests if name.startswith("test_limit_")]
+    elif connected:
+        tests = [name for name in tests if name.startswith("test_connected_")]
+    else:
+        tests = [
+            name
+            for name in tests
+            if not name.startswith(("test_connected_", "test_limit_"))
+        ]
+    suite = unittest.TestSuite(PublishedComponentRecovery(name) for name in tests)
     return int(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful())
 
 
@@ -405,10 +461,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--object-store", required=True, type=Path)
     parser.add_argument("--connected", action="store_true")
+    parser.add_argument("--candidate-commit")
+    parser.add_argument("--candidate-tree")
+    parser.add_argument("--coupled-rollback-limit", action="store_true")
     args = parser.parse_args()
+    if bool(args.candidate_commit) != bool(args.candidate_tree):
+        parser.error("Supply both exact candidate commit and tree")
+    if (args.candidate_commit or args.coupled_rollback_limit) and not args.connected:
+        parser.error("Candidate and coupled rollback modes require --connected")
     with TemporaryDirectory(prefix="mse-privacy-pinned-source-") as source:
         sys.exit(
             rehearse(
-                args.object_store.resolve(), Path(source), connected=args.connected
+                args.object_store.resolve(),
+                Path(source),
+                connected=args.connected,
+                candidate=(
+                    (args.candidate_commit, args.candidate_tree)
+                    if args.candidate_commit
+                    else None
+                ),
+                coupled=args.coupled_rollback_limit,
             )
         )
