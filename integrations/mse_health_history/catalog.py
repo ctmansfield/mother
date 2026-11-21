@@ -9,12 +9,20 @@ import re
 import sqlite3
 from tempfile import NamedTemporaryFile
 from zipfile import BadZipFile
+from zlib import error as DeflateError
 
 from mother.physiology.contracts import canonical_json
 
 from . import bp_page
 from .blood_pressure import BloodPressure, protected_ref, source_time
-from .files import CHUNK, HistoryLimit, InvalidHistory, hash_stream, private_path
+from .files import (
+    CHUNK,
+    InvalidHistory,
+    LimitKind,
+    NamedHistoryLimit,
+    hash_stream,
+    private_path,
+)
 from .inventory import Limits, scan
 from .sealed_page import authenticate_page
 from .protected_export import authenticate_export
@@ -234,7 +242,10 @@ class _HistoryCatalog:
                         db.execute(f"PRAGMA max_page_count={limit_pages}").fetchone()[0]
                         != limit_pages
                     ):
-                        raise HistoryLimit("protected catalog page limit unavailable")
+                        raise NamedHistoryLimit(
+                            LimitKind.CATALOG_PAGES,
+                            "protected catalog page limit unavailable",
+                        )
                 existing = db.execute(
                     "SELECT receipt FROM artifacts WHERE digest=?", (body,)
                 ).fetchone()
@@ -412,14 +423,19 @@ class _HistoryCatalog:
                 lookup not in nested_counts
                 and len(nested_counts) >= self.limits.type_buckets
             ):
-                raise HistoryLimit("HealthData nested type bucket limit exceeded")
+                raise NamedHistoryLimit(
+                    LimitKind.XML_TYPE_BUCKETS,
+                    "HealthData nested type bucket limit exceeded",
+                )
             nested_counts[lookup] = nested_counts.get(lookup, 0) + 1
 
         def row(member_index, ordinal, family, source_type, tag, attrs, children):
             nonlocal nested_unmapped, invalid_bp
             key = (family, source_type or tag)
             if key not in counts and len(counts) >= self.limits.type_buckets:
-                raise HistoryLimit("HealthData type bucket limit exceeded")
+                raise NamedHistoryLimit(
+                    LimitKind.XML_TYPE_BUCKETS, "HealthData type bucket limit exceeded"
+                )
             values = counts.setdefault(key, [0, 0, 0, None, None])
             values[0] += 1
             first = _clock_or_none(attrs.get("startDate"))
@@ -446,7 +462,7 @@ class _HistoryCatalog:
 
         try:
             identity = scan(stage, self.limits, row, member, nested)
-        except (BadZipFile, EOFError):
+        except (BadZipFile, DeflateError, EOFError):
             raise InvalidHistory("invalid HealthData ZIP structure") from None
         if identity != (body, size):
             raise InvalidHistory("history exact original verification failed")

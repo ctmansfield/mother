@@ -15,7 +15,7 @@ from zipfile import (
     _EndRecData,
 )
 
-from .files import CHUNK, HistoryLimit, InvalidHistory, hash_stream
+from .files import CHUNK, InvalidHistory, LimitKind, NamedHistoryLimit, hash_stream
 
 BP_TYPE = "HKCorrelationTypeIdentifierBloodPressure"
 BP_TYPES = {
@@ -118,7 +118,9 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
 
     def check_dtd(position):
         if dtd_start is not None and position - dtd_start > limits.xml_dtd_bytes:
-            raise HistoryLimit("inline HealthData DTD limit exceeded")
+            raise NamedHistoryLimit(
+                LimitKind.XML_DTD, "inline HealthData DTD limit exceeded"
+            )
 
     def end_doctype():
         nonlocal dtd_start
@@ -133,15 +135,17 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
         nonlocal depth, pending, root_seen, elements
         elements += 1
         if elements > limits.total_xml_elements:
-            raise HistoryLimit("XML total element limit exceeded")
+            raise NamedHistoryLimit(
+                LimitKind.XML_ELEMENTS, "XML total element limit exceeded"
+            )
         depth += 1
         if depth > 2 and on_nested is not None:
             source_type = attrs.get("type", "")
             on_nested(_kind(tag, source_type), source_type or tag)
         if depth > limits.xml_depth:
-            raise HistoryLimit("XML depth limit exceeded")
+            raise NamedHistoryLimit(LimitKind.XML_DEPTH, "XML depth limit exceeded")
         if sum(len(k) + len(v) for k, v in attrs.items()) > limits.xml_token_bytes:
-            raise HistoryLimit("XML attribute limit exceeded")
+            raise NamedHistoryLimit(LimitKind.XML_TOKEN, "XML attribute limit exceeded")
         if depth == 1:
             if tag != "HealthData":
                 raise InvalidHistory("expected Apple HealthData root")
@@ -154,8 +158,9 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
             and pending[1].get("type") == BP_TYPE
         ):
             if len(pending[2]) >= 16:
-                raise HistoryLimit(
-                    "blood pressure correlation component limit exceeded"
+                raise NamedHistoryLimit(
+                    LimitKind.XML_CHILDREN,
+                    "blood pressure correlation component limit exceeded",
                 )
             pending[2].append((tag, attrs))
 
@@ -164,7 +169,9 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
         if depth == 2:
             ordinal += 1
             if ordinal > limits.top_level_rows:
-                raise HistoryLimit("HealthData row limit exceeded")
+                raise NamedHistoryLimit(
+                    LimitKind.XML_ROWS, "HealthData row limit exceeded"
+                )
             tag, attrs, children = pending
             source_type = attrs.get("type", "")
             on_row(
@@ -189,12 +196,14 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
         while chunk := stream.read(CHUNK):
             cursor += len(chunk)
             if cursor > limits.member_bytes:
-                raise HistoryLimit("XML member limit exceeded")
+                raise NamedHistoryLimit(
+                    LimitKind.ZIP_MEMBER_BYTES, "XML member limit exceeded"
+                )
             hashing.update(chunk)
             parser.Parse(chunk, False)
             check_dtd(cursor)
             if cursor - parser.CurrentByteIndex > limits.xml_token_bytes:
-                raise HistoryLimit("XML token limit exceeded")
+                raise NamedHistoryLimit(LimitKind.XML_TOKEN, "XML token limit exceeded")
         parser.Parse(b"", True)
     except expat.ExpatError:
         raise InvalidHistory("invalid HealthData XML") from None
@@ -206,7 +215,7 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
 def scan(stream, limits, on_row, on_member, on_nested=None):
     """Read an already-open, stable local file and return its exact byte identity."""
     stream.seek(0)
-    original = hash_stream(stream, limits.archive_bytes)
+    original = hash_stream(stream, limits.archive_bytes, kind=LimitKind.ARCHIVE_BYTES)
     stream.seek(0)
     directory = _EndRecData(stream)
     if directory is None:
@@ -216,16 +225,17 @@ def scan(stream, limits, on_row, on_member, on_nested=None):
             raise InvalidHistory("original changed during inventory")
         on_member(1, None, "healthdata_xml", *member)
         return original
-    if (
-        directory[_ECD_ENTRIES_TOTAL] > limits.members
-        or directory[_ECD_SIZE] > limits.directory_bytes
-    ):
-        raise HistoryLimit("ZIP directory bounds exceeded")
+    if directory[_ECD_ENTRIES_TOTAL] > limits.members:
+        raise NamedHistoryLimit(LimitKind.ZIP_MEMBERS, "ZIP member count exceeded")
+    if directory[_ECD_SIZE] > limits.directory_bytes:
+        raise NamedHistoryLimit(
+            LimitKind.ZIP_DIRECTORY, "ZIP directory bounds exceeded"
+        )
     stream.seek(0)
     with ZipFile(stream) as archive:
         infos = archive.infolist()
         if len(infos) > limits.members:
-            raise HistoryLimit("ZIP member count exceeded")
+            raise NamedHistoryLimit(LimitKind.ZIP_MEMBERS, "ZIP member count exceeded")
         expanded = 0
         names = set()
         main_count = 0
@@ -245,14 +255,19 @@ def scan(stream, limits, on_row, on_member, on_nested=None):
                     or info.compress_type not in {ZIP_STORED, ZIP_DEFLATED}
                 ):
                     raise InvalidHistory("unsupported ZIP member encoding or type")
-                if (
-                    info.file_size > limits.member_bytes
-                    or info.file_size > max(1, info.compress_size) * limits.ratio
-                ):
-                    raise HistoryLimit("ZIP member size or ratio exceeded")
+                if info.file_size > limits.member_bytes:
+                    raise NamedHistoryLimit(
+                        LimitKind.ZIP_MEMBER_BYTES, "ZIP member size exceeded"
+                    )
+                if info.file_size > max(1, info.compress_size) * limits.ratio:
+                    raise NamedHistoryLimit(
+                        LimitKind.ZIP_RATIO, "ZIP member ratio exceeded"
+                    )
                 expanded += info.file_size
                 if expanded > limits.expanded_bytes:
-                    raise HistoryLimit("ZIP expanded byte limit exceeded")
+                    raise NamedHistoryLimit(
+                        LimitKind.ZIP_EXPANDED, "ZIP expanded byte limit exceeded"
+                    )
                 if key.rsplit("/", 1)[-1] == "export.xml":
                     main_count += 1
         if main_count > 1:
@@ -270,12 +285,17 @@ def scan(stream, limits, on_row, on_member, on_nested=None):
                 result = (
                     _scan_xml(member, index, limits, on_row, on_nested)
                     if kind == "healthdata_xml"
-                    else hash_stream(member, limits.member_bytes)
+                    else hash_stream(
+                        member, limits.member_bytes, kind=LimitKind.ZIP_MEMBER_BYTES
+                    )
                 )
             if result[1] != info.file_size:
                 raise InvalidHistory("ZIP member length mismatch")
             on_member(index, info.filename, kind, *result)
     stream.seek(0)
-    if hash_stream(stream, limits.archive_bytes) != original:
+    if (
+        hash_stream(stream, limits.archive_bytes, kind=LimitKind.ARCHIVE_BYTES)
+        != original
+    ):
         raise InvalidHistory("original changed during inventory")
     return original

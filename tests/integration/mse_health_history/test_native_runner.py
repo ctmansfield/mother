@@ -2,6 +2,7 @@
 
 from contextlib import ExitStack, nullcontext, redirect_stderr, redirect_stdout
 from hashlib import sha256
+import errno
 import hmac
 from io import BytesIO, StringIO
 import json
@@ -9,6 +10,7 @@ import os
 import plistlib
 from pathlib import Path
 import sqlite3
+from struct import unpack_from
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -31,12 +33,16 @@ from test_history import (
 
 from mother.physiology.contracts import canonical_json
 
-from integrations.mse_health_history import native_custodian
+from integrations.mse_health_history import native_custodian, native_status
 from integrations.mse_health_history.catalog import (
     SyntheticHistoryCatalog,
     _HistoryCatalog,
 )
-from integrations.mse_health_history.files import InvalidHistory
+from integrations.mse_health_history.files import (
+    InvalidHistory,
+    LimitKind,
+    NamedHistoryLimit,
+)
 from integrations.mse_health_history.inventory import BP_TYPE, Limits, scan
 from integrations.mse_health_history.vault import CiphertextVault, Enrollment, utc
 
@@ -82,6 +88,109 @@ class NativeRunnerTests(unittest.TestCase):
                 self.assertRaises(InvalidHistory),
             ):
                 collect(declaration, limits)
+
+    def test_named_archive_and_xml_limits_remain_distinct(self):
+        plain = (
+            b'<HealthData><Record marker="'
+            + b"x" * 200
+            + b'"><Child/></Record><Record/></HealthData>'
+        )
+        zipper = BytesIO()
+        with ZipFile(zipper, "w", ZIP_DEFLATED) as archive:
+            archive.writestr("export.xml", plain)
+            archive.writestr("synthetic.txt", b"z" * 2048)
+        packed = zipper.getvalue()
+        cases = (
+            (plain, Limits(archive_bytes=16), "ARCHIVE_BYTES_LIMIT"),
+            (plain, Limits(xml_depth=2), "XML_DEPTH_LIMIT"),
+            (plain, Limits(xml_token_bytes=64), "XML_TOKEN_LIMIT"),
+            (plain, Limits(top_level_rows=1), "XML_ROW_LIMIT"),
+            (packed, Limits(members=1), "ZIP_MEMBER_COUNT_LIMIT"),
+            (packed, Limits(member_bytes=1000), "ZIP_MEMBER_BYTES_LIMIT"),
+            (packed, Limits(ratio=8), "ZIP_RATIO_LIMIT"),
+            (packed, Limits(expanded_bytes=1024), "ZIP_EXPANDED_BYTES_LIMIT"),
+        )
+        for raw, limits, expected in cases:
+            with (
+                self.subTest(expected=expected),
+                self.assertRaises(NamedHistoryLimit) as refused,
+            ):
+                scan(BytesIO(raw), limits, lambda *_: None, lambda *_: None)
+            self.assertEqual(
+                native_custodian.diagnostic_category(
+                    refused.exception, "ARCHIVE_OR_XML"
+                ),
+                expected,
+            )
+
+    def test_actual_sqlite_full_and_file_errors_keep_safe_categories(self):
+        with sqlite3.connect(":memory:") as db:
+            db.execute("CREATE TABLE sample (body BLOB)")
+            db.execute("PRAGMA max_page_count=2")
+            with self.assertRaises(sqlite3.Error) as refused:
+                db.execute("INSERT INTO sample VALUES (zeroblob(100000))")
+            self.assertEqual(
+                native_custodian.diagnostic_category(
+                    refused.exception, "ARCHIVE_OR_XML"
+                ),
+                (
+                    "SQLITE_FULL"
+                    if hasattr(refused.exception, "sqlite_errorcode")
+                    else "CATALOG"
+                ),
+            )
+        for number, expected in (
+            (errno.ENOSPC, "FILESYSTEM_FULL"),
+            (errno.EDQUOT, "FILESYSTEM_QUOTA"),
+            (errno.EFBIG, "FILE_SIZE_LIMIT"),
+        ):
+            self.assertEqual(
+                native_custodian.diagnostic_category(
+                    OSError(number, "fabricated private marker"), "CATALOG"
+                ),
+                expected,
+            )
+        with self.assertRaises(NamedHistoryLimit) as refused:
+            native_custodian.file_limit(None, None)
+        self.assertEqual(
+            native_custodian.diagnostic_category(refused.exception, "CATALOG"),
+            "FILE_SIZE_LIMIT",
+        )
+
+    def test_wrapper_sanitizer_only_accepts_exact_complete_output(self):
+        expected = b"Protected native import category ARCHIVE_OR_XML\n"
+        self.assertEqual(
+            native_status.capture_status(1, b"", expected),
+            ("REFUSED", "ARCHIVE_OR_XML"),
+        )
+        self.assertEqual(
+            native_status.capture_status(0, native_status.SUCCESS, b""),
+            ("RUNNER_REPORTED_SUCCESS", None),
+        )
+        for stderr in (
+            expected + b"Traceback: fabricated-private-member/export.xml\n",
+            b"Traceback: fabricated-private-member/export.xml\n" + expected,
+            expected + expected,
+            b"Protected native import category NOT_ALLOWLISTED\n",
+            b"Protected native import category XML_ROW_LIMIT fabricated marker\n",
+        ):
+            self.assertEqual(
+                native_status.capture_status(1, b"", stderr), ("UNCLASSIFIED", None)
+            )
+        self.assertEqual(
+            native_status.capture_status(2, b"", expected), ("UNCLASSIFIED", None)
+        )
+        self.assertEqual(
+            native_status.capture_status(1, b"unexpected stdout", expected),
+            ("UNCLASSIFIED", None),
+        )
+        for kind in LimitKind:
+            stderr = (
+                native_status.DIAGNOSTIC_PREFIX + kind.value.encode("ascii") + b"\n"
+            )
+            self.assertEqual(
+                native_status.capture_status(1, b"", stderr), ("REFUSED", kind.value)
+            )
 
     def test_large_stream_inventory_does_not_retain_xml_or_nested_elements(self):
         count = 80_000
@@ -399,40 +508,49 @@ class NativeRunnerTests(unittest.TestCase):
         self.assertEqual(run(sign(policy), EncryptionThisVolumeProper=False)[0], 1)
         self.assertFalse(list(catalog.iterdir()))
 
-        malformed = b"<HealthData><fabricated-private-marker></HealthData>"
-        encrypted = subprocess.check_output(
-            [
-                age,
-                "-e",
-                "-r",
-                subprocess.check_output(
-                    [age.with_name("age-keygen"), "-y", identity]
-                ).strip(),
-            ],
-            input=malformed,
+        recipient = subprocess.check_output(
+            [age.with_name("age-keygen"), "-y", identity]
+        ).strip()
+
+        def bind_fixture(raw, name):
+            encrypted = subprocess.check_output([age, "-e", "-r", recipient], input=raw)
+            fixture = self.root / name
+            fixture.touch(mode=0o600)
+            fixture.write_bytes(encrypted)
+            exact_receipt = dict(
+                binding["receipt"],
+                ciphertext_sha256=sha256(encrypted).hexdigest(),
+                byte_length=len(encrypted),
+            )
+            exact_receipt.pop("receipt_id")
+            exact_receipt["receipt_id"] = sha256(
+                canonical_json(exact_receipt).encode()
+            ).hexdigest()
+            return dict(
+                policy,
+                ciphertext=str(fixture),
+                binding=dict(
+                    binding,
+                    receipt=exact_receipt,
+                    plaintext_sha256=sha256(raw).hexdigest(),
+                    plaintext_length=len(raw),
+                ),
+            )
+
+        parser_case = bind_fixture(
+            b"<HealthData><fabricated-private-marker></HealthData>",
+            "synthetic-parser-refusal.age",
         )
-        invalid_cipher = self.root / "synthetic-parser-refusal.age"
-        invalid_cipher.touch(mode=0o600)
-        invalid_cipher.write_bytes(encrypted)
-        invalid_receipt = dict(
-            binding["receipt"],
-            ciphertext_sha256=sha256(encrypted).hexdigest(),
-            byte_length=len(encrypted),
-        )
-        invalid_receipt.pop("receipt_id")
-        invalid_receipt["receipt_id"] = sha256(
-            canonical_json(invalid_receipt).encode()
-        ).hexdigest()
-        parser_case = dict(
-            policy,
-            ciphertext=str(invalid_cipher),
-            binding=dict(
-                binding,
-                receipt=invalid_receipt,
-                plaintext_sha256=sha256(malformed).hexdigest(),
-                plaintext_length=len(malformed),
-            ),
-        )
+        packed = BytesIO()
+        with ZipFile(packed, "w", ZIP_DEFLATED) as archive:
+            archive.writestr("fabricated-private-member/export.xml", xml("<Record/>"))
+        damaged = bytearray(packed.getvalue())
+        name_size, extra_size = unpack_from("<HH", damaged, 26)
+        first_compressed_byte = 30 + name_size + extra_size
+        # Reserved DEFLATE block type. The ZIP directory and admitted ciphertext
+        # stay well formed so refusal happens inside the decompressor.
+        damaged[first_compressed_byte] = 0b111
+        damaged_case = bind_fixture(bytes(damaged), "synthetic-damaged-stream.age")
         wrong_key = self.root / "synthetic-wrong-identity"
         subprocess.run(
             [age.with_name("age-keygen"), "-pq", "-o", wrong_key],
@@ -451,7 +569,8 @@ class NativeRunnerTests(unittest.TestCase):
                 nullcontext(),
             ),
             ("ARCHIVE_OR_XML", parser_case, nullcontext()),
-            ("INVENTORY_LIMIT", dict(policy, max_top_level_rows=1), nullcontext()),
+            ("ARCHIVE_OR_XML", damaged_case, nullcontext()),
+            ("XML_ROW_LIMIT", dict(policy, max_top_level_rows=1), nullcontext()),
             (
                 "PRECOMMIT_WINDOW",
                 policy,
@@ -462,15 +581,16 @@ class NativeRunnerTests(unittest.TestCase):
                 ),
             ),
             (
-                "RESOURCE_LIMIT",
+                "FILESYSTEM_RESERVE_LIMIT",
                 policy,
                 patch.object(
                     native_custodian,
                     "ensure_space",
                     side_effect=[
                         None,
-                        native_custodian.HistoryLimit(
-                            "fabricated private resource marker"
+                        NamedHistoryLimit(
+                            LimitKind.FILESYSTEM_RESERVE,
+                            "fabricated private resource marker",
                         ),
                     ],
                 ),

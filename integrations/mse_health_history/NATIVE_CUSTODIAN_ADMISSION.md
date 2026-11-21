@@ -73,3 +73,41 @@ values, credentials, or digests through the diagnostic. A previously
 completed generic refusal cannot be reclassified from the category
 implementation. Preserve the original failed state and treat any real
 replay as a separate authorization decision.
+
+### Named resource budgets
+
+The diagnostic can identify archive bytes, ZIP directory bytes, member
+count, member bytes, expansion ratio, and total expanded bytes. XML
+categories distinguish declaration size, token/attribute bytes, depth,
+element count, top-level rows, correlation child count and type buckets.
+Storage categories distinguish the filesystem reserve, scratch capacity,
+catalog file size, journal size, SQLite page-limit configuration, and
+file-size limit or configuration. Typed OS errors distinguish filesystem
+full, filesystem quota and file size. `SQLITE_FULL` means SQLite reported
+that result code. It can represent its configured page cap or filesystem
+capacity. Older Python runtimes may report only the catalog phase.
+
+Before adjusting any budget, reconcile the signed policy with already
+recorded measurements from the actual approved workspace. Preflight
+requires free space of at least plaintext bytes plus twice the catalog
+cap plus the reserve. Just before commit it checks the reserve and each
+existing catalog/journal file against its cap. The operative per-file
+soft limit is the larger of plaintext bytes and catalog cap. Record only
+whether these comparisons passed, whether an explicit host file or CPU
+limit was inherited, and whether SQLite exposed a structured result code.
+Keep values tied to the protected archive in private custody. Post-run
+backing free space cannot substitute for attempt-time capacity or the
+child APFS volume quota. An older generic resource refusal alone does not
+justify widening any budget.
+
+### Manual wrapper review
+
+Use the package's `native_status.capture_status(exit_code, stdout, stderr)`
+with separate byte streams. The function accepts only an exact complete
+allowlisted line with the matching exit code and empty opposite stream.
+Mixed output, duplicated lines, traceback text and unknown categories
+yield only `UNCLASSIFIED`. Keep captured streams private and never echo
+unexpected output. Runner-reported success still requires independent
+receipt reconciliation. Bind the wrapper to this source/package and test
+the exact wrapper's allowlist, authority, detach and exit-code paths using
+fabricated input before authorizing any manual use with the real archive.
