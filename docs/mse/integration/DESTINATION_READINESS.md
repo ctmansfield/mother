@@ -81,3 +81,16 @@ Compare engines against exact original-byte custody, atomic receipt/revision lin
 Design separate access paths for archive writers, Chad and authorized evidence operators, and API or special-purpose database consumers. Publish only explicitly approved tables, views or versioned exports with scoped authorization, provenance/cutoff, audit receipts, and revocation behavior. Consumers must not need direct reads of archive database files, original bytes or the identity vault simply to obtain a controlled view. Evaluate access through an archive-owned API, audited query role, or exported read model based on the selected engine and actual consumer requirements. Exact operator inspection and export commands remain to be specified.
 
 No clone, host inspection, provisioning, installation or credential action was performed for this decision.
+
+### Connection protection and phone synchronization
+
+Chad requires encrypted database connections where practical and preservation of a future encryption path in the selected design. The proposed remote database default is TLS with trusted-server certificate and hostname verification. Treat unavailable TLS, invalid trust or a name mismatch as a failed connection, with no silent plaintext fallback. Record per-client trust references, certificate lifecycle ownership and negative handshake tests in the future reproduction bundle. A local Unix socket may have a separately documented authorization and filesystem-permission model. Engine choice remains open. At-rest protection and backup encryption remain separate decisions.
+
+The phone connects only to a private HTTPS ingestion API over Tailscale. The API holds the scoped archive-writer identity and the phone receives only an ingestion credential. The proposed sync sequence is:
+
+1. Persist the exact artifact, digest and stable batch identity in a durable phone outbox before sending.
+2. Send over hostname-verified HTTPS on the approved private route. Retain the same identity and bytes for retry after an uncertain response.
+3. Issue a durable archive receipt only after the original and its authoritative acceptance metadata are committed. Reject changed bytes for the same identity. A lost response must be recoverable by exact retry or receipt reconciliation.
+4. Advance the associated delivery checkpoint and release outbox bytes only after verifying a receipt bound to that artifact and batch, under the approved retention policy. Keep a HealthKit acquisition anchor distinct from the delivery checkpoint.
+
+Prior synthetic upload evidence supports a bounded private network transfer, and the [offline custody rehearsal](https://github.com/ctmansfield/mother/pull/29) supports local receipt/restore behavior at tested cuts. The archive API, phone outbox integration, continuous real-data sync and background delivery still need separate qualification. The connection and sync design authorizes no provisioning, deployment or certificate action.
