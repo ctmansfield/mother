@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from fractions import Fraction
 import json
-from secrets import token_hex
 
 from integrations.mse_ingest.connected import ConnectedIngest
+from integrations.mse_privacy.custody import Custody
 
 POLICY_VERSION = "synthetic-aggregate-hr-sdnn/0.1"
 PROJECTION_VERSION = "relative-hour-mean/0.1"
@@ -27,78 +27,103 @@ class ExportDenied(ValueError):
 
 
 @dataclass(frozen=True, repr=False)
-class ProjectionGrant:
-    """Trusted local bootstrap configuration; never deserialize from a request."""
+class ProjectionBinding:
+    """Trusted workflow selection; never deserialize this from a reader request."""
 
     scope: tuple[tuple[str, str], ...]
     archive_id: str
     snapshot_sha256: str
-    role: str = "projection_worker"
-    purpose: str = "analytical_project"
-    policy_version: str = POLICY_VERSION
+    recipient: str
+    generation: int
 
 
 class AnalyticalExporter:
-    """Provisional local worker. The scoped custody registry owns serving."""
+    """Publish an aggregate only after opening a genuine scoped grant."""
 
-    def __init__(self, ledger: ConnectedIngest, grant: ProjectionGrant):
-        if type(ledger) is not ConnectedIngest or type(grant) is not ProjectionGrant:
+    def __init__(self, custody: Custody, open_ledger, binding: ProjectionBinding):
+        if type(custody) is not Custody or type(binding) is not ProjectionBinding:
             raise ExportDenied("Analytical export denied")
-        self._ledger = ledger
-        self._grant = grant
+        self._custody = custody
+        self._open_ledger = open_ledger
+        self._binding = binding
 
     def export(
         self,
-        snapshot: dict,
+        credential: str,
+        load_snapshot,
         *,
         requested_fields: frozenset[str] = FIELDS,
         status_only: bool = False,
     ) -> dict:
+        """Use trusted deferred loaders and return only a published handle or status."""
         try:
-            granted = self._authorize(snapshot, requested_fields, status_only)
-            start = _instant(granted["measurement_start"])
-            end = _instant(granted["measurement_end"])
+            if (
+                type(requested_fields) is not frozenset
+                or requested_fields != FIELDS
+                or type(status_only) is not bool
+            ):
+                raise ExportDenied("Analytical export denied")
+            # Do not open or parse any restricted input before authenticating.
+            self._authorize(credential)
+            snapshot = self._snapshot(load_snapshot())
+            start = _instant(snapshot["measurement_start"])
+            end = _instant(snapshot["measurement_end"])
             if not timedelta(0) < end - start <= timedelta(hours=24):
                 raise ExportDenied("Analytical export denied")
-            if not self._ledger.verify_snapshot(granted):
+            ledger = self._open_ledger()
+            if (
+                type(ledger) is not ConnectedIngest
+                or snapshot["scope"] != ledger.scope.fields()
+                or snapshot["archive_id"] != ledger.archive_id
+                or not ledger.verify_snapshot(snapshot)
+            ):
                 raise ExportDenied("Analytical export denied")
             if status_only:
+                self._authorize(credential)
                 return {"status": "available"}
-            rows, losses = _aggregate(granted, start, end)
-        except (KeyError, TypeError, ValueError, ArithmeticError, OSError, RecursionError):
+            rows, losses = _aggregate(snapshot, start, end)
+            self._authorize(credential)
+            view_id = self._custody.issue_view(credential)
+            self._authorize(credential, view_id)
+            self._custody.put_projection(credential, view_id, {
+                "schema_version": "mse.analytics-view/0.1",
+                "purpose": "aggregate_hr_sdnn",
+                "policy_version": POLICY_VERSION,
+                "projection_version": PROJECTION_VERSION,
+                "time_basis": "relative_60_minute_bucket",
+                "view_id": view_id,
+                "rows": rows,
+                "projection_loss": losses,
+            })
+        except Exception:
+            # Restricted loaders and validators can raise value-bearing errors.
             raise ExportDenied("Analytical export denied") from None
-        return {
-            "schema_version": "mse.analytics-view/0.1",
-            "purpose": "aggregate_hr_sdnn",
-            "policy_version": POLICY_VERSION,
-            "projection_version": PROJECTION_VERSION,
-            "time_basis": "relative_60_minute_bucket",
-            "view_id": "av_" + token_hex(16),
-            "rows": rows,
-            "projection_loss": losses,
-        }
+        return {"view_id": view_id}
 
-    def _authorize(self, snapshot, fields, status_only):
-        grant = self._grant
+    def _authorize(self, credential: str, view_id: str | None = None) -> None:
+        decision = self._custody.authorize_projection(credential, view_id)
+        binding = self._binding
         if (
-            grant.role != "projection_worker"
-            or grant.purpose != "analytical_project"
-            or grant.policy_version != POLICY_VERSION
-            or type(fields) is not frozenset
-            or fields != FIELDS
-            or type(status_only) is not bool
-            or type(snapshot) is not dict
-            or snapshot.get("snapshot_sha256") != grant.snapshot_sha256
-            or snapshot.get("purpose") != "offline_synthetic_replay"
-            or snapshot.get("scope") != dict(grant.scope)
-            or snapshot.get("scope") != self._ledger.scope.fields()
-            or snapshot.get("archive_id") != grant.archive_id
-            or grant.archive_id != self._ledger.archive_id
+            decision["scope"] != dict(binding.scope)
+            or decision["purpose"] != "aggregate_hr_sdnn"
+            or decision["policy_version"] != POLICY_VERSION
+            or decision["recipient"] != binding.recipient
+            or decision["generation"] != binding.generation
         ):
             raise ExportDenied("Analytical export denied")
-        if len(snapshot["observations"]) + len(snapshot["tombstones"]) > MAX_MEMBERS:
+
+    def _snapshot(self, snapshot: dict) -> dict:
+        binding = self._binding
+        if (
+            type(snapshot) is not dict
+            or snapshot.get("snapshot_sha256") != binding.snapshot_sha256
+            or snapshot.get("purpose") != "offline_synthetic_replay"
+            or snapshot.get("scope") != dict(binding.scope)
+            or snapshot.get("archive_id") != binding.archive_id
+            or len(snapshot["observations"]) + len(snapshot["tombstones"]) > MAX_MEMBERS
+        ):
             raise ExportDenied("Analytical export denied")
-        # Use a bounded detached copy so verification and projection share inputs.
+        # Verify and aggregate the same detached snapshot, within a byte ceiling.
         chunks, size = [], 0
         for chunk in json.JSONEncoder(allow_nan=False).iterencode(snapshot):
             size += len(chunk.encode("utf-8"))
