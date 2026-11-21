@@ -44,3 +44,21 @@ Fresh synthetic HRV is ingested through actual public custody, projected by the 
 **Diagnostic outcomes and release conditions.** The published projection restores as an aggregate without the raw evidence file; a reader cannot resolve protected lineage. A bootstrap with no trusted grants denies both reads. The supplied current generation fences old views after restore. Two of the passing diagnostics intentionally reproduce the published limitations: restarting with stale bootstrap grants reopens the old view, and removing the identity vault blocks aggregate reads even with published projection and current in-memory grants. These outcomes are evidence of missing durable authority and missing aggregate-only recovery, not proof of a qualified boundary.
 
 For the connected gate, require the new current authorization API to reopen from an independent persistent generation and revocation store. Keep that store outside every copied domain. After actual revoke and restart, restore stale reservation, projection and lineage snapshots without restoring current authorization. The old view and audit path must remain denied. With live authorization retained, remove the raw evidence and identity-vault members before reopen; require the restored aggregate to pass and privileged lineage to deny. Also remove current authorization itself and require both paths to deny. Run before/after output and private-open counters through the actual connected APIs. Do not carry the preview grant shim or missing-vault limitation into final acceptance.
+
+## Connected round 9 restore result
+
+The connected mode uses #35 `b7aae4f2216d27f0544eab9fe9698286fe49d716`, FORGE #40 `7623616a97c0ab0213b6a9b4ebcf9affdac1e80a`, ORACLE #38 `58f78b1ed077fc0938b3540a517429500a40c663`, and PROVENANCE #39 `c509515b6ae4508d6f94e619ed557cc6789ebda7`. It calls the persistent bootstrap, actual ORACLE publisher and actual PROVENANCE resolver. There is no preview grant or substituted authority in the connected mode. Fetch those Git objects and run:
+
+```sh
+python3 -I -B tools/mse_integration/recovery/privacy_stores.py \
+  --object-store /path/to/mother-checkout-with-pins --connected
+```
+
+Recovery is split five ways. Evidence and identity vault remain restricted. Projection and private lineage registry are independently recoverable. Durable authority is required for serving and is checked against a separate current fence. **Exclude the live fence from backup and restoration of the other stores.** A copied authority database cannot supply its own current epoch.
+
+- Reopen a restored projection with current authority and fence only. The evidence, identity vault and exact PF-001 input path are unavailable. An authorized reader gets the exact prior bounded aggregate without raw markers. The reader cannot resolve restricted lineage. The auditor cannot resolve lineage when the separately protected registry is unavailable.
+- Revoke through the actual custody API, restore old vault, projection and lineage databases, and reopen without bootstrap grants. Old reader and auditor credentials are denied.
+- Restore the stale authority database as well, while preserving the newer fence. Reopen is denied. Missing authority or missing fence also denies reopen. No retry with old grants or privileged stores is permitted.
+- Before a later authorized cutover, verify the separate live fence/revocation source before publishing anything. A coherent current authority paired with that fence is a prerequisite. Failure to reconcile must leave serving disabled while evidence is preserved for the custodians.
+
+This connected result is scoped to the pinned source assembly and disposable SQLite backups. It does not demonstrate protection if both authority and fence are rolled back, or if one process has plaintext filesystem access to the stores. No host writes, production keys, role isolation or real-data privacy qualification were performed.

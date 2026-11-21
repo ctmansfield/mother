@@ -19,6 +19,11 @@ BASE = "b7aae4f2216d27f0544eab9fe9698286fe49d716"
 CUSTODY = "26895ab4cf090c75f5540dbab1f16d1f7d91db02"
 EXPORT = "ef8dded78ffdce643db394fa3f6ef91e3fa36854"
 LINEAGE = "05b571ad8610d21d99bd2dacc070d063c3ff1f1c"
+CONNECTED_PINS = (
+    "7623616a97c0ab0213b6a9b4ebcf9affdac1e80a",
+    "58f78b1ed077fc0938b3540a517429500a40c663",
+    "c509515b6ae4508d6f94e619ed557cc6789ebda7",
+)
 REFERENCE = "research/mse/reference-v0.1.0/prototype"
 CONTRACT = "docs/mse/integration/contracts/offline-integration.schema.json"
 
@@ -27,7 +32,10 @@ def git(checkout, *args):
     return subprocess.check_output(["git", "-C", str(checkout), *args])
 
 
-def load_sources(checkout, root):
+def load_sources(checkout, root, *, connected):
+    custody, export, lineage = (
+        CONNECTED_PINS if connected else (CUSTODY, EXPORT, LINEAGE)
+    )
     for pin, *paths in (
         (
             BASE,
@@ -38,9 +46,9 @@ def load_sources(checkout, root):
             REFERENCE,
             CONTRACT,
         ),
-        (CUSTODY, "integrations/mse_privacy/custody"),
-        (EXPORT, "integrations/mse_privacy/export"),
-        (LINEAGE, "integrations/mse_privacy/lineage"),
+        (custody, "integrations/mse_privacy/custody"),
+        (export, "integrations/mse_privacy/export"),
+        (lineage, "integrations/mse_privacy/lineage"),
     ):
         with tarfile.open(
             fileobj=BytesIO(git(checkout, "archive", pin, *paths))
@@ -63,8 +71,8 @@ def sqlite_copy(source, destination):
                 raise ValueError("Invalid backup member")
 
 
-def rehearse(checkout, source_root):
-    load_sources(checkout, source_root)
+def rehearse(checkout, source_root, *, connected):
+    load_sources(checkout, source_root, connected=connected)
     from integrations.healthbridge.ingest import ingest_capture
     from integrations.mse_ingest import Scope
     from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
@@ -75,7 +83,12 @@ def rehearse(checkout, source_root):
         open_custody,
     )
     from integrations.mse_privacy.custody.projection import POLICY, PURPOSE
-    from integrations.mse_privacy.export import AnalyticalExporter, ProjectionGrant
+    from integrations.mse_privacy.export import AnalyticalExporter
+
+    if connected:
+        from integrations.mse_privacy.export import ProjectionBinding
+    else:
+        from integrations.mse_privacy.export import ProjectionGrant
     from integrations.mse_privacy.lineage import LineageDenied, LineageResolver
     from mse.contracts import canonical
 
@@ -88,6 +101,11 @@ def rehearse(checkout, source_root):
                 name + "_root": self.directory(name)
                 for name in ("evidence", "vault", "projection")
             }
+            if connected:
+                self.roots.update(
+                    authority_root=self.directory("authority"),
+                    fence_root=self.directory("fence"),
+                )
             self.registry = self.directory("registry")
             self.backup_root = self.directory("backup")
             self.now = datetime(2026, 11, 21, 3, tzinfo=timezone.utc)
@@ -135,8 +153,9 @@ def rehearse(checkout, source_root):
                 dict(readings=rows, anchors={}, tombstones={}, backfillStart=0)
             ).encode()
             self.service.put_evidence(self.creds["evidence"], self.original)
+            self.ledger_root = self.directory("ledger")
             self.ledger = ConnectedIngest(
-                self.directory("ledger"),
+                self.ledger_root,
                 archive_id=self.archive_id,
                 scope=self.scope,
                 schema=json.loads((source_root / CONTRACT).read_text()),
@@ -155,16 +174,37 @@ def rehearse(checkout, source_root):
                 knowledge_cutoff_sequence=delivery.receipt["commit_sequence"],
                 normalizer_version=NORMALIZER_VERSION,
             )
-            self.view = self.service.issue_view(self.creds["writer"])
-            # Historical components expose a preview grant and a distinct storage
-            # reservation. Persist the real aggregate under the reserved view.
-            preview = ProjectionGrant(
-                tuple(self.scope.fields().items()),
-                self.archive_id,
-                snapshot["snapshot_sha256"],
-            )
-            analytical = AnalyticalExporter(self.ledger, preview).export(snapshot)
-            self.payload = dict(analytical, view_id=self.view)
+            if connected:
+                binding = ProjectionBinding(
+                    tuple(self.scope.fields().items()),
+                    self.archive_id,
+                    snapshot["snapshot_sha256"],
+                    self.grants["writer"].recipient,
+                    1,
+                )
+                exported = AnalyticalExporter(
+                    self.service,
+                    lambda: self.ledger,
+                    binding,
+                ).export(self.creds["writer"], lambda: snapshot)
+                self.view = exported["view_id"]
+                self.payload = self.service.read_projection(
+                    self.creds["reader"], self.view
+                )
+            else:
+                self.view = self.service.issue_view(self.creds["writer"])
+                # Historical components expose a preview grant and a distinct storage
+                # reservation. Persist the real aggregate under the reserved view.
+                preview = ProjectionGrant(
+                    tuple(self.scope.fields().items()),
+                    self.archive_id,
+                    snapshot["snapshot_sha256"],
+                )
+                analytical = AnalyticalExporter(self.ledger, preview).export(snapshot)
+                self.payload = dict(analytical, view_id=self.view)
+                self.service.put_projection(
+                    self.creds["writer"], self.view, self.payload
+                )
             self.assertEqual(
                 self.payload["rows"],
                 [
@@ -173,18 +213,23 @@ def rehearse(checkout, source_root):
                     )
                 ],
             )
-            self.service.put_projection(self.creds["writer"], self.view, self.payload)
+            ledger_input = (
+                {"open_ledger": lambda: self.ledger}
+                if connected
+                else {"ledger": self.ledger}
+            )
             self.resolver(self.service).bind(
                 self.creds["writer"],
                 self.view,
-                ledger=self.ledger,
+                **ledger_input,
                 snapshot_bytes=canonical(snapshot).encode(),
                 projection_bytes=canonical(self.payload).encode(),
                 max_snapshot_bytes=64_000,
                 max_projection_bytes=16_000,
             )
             for name, store in self.stores().items():
-                sqlite_copy(store, self.backup_root / name)
+                if name != "fence_root":
+                    sqlite_copy(store, self.backup_root / name)
 
         def directory(self, name):
             path = self.root / name
@@ -196,12 +241,18 @@ def rehearse(checkout, source_root):
                 name: root / "store.sqlite3" for name, root in self.roots.items()
             } | {"registry": self.registry / "lineage.sqlite3"}
 
-        def boot(self, *, initialize=False, grants=None):
+        def boot(self, *, initialize=False, grants=None, aggregate_only=False):
+            roots = dict(self.roots)
+            if aggregate_only:
+                del roots["evidence_root"]
+                del roots["vault_root"]
+            if connected:
+                if initialize:
+                    grants = self.grants
+            elif grants is None:
+                grants = self.grants
             return open_custody(
-                **self.roots,
-                initialize=initialize,
-                grants=self.grants if grants is None else grants,
-                clock=lambda: self.now,
+                **roots, initialize=initialize, grants=grants, clock=lambda: self.now
             )
 
         def resolver(self, service):
@@ -285,13 +336,79 @@ def rehearse(checkout, source_root):
             with self.assertRaises(StoreUnavailable):
                 self.boot()
 
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(PublishedComponentRecovery)
+        def test_connected_aggregate_only_restore_without_raw_or_identity(self):
+            self.recover("projection_root")
+            self.stores()["evidence_root"].unlink()
+            self.stores()["vault_root"].unlink()
+            self.ledger_root.rename(self.root / "ledger-unavailable")
+            service, new_creds = self.boot(aggregate_only=True)
+            self.assertEqual(new_creds, {})
+            aggregate = service.read_projection(self.creds["reader"], self.view)
+            self.assertEqual(aggregate, self.payload)
+            encoded = canonical(aggregate)
+            for marker in (
+                self.scope.subject_id,
+                self.scope.source_instance,
+                "private-capture-marker",
+                "2001-01-01",
+                self.archive_id,
+            ):
+                self.assertNotIn(marker, encoded)
+            with self.assertRaises(LineageDenied):
+                self.resolver(service).resolve(self.creds["reader"], self.view)
+            self.stores()["registry"].unlink()
+            with self.assertRaises(LineageDenied):
+                self.resolver(service).resolve(self.creds["audit"], self.view)
+
+        def test_connected_revocation_survives_stale_data_restore(self):
+            self.assertEqual(self.service.revoke(self.creds["revoke"]), 2)
+            fence = self.stores()["fence_root"].read_bytes()
+            self.assertFalse((self.backup_root / "fence_root").exists())
+            self.recover("vault_root", "projection_root", "registry")
+            service, reopened_credentials = self.boot()
+            self.assertEqual(reopened_credentials, {})
+            with self.assertRaises(AccessDenied):
+                service.read_projection(self.creds["reader"], self.view)
+            with self.assertRaises(LineageDenied):
+                self.resolver(service).resolve(self.creds["audit"], self.view)
+            self.assertEqual(self.stores()["fence_root"].read_bytes(), fence)
+
+        def test_connected_stale_authority_backup_cannot_override_live_fence(self):
+            self.assertEqual(self.service.revoke(self.creds["revoke"]), 2)
+            fence = self.stores()["fence_root"].read_bytes()
+            self.assertFalse((self.backup_root / "fence_root").exists())
+            self.recover("authority_root", "vault_root", "projection_root", "registry")
+            with self.assertRaises((AccessDenied, StoreUnavailable)):
+                self.boot(aggregate_only=True)
+            self.assertEqual(self.stores()["fence_root"].read_bytes(), fence)
+
+        def test_connected_missing_authority_or_fence_denies_reopen(self):
+            member = self.stores()["authority_root"]
+            member.rename(member.with_suffix(".unavailable"))
+            with self.assertRaises((AccessDenied, StoreUnavailable)):
+                self.boot(aggregate_only=True)
+            member.with_suffix(".unavailable").rename(member)
+            self.stores()["fence_root"].unlink()
+            with self.assertRaises((AccessDenied, StoreUnavailable)):
+                self.boot(aggregate_only=True)
+
+    tests = unittest.defaultTestLoader.getTestCaseNames(PublishedComponentRecovery)
+    suite = unittest.TestSuite(
+        PublishedComponentRecovery(name)
+        for name in tests
+        if name.startswith("test_connected_") == connected
+    )
     return int(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful())
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--object-store", required=True, type=Path)
+    parser.add_argument("--connected", action="store_true")
     args = parser.parse_args()
     with TemporaryDirectory(prefix="mse-privacy-pinned-source-") as source:
-        sys.exit(rehearse(args.object_store.resolve(), Path(source)))
+        sys.exit(
+            rehearse(
+                args.object_store.resolve(), Path(source), connected=args.connected
+            )
+        )
