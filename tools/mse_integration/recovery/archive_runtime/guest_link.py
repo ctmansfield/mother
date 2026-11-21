@@ -1,5 +1,8 @@
 from pathlib import Path
-import json, os
+import ipaddress
+import json
+import os
+import sys
 
 mac = sys.argv[1]
 address = ipaddress.IPv4Interface(sys.argv[2])
