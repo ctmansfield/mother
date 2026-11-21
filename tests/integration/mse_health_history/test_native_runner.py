@@ -1,0 +1,255 @@
+"""Fabricated native ZIP import and bounded streaming qualification."""
+
+from hashlib import sha256
+import json
+import os
+from pathlib import Path
+import sqlite3
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+import tracemalloc
+import unittest
+from zipfile import ZIP_DEFLATED, ZipFile
+
+from test_history import (
+    DIASTOLIC,
+    SYSTOLIC,
+    THROUGH,
+    UTC,
+    UUIDS,
+    api_page,
+    correlation,
+    record,
+    xml,
+)
+
+from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
+from integrations.mse_health_history.inventory import Limits, scan
+from integrations.mse_health_history.vault import CiphertextVault, Enrollment, utc
+
+
+class NativeRunnerTests(unittest.TestCase):
+    def setUp(self):
+        temp = TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name).resolve()
+
+    def test_large_stream_inventory_does_not_retain_xml_or_nested_elements(self):
+        count = 80_000
+        path = self.root / "large.zip"
+        with ZipFile(path, "w", ZIP_DEFLATED) as archive:
+            with archive.open("export.xml", "w") as source:
+                source.write(b"<HealthData>")
+                for n in range(count):
+                    marker = sha256(str(n).encode()).hexdigest()
+                    source.write(
+                        (
+                            f'<Workout uuid="{marker}"><WorkoutStatistics type="synthetic"/>'
+                            f'<WorkoutRoute><FileReference path="never-open-{n}.gpx"/></WorkoutRoute>'
+                            "</Workout>"
+                        ).encode()
+                    )
+                source.write(b"</HealthData>")
+        totals = {"rows": 0, "nested": 0, "attachments": 0}
+
+        def row(*_):
+            totals["rows"] += 1
+
+        def member(*_):
+            totals["attachments"] += 1
+
+        def nested(*_):
+            totals["nested"] += 1
+
+        tracemalloc.start()
+        try:
+            with path.open("rb") as source:
+                result = scan(source, Limits(), row, member, nested)
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        self.assertEqual(result[1], path.stat().st_size)
+        self.assertEqual(totals, {"rows": count, "nested": count * 3, "attachments": 1})
+        self.assertLess(peak, 8 * 1024**2)
+
+    def test_pinned_api_deletion_reconciles_explicit_native_component_only(self):
+        dest = self.root / "typed"
+        dest.mkdir(mode=0o700)
+        catalog = SyntheticHistoryCatalog(
+            dest, enrollment="synthetic-history-test", key=b"a" * 32, bp_cutoff=THROUGH
+        )
+        catalog.initialize()
+        original = self.root / "export.xml"
+        original.write_bytes(
+            xml(
+                correlation(
+                    record(SYSTOLIC, "124", UUIDS[1])
+                    + record(DIASTOLIC, "81", UUIDS[2]),
+                    UUIDS[0],
+                )
+                + correlation(record(SYSTOLIC, "124") + record(DIASTOLIC, "81"))
+            )
+        )
+        receipt = catalog.ingest(original)
+        self.assertEqual(
+            [r["ordinal"] for r in catalog.blood_pressure_lineage(receipt["sha256"])],
+            [1, 2],
+        )
+        self.assertEqual(len(list(catalog.blood_pressure(current=True))), 2)
+        tombstone = self.root / "native-page.json"
+        tombstone.write_text(json.dumps(api_page("systolic", deleted=[UUIDS[1]])))
+        catalog.ingest_bp_page(tombstone)
+        self.assertEqual(len(list(catalog.blood_pressure())), 2)
+        current = list(catalog.blood_pressure(current=True))
+        self.assertEqual(len(current), 1)
+        self.assertIsNone(current[0]["native_ref"])
+
+    @unittest.skipUnless(
+        os.environ.get("MSE_HISTORY_AGE_BIN"), "requires pinned synthetic age tool"
+    )
+    def test_authenticated_zip_runner_reopens_typed_db_and_consumer_snapshot(self):
+        age = Path(os.environ["MSE_HISTORY_AGE_BIN"]).resolve()
+        identity = self.root / "detached"
+        subprocess.run(
+            [age.with_name("age-keygen"), "-pq", "-o", identity],
+            check=True,
+            capture_output=True,
+        )
+        recipient = subprocess.check_output(
+            [age.with_name("age-keygen"), "-y", identity]
+        ).strip()
+        pin = sha256(recipient).hexdigest()
+        original = self.root / "export.zip"
+        with ZipFile(original, "w") as archive:
+            archive.writestr(
+                "apple_health_export/export.xml",
+                xml(
+                    correlation(record(SYSTOLIC, "124.50") + record(DIASTOLIC, "81"))
+                    + record(SYSTOLIC, "120")
+                    + '<Workout><WorkoutRoute><FileReference path="../opaque.gpx"/></WorkoutRoute></Workout>'
+                    + '<Record type="HKClinicalTypeIdentifierLabResultRecord"/>'
+                    + "<MedicationRecord/>"
+                ),
+            )
+            archive.writestr("opaque.gpx", b"fabricated route attachment")
+        raw = original.read_bytes()
+        cipher = self.root / "cipher.age"
+        cipher.touch(mode=0o600)
+        with cipher.open("wb") as stream:
+            subprocess.run(
+                [age, "-e", "-r", recipient],
+                input=raw,
+                stdout=stream,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+        encrypted = cipher.read_bytes()
+        vault_root = self.root / "vault"
+        vault_root.mkdir(mode=0o700)
+        enrollment = Enrollment(
+            "synthetic-vault",
+            "synthetic-import",
+            pin,
+            sha256(encrypted).hexdigest(),
+            len(encrypted),
+            THROUGH,
+            12 * 1024**3,
+            16 * 1024**3,
+            True,
+        )
+        vault = CiphertextVault(vault_root, enrollment, clock=lambda: utc(UTC))
+        vault.initialize()
+        receipt = vault.put(0, len(encrypted), encrypted, enrollment.expected_sha256)
+        typed, scratch = self.root / "typed", self.root / "scratch"
+        typed.mkdir(mode=0o700)
+        scratch.mkdir(mode=0o700)
+        pkey, ckey = self.root / "provenance", self.root / "consumer"
+        for file in (pkey, ckey):
+            file.touch(mode=0o600)
+            file.write_bytes(b"k" * 32)
+        binding = self.root / "binding.json"
+        binding.touch(mode=0o600)
+        value = dict(
+            receipt=receipt,
+            recipient_fingerprint=pin,
+            plaintext_sha256=sha256(raw).hexdigest(),
+            plaintext_length=len(raw),
+            age_sha256=sha256(age.read_bytes()).hexdigest(),
+        )
+        base = [
+            sys.executable,
+            "-B",
+            "-m",
+            "integrations.mse_health_history.native_runner",
+        ]
+        common = [
+            "--root",
+            str(typed),
+            "--enrollment",
+            "synthetic-history-test",
+            "--provenance-key-file",
+            str(pkey),
+        ]
+
+        def run(mode, *args, check=True):
+            return subprocess.run(
+                [*base, mode, *common, *args],
+                check=check,
+                capture_output=True,
+                text=True,
+            )
+
+        run("init")
+        import_args = [
+            "--custodian-binding",
+            str(binding),
+            "--ciphertext",
+            str(cipher),
+            "--age-executable",
+            str(age),
+            "--identity-file",
+            str(identity),
+            "--scratch-root",
+            str(scratch),
+        ]
+        binding.write_text(json.dumps(dict(value, plaintext_sha256="0" * 64)))
+        self.assertEqual(run("import", *import_args, check=False).returncode, 1)
+        binding.write_text(json.dumps(value))
+        first = json.loads(run("import", *import_args).stdout)
+        self.assertEqual(first, json.loads(run("import", *import_args).stdout))
+        self.assertEqual(first["normalized_bp_rows"], 2)
+        self.assertEqual(first["unnormalized_top_level_rows"], 3)
+        self.assertFalse(list((typed / "originals").iterdir()))
+        self.assertFalse(list(scratch.iterdir()))
+        typed_catalog = SyntheticHistoryCatalog(
+            typed, enrollment="synthetic-history-test", key=b"k" * 32
+        )
+        bound = typed_catalog.receipt(value["plaintext_sha256"])
+        self.assertEqual(bound["ciphertext_receipt"], receipt)
+        self.assertTrue(
+            any(
+                row["family"] == "attachment_reference"
+                for row in bound["nested_occurrences"]
+            )
+        )
+        output = self.root / "projection.db"
+        run(
+            "snapshot",
+            "--purpose",
+            "mother-bp-cgm-review",
+            "--consumer-key-file",
+            str(ckey),
+            "--start",
+            UTC,
+            "--end",
+            THROUGH,
+            "--output",
+            str(output),
+        )
+        with sqlite3.connect(output.as_uri() + "?mode=ro", uri=True) as conn:
+            body = json.loads(conn.execute("SELECT body FROM facts").fetchone()[0])
+            self.assertEqual(body["systolic"], "124.5")
+            self.assertNotIn("source_ref", body)
+            with self.assertRaises(sqlite3.OperationalError):
+                conn.execute("DELETE FROM facts")

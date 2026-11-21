@@ -35,6 +35,7 @@ class Limits:
     xml_depth: int = 32
     xml_token_bytes: int = 256 * 1024
     top_level_rows: int = 30_000_000
+    total_xml_elements: int = 90_000_000
     type_buckets: int = 4096
 
     def __post_init__(self):
@@ -77,6 +78,12 @@ def _kind(tag, source_type):
         "ActivitySummary": "activity",
         "Audiogram": "audiogram",
         "Electrocardiogram": "ecg",
+        "ClinicalRecord": "clinical",
+        "MedicationRecord": "medication",
+        "HeartbeatSeries": "series",
+        "WorkoutStatistics": "workout",
+        "WorkoutEvent": "workout",
+        "FileReference": "attachment_reference",
         "WorkoutRoute": "route",
         "VisionPrescription": "vision",
         "Medication": "medication",
@@ -84,7 +91,7 @@ def _kind(tag, source_type):
     }.get(tag, "other")
 
 
-def _scan_xml(stream, member_index, limits, on_row):
+def _scan_xml(stream, member_index, limits, on_row, on_nested):
     parser = expat.ParserCreate()
     parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
     parser.EntityDeclHandler = _forbidden
@@ -94,6 +101,7 @@ def _scan_xml(stream, member_index, limits, on_row):
     cursor = 0
     depth = 0
     ordinal = 0
+    elements = 0
     pending = None
     root_seen = False
 
@@ -104,8 +112,14 @@ def _scan_xml(stream, member_index, limits, on_row):
             _forbidden()
 
     def start(tag, attrs):
-        nonlocal depth, pending, root_seen
+        nonlocal depth, pending, root_seen, elements
+        elements += 1
+        if elements > limits.total_xml_elements:
+            raise InvalidHistory("XML total element limit exceeded")
         depth += 1
+        if depth > 2 and on_nested is not None:
+            source_type = attrs.get("type", "")
+            on_nested(_kind(tag, source_type), source_type or tag)
         if depth > limits.xml_depth:
             raise InvalidHistory("XML depth limit exceeded")
         if sum(len(k) + len(v) for k, v in attrs.items()) > limits.xml_token_bytes:
@@ -168,7 +182,7 @@ def _scan_xml(stream, member_index, limits, on_row):
     return hashing.hexdigest(), cursor
 
 
-def scan(stream, limits, on_row, on_member):
+def scan(stream, limits, on_row, on_member, on_nested=None):
     """Read an already-open, stable local file and return its exact byte identity."""
     stream.seek(0)
     original = hash_stream(stream, limits.archive_bytes)
@@ -176,7 +190,7 @@ def scan(stream, limits, on_row, on_member):
     directory = _EndRecData(stream)
     if directory is None:
         stream.seek(0)
-        member = _scan_xml(stream, 1, limits, on_row)
+        member = _scan_xml(stream, 1, limits, on_row, on_nested)
         if member != original:
             raise InvalidHistory("original changed during inventory")
         on_member(1, None, "healthdata_xml", *member)
@@ -233,7 +247,7 @@ def scan(stream, limits, on_row, on_member):
             )
             with archive.open(info) as member:
                 result = (
-                    _scan_xml(member, index, limits, on_row)
+                    _scan_xml(member, index, limits, on_row, on_nested)
                     if kind == "healthdata_xml"
                     else hash_stream(member, limits.member_bytes)
                 )
