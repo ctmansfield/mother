@@ -1,0 +1,2 @@
+# Optional BROJA acceptance environment. Requires Python 3.11 or newer.
+dit==2.4

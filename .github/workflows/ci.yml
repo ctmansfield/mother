@@ -22,10 +22,13 @@ jobs:
           python-version: '3.12'
       - name: Install
         run: make install
+      - name: Install BROJA test dependency
+        run: .venv/bin/python -m pip install -r requirements-broja.txt
       - name: Verify
         run: make verify
       - name: Tests
         env:
           COACH_CHECKOUT: ${{ github.workspace }}/.paired-coach
           PYTHONPATH: .:.paired-coach
+          MOTHER_REQUIRE_BROJA: '1'
         run: make test
