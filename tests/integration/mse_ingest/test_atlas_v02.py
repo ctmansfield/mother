@@ -41,7 +41,7 @@ class Atlas02Tests(unittest.TestCase):
 
     def ingest(self, export=None, original=None, service=None, normalizer=None):
         export = export or self.export
-        return (service or self.service()).ingest(
+        return (service or self.service())._ingest(
             original or self.original,
             export,
             adapter_version="forge-golden-test",

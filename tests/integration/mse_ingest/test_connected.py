@@ -137,7 +137,7 @@ class ConnectedTests(unittest.TestCase):
             self.snapshot(second["commit_sequence"])["observations"],
             initial["observations"],
         )
-        next_version = "forge-pf001-trial-version-2"
+        next_version = "forge-pf001-binary64-trial-2"
         remodel = self.ingest("baseline", "remodel", normalizer=next_version)
         self.assertEqual(
             self.snapshot(second["commit_sequence"], next_version)["observations"], []
@@ -280,3 +280,106 @@ class ConnectedTests(unittest.TestCase):
                             for loss in result["input_losses"]
                         )
                     )
+
+    def test_direct_intake_requires_complete_original_binding(self):
+        original, genuine = self.capture("baseline", "bound")
+        service = self.open()
+        changes = {
+            "different value": {"value": 12},
+            "different measurement time": {"start": 785000001},
+            "different source": {"source": "Alternate synthetic source"},
+            "different bundle": {"bundleID": "org.example.alternate"},
+            "different channel and unit": {"kind": "Heart rate", "unit": "bpm"},
+        }
+        for name, change in changes.items():
+            with self.subTest(name=name):
+                captures = json.loads(original)
+                captures["readings"][1].update(change)
+                _, different = self.capture(
+                    "baseline", "bound", original=json.dumps(captures).encode()
+                )
+                with self.assertRaisesRegex(ValueError, "Export"):
+                    service.ingest_export(
+                        original, dict(different, artifact=genuine["artifact"])
+                    )
+        incomplete = deepcopy(genuine)
+        incomplete["revisions"] = [
+            fact for fact in incomplete["revisions"] if fact["operation"] != "delete"
+        ]
+        for name, invalid in (
+            ("incomplete deletions", incomplete),
+            ("wrong exporter", dict(genuine, exporter_version="different-adapter")),
+        ):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "Export"):
+                service.ingest_export(original, invalid)
+        with self.assertRaisesRegex(TypeError, "authoritative intake"):
+            service.ingest(original, genuine, normalize=lambda *_: ([], []))
+        from integrations.healthbridge.capture import CaptureLimits
+
+        with self.assertRaisesRegex(ValueError, "byte"):
+            service.ingest_export(b" " * (CaptureLimits().byte_length + 1), genuine)
+        self.assertEqual(list(self.root.iterdir()), [])
+        self.assertEqual(
+            service.ingest_export(original, genuine)["status"], "normalized"
+        )
+
+    def test_binary64_loss_is_bound_at_write_and_reopened_cutoff(self):
+        from integrations.mse_snapshot.ledger import replay_ledger_snapshot
+
+        capture = json.loads((self.fixtures / "baseline.json").read_bytes())
+        capture["readings"][1]["value"] = 0.1
+        receipt = self.ingest(
+            "baseline", "decimal", original=json.dumps(capture).encode()
+        )
+        snapshot = self.snapshot(receipt["commit_sequence"])
+        expected = [
+            {
+                "field": field,
+                "reason": "pf001_binary64_rounding",
+                "exact_decimal": "0.1",
+                "projected_binary64_hex": (0.1).hex(),
+            }
+            for field in ("original_value", "value")
+        ]
+        with Archive(self.root / "physiology.sqlite3") as archive:
+            (record,) = archive.records(current=False)
+            self.assertEqual(record["metadata"]["numeric_projection_losses"], expected)
+        fields = {
+            loss["field"]
+            for loss in snapshot["losses"]
+            if loss["reason"] == "pf001_binary64_rounding"
+        }
+        self.assertEqual(fields, {"original_value", "value"})
+        reopened = self.open()
+        replay = replay_ledger_snapshot(
+            json.dumps(snapshot).encode(),
+            ledger=reopened,
+            expected_scope=self.scope.fields(),
+            expected_archive_id=reopened.archive_id,
+            max_bytes=65_536,
+            max_members=100,
+        )
+        self.assertEqual(replay["input_losses"], snapshot["losses"])
+        snapshot["losses"] = []
+        self.assertFalse(reopened.verify_snapshot(snapshot))
+
+    def test_unrepresentable_binary64_is_retained_without_observation(self):
+        original = (self.fixtures / "baseline.json").read_bytes()
+        value = b"9" * 150 + b"e200"
+        original = original.replace(b'"value": 41.5', b'"value": ' + value)
+        receipt = self.ingest("baseline", "decimal-exclusion", original=original)
+        snapshot = self.snapshot(receipt["commit_sequence"])
+        self.assertTrue(self.open().verify_snapshot(snapshot))
+        self.assertEqual(len(snapshot["observations"]), 1)
+        self.assertEqual(
+            sum(
+                loss["reason"] == "pf001_binary64_out_of_range"
+                for loss in snapshot["losses"]
+            ),
+            2,
+        )
+        with Archive(self.root / "physiology.sqlite3") as archive:
+            self.assertEqual(archive.records(current=False), [])
+            self.assertTrue(
+                any(row["native_id"].endswith("0002") for row in archive.revisions())
+            )
