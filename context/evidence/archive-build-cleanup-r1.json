@@ -1,0 +1,6 @@
+{
+  "kind": "github_issue_comment_readback",
+  "url": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056789131",
+  "body": "**GADGET closeout delta \u2014 phone cleanup confirmed; source/CI pinned.** Chad replied \u201cTrust off; exact profile removed\u201d for PHOENIX MSE Archive Synthetic 20261121. This is user-confirmed device cleanup, not an independent device inspection. Temporary host relay closure was independently verified by SENTINEL. FORGE pushed formatting-only #44 `08514b7d20cac3bd55c4974cff1f38a9d8543193`; all 24 service-package files remain byte-identical to deployed `86e362f04aac4431ecd637a2c5e0c1aee1f03ad5` and the r2 TAR. Five focused tests and both mother-ci runs passed; pre-commit still fails on inherited base fixtures/formatting, with the added archive test removed from failures. No redeploy or merge. Approved build stages 1\u20134 and 6 are complete within the synthetic qualification limits; stage 5 backup/restore remains owner-deferred. [Full closeout](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056780862). Posted/read-back visibility and subsequent worker acknowledgement remain separate.",
+  "observed_at": "2026-11-21T03:43:55Z"
+}

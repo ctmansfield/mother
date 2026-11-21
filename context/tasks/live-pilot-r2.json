@@ -1,0 +1,145 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-LIVE-PILOT-20261121-05",
+  "task_revision": "2",
+  "observed_at": "2026-11-21T05:16:20Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Current launch directive and running report read back; new live CA trust is user-confirmed."
+  },
+  "goal": "Install and activate a private prospective 48-hour selected HealthKit archival pilot.",
+  "scope": [
+    "Reviewed live client and endpoint, safe in-place phone install, prospective 14-type pilot, retained archive and finite cutoff."
+  ],
+  "acceptance": [
+    "Independent source/runtime readiness, preserved collector, same phone/server start-end, actual first live receipt/original/view/export reconciliation and subsequent status."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Implement missing live integration, scoped deployment/credentials, safe phone install and 48-hour selected HealthKit transfer to private archive VM with archival retention."
+    ],
+    "not_authorized": [
+      "Public exposure, historical backfill, LLM forwarding, main merge, unrelated VM/IDS changes."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Backups/restores deferred. Preserve accepted synthetic evidence and collector. No health values or secrets in shared reports. Actual start is unset until verified readiness."
+  ],
+  "instruction_binding": {
+    "id": "MSE-LIVE-PILOT-20261121-05",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057163283",
+    "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "LIVE-PILOT-RUNNING-R2",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-LIVE-PILOT-20261121-05",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057163283",
+      "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002"
+    },
+    "source": "report",
+    "tests_performed": [
+      "Independent signed recovery build49tests; in-place collector/state preservation; exact real phone/server receipts1+2, retained originals and scoped exports matched,23 acknowledged rows and queue0."
+    ],
+    "limitations": [
+      "Initial HTTP failure remains unclassified. Locked-background and full48h completion unverified. No demonstrated disk encryption or anonymity."
+    ],
+    "requested_decision": "None for running selected pilot.",
+    "next_action": "#next_action"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-LIVE-PILOT-20261121-05",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7057163283",
+      "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "48h-live-archival",
+      "value": "Prospective 48-hour selected-data transfer; accepted archive retained without age purge.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit user launch authorization."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "PUSHED_REVIEWED",
+      "detail": "Installed app 295beda; deployed server e6762b0. Clock-tolerance49 not deployed.",
+      "source": "report"
+    },
+    "test": {
+      "status": "LIVE_ACCEPTANCE_PASS",
+      "detail": "First actual receipt 15:04:41 Guam andnatural follow-up 15:05:07 matched phone/server. Counts are point-in-time.",
+      "source": "report"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "Source drafts; no main merge.",
+      "source": "report"
+    },
+    "deploy": {
+      "status": "DEPLOYED",
+      "detail": "Private selected service/relay active; preserved old synthetic archive.",
+      "source": "report"
+    },
+    "runtime": {
+      "status": "RUNNING",
+      "detail": "Window Nov 21 14:45\u2192Nov23 14:45 Guam, archival retention afterward, backups deferred.",
+      "source": "report"
+    }
+  },
+  "unknowns": [
+    "Full-window coverage/cutoff/locked-background outcome pending; historical HTTP cause unclassified."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [],
+  "next_action": {
+    "action": "Preserve running 14-type pilot and finite cutoff. Historical all-category/BP work uses separate enrollment; never replay committed batches.",
+    "role": "GADGET and existing owners"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/live-pilot-source-r1.json",
+      "sha256": "8a09d0692cb76b9a3e465e40c9a1f7121164735def2452c993db5338adce8002",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact directive readback.",
+        "result": "Published directive visible.",
+        "limitations": [
+          "No execution or recipient acknowledgement implied."
+        ],
+        "observed_at": "2026-11-21T04:21:32Z"
+      }
+    },
+    "report": {
+      "path": "evidence/live-pilot-running-r2.json",
+      "sha256": "0e19cd624d3e4b3b248617bd8a4cb4147aa0517f7c032fe52943ca649cc7a502",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated canonical comment readback.",
+        "result": "Published and visible; recipient acknowledgements separate.",
+        "limitations": [
+          "No full-window completion inferred."
+        ],
+        "observed_at": "2026-11-21T05:16:20Z"
+      }
+    }
+  }
+}

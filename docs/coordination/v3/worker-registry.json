@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "task": "MSE-ALL-ZIP-DATA-20261121-07",
+  "revision": 2,
+  "workers": [
+    {
+      "name": "ATLAS",
+      "wave": 1,
+      "old": "01a1f847-4b91-74c1-ae93-d40881bf0310",
+      "handoff": "https://github.com/ctmansfield/mother/blob/cee8de8168cd6c70d5ac7f24bf53983cf6d293f5/docs/mse/integration/ATLAS_V3_HANDOFF_2026-11-21.md",
+      "new": "01a1fd7b-3e34-7833-9392-bca50d2dc932",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    },
+    {
+      "name": "ORACLE",
+      "wave": 1,
+      "old": "01a1f837-f3d0-7471-8c84-0cf5e14cc35b",
+      "handoff": "https://github.com/ctmansfield/mother-health-bridge/tree/778a9ef614c022d17f30348aa6d3439a6fd73b10/context/handoffs/oracle-v3",
+      "new": "01a1fd7b-3f19-72f0-9873-dc5092c64452",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    },
+    {
+      "name": "SENTINEL",
+      "wave": 2,
+      "old": "01a1f846-2cbc-7d10-9ed4-12756f88bdf5",
+      "handoff": "https://github.com/ctmansfield/mother/blob/21c2570ac382c616e62e35e2d20cb05f434be83b/docs/mse/integration/SENTINEL_V3_HANDOFF.md",
+      "new": "01a1fd7d-3c5e-72d2-a9d1-483184ae7def",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    },
+    {
+      "name": "PROVENANCE",
+      "wave": 2,
+      "old": "01a1f845-0eb7-7aa1-8c7d-e306d1807818",
+      "handoff": "https://github.com/ctmansfield/mother/blob/aa6b929c3bd0360fa8bf72dc1e6a4f787d668a27/docs/mse/integration/PROVENANCE_V3_HANDOFF.md",
+      "new": "01a1fd7d-3d79-7740-97b0-e3e7a012a86b",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    },
+    {
+      "name": "FORGE",
+      "wave": 3,
+      "old": "01a1f838-bfd4-7af3-9174-ce3864d66002",
+      "handoff": "https://github.com/ctmansfield/mother/blob/f79bdca5ccc8944f68f2ab84b1f60041cd51f0df/docs/mse/integration/FORGE_V3_HANDOFF.md",
+      "new": "01a1fd7e-cd71-77b2-a268-65fb169265cb",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    },
+    {
+      "name": "PHOENIX",
+      "wave": 3,
+      "old": "01a1f843-b2d8-70d0-9cfd-13f3166538d3",
+      "handoff": "https://github.com/ctmansfield/mother/blob/9c47147fe27f25c71e3f4ea78a872a1051f9f78f/tools/mse_integration/recovery/health_history_vault/PHOENIX_V3_HANDOFF.md",
+      "new": "01a1fd7e-ceb1-7130-b323-be09fba3c0af",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    },
+    {
+      "name": "NICKY",
+      "wave": 4,
+      "old": "01a1f842-a1fb-7940-a67a-db78447f14f6",
+      "handoff": "https://github.com/ctmansfield/mother/blob/0353986/docs/coordination/v3/NICKY_V3_HANDOFF.md",
+      "new": "01a1fd80-7ed2-7352-8695-74c7772f3c38",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    },
+    {
+      "name": "LONESTAR",
+      "wave": 4,
+      "old": "01a1f847-6984-7741-8ca5-7ac3f767335a",
+      "handoff": "https://github.com/ctmansfield/mother/blob/7ebe3c8f3d64247d542229114ec2884480553e0e/docs/mse/integration/LONESTAR_V3_HANDOFF.md",
+      "new": "01a1fd80-7ffd-7f12-89e0-ed8fcf77d99e",
+      "hostId": "local",
+      "predecessor": "standby",
+      "readiness": "V3_READY",
+      "ownership": "active_v3"
+    }
+  ],
+  "migration_status": "All eight saved, launched in four waves, intake acknowledged; v3 activation messages delivered, execution separate."
+}

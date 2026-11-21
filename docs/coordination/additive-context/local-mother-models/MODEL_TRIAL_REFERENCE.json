@@ -1,0 +1,49 @@
+{
+  "models": {
+    "deepseek-r1:14b": {
+      "cap": 1800,
+      "digest": "c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09"
+    },
+    "medgemma:27b": {
+      "cap": 1500,
+      "digest": "58238ae38f99827496301de22016b2f94157552971f5a38db226f13802c2437e"
+    },
+    "qwen3.8:27b": {
+      "cap": 2400,
+      "digest": "aaee06c39dcf2437cde036998d960e1fc1494b8191be7cc9657d01e509097813"
+    }
+  },
+  "cases": 8,
+  "gpu_observed": 40,
+  "analyst_correct": 3,
+  "predeclared_thresholds": {
+    "accepted_known_bad_candidates": 0,
+    "analyst_correct_min": 7,
+    "exact_negative_controls_per_reviewer": 8,
+    "gpu_observed_requests": 40,
+    "reviewer_correct_each_min": 15,
+    "reviewer_false_approvals": 0
+  },
+  "reviewers": {
+    "deepseek-r1:14b": {
+      "correct": 10,
+      "exact_planted_controls": 1,
+      "false_approvals": 6,
+      "false_holds": 0,
+      "gate_pass": false,
+      "peak_tokens": 1454,
+      "valid": 16
+    },
+    "qwen3.8:27b": {
+      "correct": 16,
+      "exact_planted_controls": 8,
+      "false_approvals": 0,
+      "false_holds": 0,
+      "gate_pass": true,
+      "peak_tokens": 963,
+      "valid": 16
+    }
+  },
+  "source_sha256": "cba6ffb11580ae72a8779dd9efc6dbbf5911b6315b923a11c3d77908cd481140",
+  "source_description": "Local Mother/Coach evaluation chat, compact comparison eligibility trial; saved synthetic results read 2026-11-21. This is historical trial evidence, not a fresh host probe or prompt evaluation."
+}
