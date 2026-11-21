@@ -94,3 +94,20 @@ The phone connects only to a private HTTPS ingestion API over Tailscale. The API
 4. Advance the associated delivery checkpoint and release outbox bytes only after verifying a receipt bound to that artifact and batch, under the approved retention policy. Keep a HealthKit acquisition anchor distinct from the delivery checkpoint.
 
 Prior synthetic upload evidence supports a bounded private network transfer, and the [offline custody rehearsal](https://github.com/ctmansfield/mother/pull/29) supports local receipt/restore behavior at tested cuts. The archive API, phone outbox integration, continuous real-data sync and background delivery still need separate qualification. The connection and sync design authorizes no provisioning, deployment or certificate action.
+
+### Incremental delivery and latency
+
+The long-term goal is event-driven incremental delivery as close to real time as the source, iOS and connectivity allow. An initial foreground-only trial can establish durability with small bounded HTTPS batches. Manual export and periodic full-archive copies can support bootstrap or recovery, with incremental delivery as the target. WSS or MQTT are later transport options if measurements justify them. No transport protocol has been selected.
+
+Measure and report each interval separately when the clocks are available and comparable:
+
+| Interval | What it measures |
+| --- | --- |
+| Measurement completion to HealthKit availability | Sensor, device and source publication delay. The source availability timestamp may be unknown. |
+| HealthKit availability to durable phone acquisition | Observer scheduling, query execution and local acquisition/outbox persistence. A query anchor tracks acquisition scope and position. |
+| Durable phone acquisition to archive commit | Outbox wait, offline time, batching, network transfer, retries and server commit. |
+| Archive commit to verified phone receipt | Delivery reconciliation and when the phone can safely advance its delivery checkpoint. |
+
+Retain queued additions and tombstones across offline periods and relaunches. Catch up from the committed acquisition position with bounded batches and backpressure, preserving exact retries and receipt reconciliation. Track queue age and the oldest uncommitted batch separately from the acquisition anchor and archive watermark. Define latency targets after measuring representative conditions.
+
+Qualify HealthKit observer wakeups and background delivery on the intended physical iPhone. Separately qualify file-backed background URLSession uploads, including app suspension, relaunch, interrupted transfer, receipt recovery and private connectivity. The architecture assumes neither a continuously available background socket nor a guaranteed HealthKit publication cadence for HR or HRV. Previous synthetic foreground and offline custody evidence does not establish these capabilities.
