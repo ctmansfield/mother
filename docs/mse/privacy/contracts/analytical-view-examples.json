@@ -1,0 +1,186 @@
+{
+  "valid": [
+    {
+      "schema_version": "mse.analytics-view/0.1",
+      "purpose": "aggregate_hr_sdnn",
+      "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
+      "projection_version": "relative-hour-mean/0.1",
+      "time_basis": "relative_60_minute_bucket",
+      "view_id": "av_80ae17e87bb8d214391706daae9c4f16",
+      "rows": [
+        {
+          "bucket_index": 0,
+          "channel": "heart_rate",
+          "unit": "bpm",
+          "mean_value": "62.4"
+        },
+        {
+          "bucket_index": 0,
+          "channel": "hrv_sdnn",
+          "unit": "ms",
+          "mean_value": "41.0"
+        }
+      ],
+      "projection_loss": [
+        "coverage_unknown",
+        "relative_time_binning",
+        "some_outputs_suppressed",
+        "value_aggregation_and_rounding"
+      ]
+    },
+    {
+      "schema_version": "mse.analytics-view/0.1",
+      "purpose": "aggregate_hr_sdnn",
+      "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
+      "projection_version": "relative-hour-mean/0.1",
+      "time_basis": "relative_60_minute_bucket",
+      "view_id": "av_80ae17e87bb8d214391706daae9c4f16",
+      "rows": [],
+      "projection_loss": [
+        "coverage_unknown"
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "name": "direct_identifier",
+      "value": {
+        "schema_version": "mse.analytics-view/0.1",
+        "purpose": "aggregate_hr_sdnn",
+        "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
+        "projection_version": "relative-hour-mean/0.1",
+        "time_basis": "relative_60_minute_bucket",
+        "view_id": "av_80ae17e87bb8d214391706daae9c4f16",
+        "rows": [
+          {
+            "bucket_index": 0,
+            "channel": "heart_rate",
+            "unit": "bpm",
+            "mean_value": "62.4"
+          },
+          {
+            "bucket_index": 0,
+            "channel": "hrv_sdnn",
+            "unit": "ms",
+            "mean_value": "41.0"
+          }
+        ],
+        "projection_loss": [
+          "coverage_unknown",
+          "relative_time_binning",
+          "some_outputs_suppressed",
+          "value_aggregation_and_rounding"
+        ],
+        "subject_id": "synthetic-subject"
+      }
+    },
+    {
+      "name": "exact_timestamp",
+      "value": {
+        "schema_version": "mse.analytics-view/0.1",
+        "purpose": "aggregate_hr_sdnn",
+        "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
+        "projection_version": "relative-hour-mean/0.1",
+        "time_basis": "relative_60_minute_bucket",
+        "view_id": "av_80ae17e87bb8d214391706daae9c4f16",
+        "rows": [
+          {
+            "bucket_index": 0,
+            "channel": "heart_rate",
+            "unit": "bpm",
+            "mean_value": "62.4",
+            "timestamp": "2001-01-01T00:00:00.000000Z"
+          }
+        ],
+        "projection_loss": [
+          "coverage_unknown",
+          "relative_time_binning",
+          "some_outputs_suppressed",
+          "value_aggregation_and_rounding"
+        ]
+      }
+    },
+    {
+      "name": "wrong_unit",
+      "value": {
+        "schema_version": "mse.analytics-view/0.1",
+        "purpose": "aggregate_hr_sdnn",
+        "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
+        "projection_version": "relative-hour-mean/0.1",
+        "time_basis": "relative_60_minute_bucket",
+        "view_id": "av_80ae17e87bb8d214391706daae9c4f16",
+        "rows": [
+          {
+            "bucket_index": 0,
+            "channel": "hrv_sdnn",
+            "unit": "bpm",
+            "mean_value": "41.0"
+          }
+        ],
+        "projection_loss": [
+          "coverage_unknown",
+          "relative_time_binning",
+          "some_outputs_suppressed",
+          "value_aggregation_and_rounding"
+        ]
+      }
+    },
+    {
+      "name": "stable_hash",
+      "value": {
+        "schema_version": "mse.analytics-view/0.1",
+        "purpose": "aggregate_hr_sdnn",
+        "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
+        "projection_version": "relative-hour-mean/0.1",
+        "time_basis": "relative_60_minute_bucket",
+        "view_id": "av_80ae17e87bb8d214391706daae9c4f16",
+        "rows": [
+          {
+            "bucket_index": 0,
+            "channel": "heart_rate",
+            "unit": "bpm",
+            "mean_value": "62.4"
+          },
+          {
+            "bucket_index": 0,
+            "channel": "hrv_sdnn",
+            "unit": "ms",
+            "mean_value": "41.0"
+          }
+        ],
+        "projection_loss": [
+          "coverage_unknown",
+          "relative_time_binning",
+          "some_outputs_suppressed",
+          "value_aggregation_and_rounding"
+        ],
+        "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "unchecked_precision",
+      "value": {
+        "schema_version": "mse.analytics-view/0.1",
+        "purpose": "aggregate_hr_sdnn",
+        "policy_version": "synthetic-aggregate-hr-sdnn/0.1",
+        "projection_version": "relative-hour-mean/0.1",
+        "time_basis": "relative_60_minute_bucket",
+        "view_id": "av_80ae17e87bb8d214391706daae9c4f16",
+        "rows": [
+          {
+            "bucket_index": 0,
+            "channel": "heart_rate",
+            "unit": "bpm",
+            "mean_value": "62.412"
+          }
+        ],
+        "projection_loss": [
+          "coverage_unknown",
+          "relative_time_binning",
+          "some_outputs_suppressed",
+          "value_aggregation_and_rounding"
+        ]
+      }
+    }
+  ]
+}
