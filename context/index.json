@@ -10,8 +10,8 @@
       "sha256": "56639a1575f8ec23b1f8fc7a009d8f4ad795dea8cb2f7848862d7b2cc2db6cf8"
     },
     "MSE-ALL-ZIP-DATA-20261121-07": {
-      "path": "tasks/all-zip-data-r1.json",
-      "sha256": "6fbf8c653d5f3fef036a53dc09d24ae761a3bbbe921da87ef8c16a03140e6ae6"
+      "path": "tasks/all-zip-data-r2.json",
+      "sha256": "719c337857bfdca2dfa0366e60b75f5197c67eea72cde4b697634e8e085f9632"
     },
     "MSE-EVIDENCE-INFRA-20261121-02": {
       "path": "tasks/archive-build-r1.json",
