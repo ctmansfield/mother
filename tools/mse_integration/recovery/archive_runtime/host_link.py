@@ -3,10 +3,13 @@ import hashlib, ipaddress, json, os, subprocess, sys, time, uuid
 from xml.etree import ElementTree as E
 
 P = json.loads(Path(sys.argv[1]).read_text())
-name = "phoenix-mse-evidence-20261121"
+targets = {
+    "phoenix-mse-evidence-20261121": ("virbr-msearc", "phoenix_mse_archive_link"),
+    "phoenix-mse-repro-20261121": ("virbr-mserepro", "phoenix_mse_repro_link"),
+}
+name = P.get("name", "phoenix-mse-evidence-20261121")
+bridge, table = targets[name]
 net = name + "-isolated"
-bridge = "virbr-msearc"
-table = "phoenix_mse_archive_link"
 root = Path("/var/lib/libvirt/images") / name
 
 
