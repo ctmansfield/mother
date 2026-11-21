@@ -502,13 +502,19 @@ class UniversalStore:
         self.receipt()
         with closing(self.connect()) as db:
             row = db.execute(
-                f"""SELECT e.attributes,{native_source.LEVEL_SQL}
+                f"""SELECT e.attributes,{native_source.LEVEL_SQL},parent.parent
                    FROM native_source_elements e JOIN native_source_occurrences o
                      ON o.artifact=e.artifact AND o.member=e.member AND o.ordinal=e.occurrence
+                   LEFT JOIN native_source_elements parent
+                     ON parent.artifact=e.artifact AND parent.member=e.member
+                    AND parent.element=e.parent
                    WHERE e.artifact=? AND e.member=? AND e.occurrence=? AND e.element=?""",
                 (self.manifest["artifact"], member, ordinal, element),
             ).fetchone()
-        if row is None or row[1] not in ("fallback", "descriptor"):
+        if row is None or not (
+            row[1] in ("fallback", "descriptor")
+            or (row[1] == "typed" and row[2] is not None)
+        ):
             raise KeyError("approved structured fallback absent")
         data = dict(json.loads(row[0]))
         require(

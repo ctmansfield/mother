@@ -1,6 +1,8 @@
 # Native Health ZIP universal review candidate
 
-Scope is MSE-ALL-ZIP-DATA-20261121-07 revision 1. Preserve the exact
+Scope is MSE-ALL-ZIP-DATA-20261121-07 revision 2. Every real-data
+step is user-manual, including offline preflight, admissions, verification
+and cleanup. Preserve the exact
 original and the successful PR #61 inventory and BP catalog. Use a
 fresh encrypted catalog if this candidate is ever admitted. No agent
 runs the real archive. This document is for independent source and
@@ -142,3 +144,13 @@ fabricated 9 MiB case needed about 12.06 MiB of spool, 12.25 MiB of staged
 SQLite, and 21.40 MiB of witnessed SQLite. Those measurements inform the
 operator estimate. They do not establish a production bound or certify the
 target volume.
+
+Purpose discovery reports whether genuinely timeless rows are eligible.
+Rows with an invalid supplied clock stay in protected source storage.
+Default purpose cursors refer to the last returned eligible row and are
+present only when another eligible row exists. Restart pagination after
+upgrading from the previous candidate. Reviewed fallback grants may
+select exact attributes of a nested element under a typed occurrence.
+Approved source XML also includes UTF-16 GPX recognized by a byte-order
+mark or XML opening signature. The parser retains the original member
+bytes and indexes decoded structure independently.

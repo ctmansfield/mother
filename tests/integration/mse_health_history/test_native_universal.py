@@ -47,7 +47,10 @@ class NativeUniversalTests(unittest.TestCase):
                 ("resources/", b""),
                 (
                     "resources/route.gpx",
-                    b'<gpx xmlns="urn:gpx"><trk><name>synthetic</name></trk></gpx>',
+                    b"\xfe\xff"
+                    + '<gpx xmlns="urn:gpx"><trk><name>synthetic</name></trk></gpx>'.encode(
+                        "utf-16-be"
+                    ),
                 ),
                 (
                     "resources/cda.xml",
@@ -116,7 +119,12 @@ class NativeUniversalTests(unittest.TestCase):
             )
             self.assertEqual(json.loads(found[0]["attributes_json"]), [["z:key", "v"]])
 
+            route = readback.source_elements(archive, 3)
+            self.assertEqual(
+                [item["qualified_name"] for item in route], ["gpx", "trk", "name"]
+            )
             members = readback.members(archive)
+            self.assertEqual(members[2]["kind"], "source_xml")
             for row, (path, raw) in zip(members, entries):
                 self.assertEqual(row["path"], path)
                 self.assertEqual(row["sha256"], sha256(raw).hexdigest())
@@ -424,6 +432,7 @@ def verify_universal_https(
     ca = root / "client-ca.pem"
     ca.write_bytes(b"".join(cert.read_bytes() for cert, _ in certs.values()))
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
     context.load_cert_chain(server_cert, server_key)
     context.load_verify_locations(cafile=ca)
     context.verify_mode = ssl.CERT_REQUIRED
@@ -542,6 +551,15 @@ def verify_universal_https(
     )
     test.assertEqual(request("receipt", "GET", "/receipt")[0], 404)
     test.assertEqual(sender.transfer(), sender.verify_receipt())
+    with store.connect() as db:
+        member_id, ordinal, nested = db.execute(
+            """SELECT member,occurrence,element FROM native_source_elements
+               WHERE qualified_name='MetadataEntry'"""
+        ).fetchone()
+    test.assertEqual(
+        json.loads(store.approved_fallback(member_id, ordinal, nested, ["key"])),
+        {"fields": {"key": "test"}},
+    )
     test.assertEqual(request("receipt", "GET", "/manifest")[0], 200)
     test.assertEqual(request("mother", "GET", "/source/coverage")[0], 403)
     coverage_code, coverage_body = request("source", "GET", "/source/coverage")
@@ -551,6 +569,7 @@ def verify_universal_https(
         "mother", "GET", "/purposes/mother/discovery"
     )
     test.assertEqual(discovery_code, 200)
+    test.assertIs(json.loads(discovery_body)["timeless"], True)
     test.assertEqual(
         json.loads(discovery_body)["fields"], {"quantity": ["value", "source_unit"]}
     )
@@ -567,11 +586,16 @@ def verify_universal_https(
     cursor = first["next"]
     test.assertIsInstance(cursor, str)
     decoded = urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4))
-    test.assertEqual(len(json.loads(decoded[:-32])), 3)
+    test.assertEqual(
+        json.loads(decoded[:-32])[1:],
+        [first["rows"][0]["event_utc"], first["rows"][0]["ref"]],
+    )
     test.assertTrue(all(isinstance(item, str) for item in json.loads(decoded[:-32])))
     status, raw = request("mother", "GET", "/purposes/mother?after=" + cursor)
     test.assertEqual(status, 200)
     second = json.loads(raw)
+    test.assertEqual(len(second["rows"]), 1)
+    test.assertIsNone(second["next"])
     test.assertEqual(
         {first["rows"][0]["fields"]["value"], second["rows"][0]["fields"]["value"]},
         {"9", "10"},

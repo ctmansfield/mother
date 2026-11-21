@@ -192,7 +192,8 @@ class UniversalServer(HTTPServer):
                 body, proof = packet[:-32], packet[-32:]
                 require(
                     compare_digest(
-                        mac(self.cursor_key, b"purpose-page:" + body, "sha256"), proof
+                        mac(self.cursor_key, b"purpose-page-v2:" + body, "sha256"),
+                        proof,
                     ),
                     "invalid universal cursor authentication",
                 )
@@ -215,20 +216,49 @@ class UniversalServer(HTTPServer):
         source_types = policy["types"]
         type_slots = ",".join("?" for _ in source_types)
         from_clock, before = policy["from"], policy["before"]
+
+        def project_fields(adapter, body):
+            source = json.loads(body)
+            fields = {key: source[key] for key in SAFE_FIELDS[adapter] if key in source}
+            if any(
+                key in fields and fields[key] not in policy[allowlist]
+                for key, allowlist in (
+                    ("source_unit", "units"),
+                    ("source_duration_unit", "units"),
+                    ("source_state", "states"),
+                    ("source_activity", "activities"),
+                )
+            ):
+                return None
+            if adapter == "blood_pressure":
+                if source.get("pairing") != "paired":
+                    return None
+                values = {part["role"]: part["value"] for part in source["components"]}
+                if set(values) != {"systolic", "diastolic"}:
+                    return None
+                fields = dict(values, unit="mmHg")
+            return json.dumps(fields)
+
         with closing(self.store.connect()) as db:
             db.create_function("purpose_occurrence", 2, opaque, deterministic=True)
+            db.create_function("purpose_fields", 2, project_fields, deterministic=True)
             rows = db.execute(
                 f"""WITH values_in_scope AS (
-                    SELECT purpose_occurrence(member,ordinal) AS tie,source_type,adapter,typed,coalesce(
+                    SELECT purpose_occurrence(member,ordinal) AS tie,source_type,adapter,
+                        purpose_fields(adapter,typed) AS fields,coalesce(
                         json_extract(typed,'$.clocks.endDate.utc'),
                         json_extract(typed,'$.clocks.startDate.utc'),
                         json_extract(typed,'$.clocks.event_end'), ''
                     ) AS clock FROM native_source_occurrences
                     WHERE artifact=? AND adapter IN ({slots}) AND source_type IN ({type_slots})
+                      AND NOT EXISTS (
+                          SELECT 1 FROM json_each(typed,'$.clocks') AS source_clock
+                          WHERE json_type(typed,source_clock.fullkey || '.utc')='null'
+                      )
                 )
                 SELECT * FROM values_in_scope
                 WHERE ((clock>=? AND clock<?) OR (clock='' AND ?))
-                  AND (clock,tie)>(?,?)
+                  AND (clock,tie)>(?,?) AND fields IS NOT NULL
                 ORDER BY clock,tie LIMIT ?""",
                 (
                     self.store.manifest["artifact"],
@@ -240,49 +270,34 @@ class UniversalServer(HTTPServer):
                     *after,
                     policy["limit"] + 1,
                 ),
-            ).fetchall()
-        more = len(rows) > policy["limit"]
-        items = []
-        cursor_out = None
-        for tie, source_type, adapter, body, clock in rows[: policy["limit"]]:
-            source = json.loads(body)
-            fields = {key: source[key] for key in SAFE_FIELDS[adapter] if key in source}
-            cursor_body = encoded([scope, clock, tie])
-            proof = mac(self.cursor_key, b"purpose-page:" + cursor_body, "sha256")
-            cursor_out = urlsafe_b64encode(cursor_body + proof).decode().rstrip("=")
-            if any(
-                key in fields and fields[key] not in policy[allowlist]
-                for key, allowlist in (
-                    ("source_unit", "units"),
-                    ("source_duration_unit", "units"),
-                    ("source_state", "states"),
-                    ("source_activity", "activities"),
-                )
-            ):
-                continue
-            if adapter == "blood_pressure":
-                if source.get("pairing") != "paired":
-                    continue
-                values = {part["role"]: part["value"] for part in source["components"]}
-                if set(values) != {"systolic", "diastolic"}:
-                    continue
-                fields = dict(values, unit="mmHg")
-            items.append(
-                {
-                    "ref": tie,
-                    "kind": adapter,
-                    "source_type": source_type,
-                    "event_utc": clock or None,
-                    "fields": fields,
-                }
             )
+            items = []
+            cursor_out = None
+            for tie, source_type, adapter, body, clock in rows:
+                items.append(
+                    {
+                        "ref": tie,
+                        "kind": adapter,
+                        "source_type": source_type,
+                        "event_utc": clock or None,
+                        "fields": json.loads(body),
+                    }
+                )
+            if len(items) > policy["limit"]:
+                items.pop()
+                last = items[-1]
+                cursor_body = encoded([scope, last["event_utc"] or "", last["ref"]])
+                proof = mac(
+                    self.cursor_key, b"purpose-page-v2:" + cursor_body, "sha256"
+                )
+                cursor_out = urlsafe_b64encode(cursor_body + proof).decode().rstrip("=")
         raw = encoded(
             {
                 "schema_version": "mse.native-health-purpose-features/0.1",
                 "purpose": purpose,
                 "subject": policy["subject"],
                 "rows": items,
-                "next": cursor_out if more else None,
+                "next": cursor_out,
             }
         )
         if len(raw) > MAX_PROJECTION_BYTES:
@@ -308,6 +323,7 @@ class UniversalServer(HTTPServer):
                     for adapter in policy["adapters"]
                 },
                 "interval": {"from": policy["from"], "before": policy["before"]},
+                "timeless": policy["timeless"],
                 "limit": policy["limit"],
             }
         )
