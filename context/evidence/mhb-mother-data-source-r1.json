@@ -1,0 +1,7 @@
+{
+  "instruction_id": "MHB-MOTHER-DATA-001",
+  "revision": "1",
+  "url": "https://github.com/ctmansfield/mother/pull/23",
+  "user_request": "Build our requirements document in Mother; shift work to Mother. Clarification: it may be within MSE.",
+  "scope": "Proposed documentation in docs/mse, review branch; no live data, deployment or collector cutover."
+}

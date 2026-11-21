@@ -1,0 +1,7 @@
+{
+  "instruction_id": "MSE-INTEGRATION-20261120-01",
+  "revision": "1",
+  "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7041443650",
+  "user_instruction": "MSE and this integration is the focus of our team now; break down implementation and assign work.",
+  "scope": "Local synthetic implementation, contracts, planning and draft PRs; no live operations or main merge."
+}
