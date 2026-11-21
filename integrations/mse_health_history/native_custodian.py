@@ -22,7 +22,7 @@ from mother.physiology.contracts import canonical_json
 from .blood_pressure import source_time
 from .catalog import _HistoryCatalog
 from .files import HistoryLimit, LimitKind, NamedHistoryLimit, private_path
-from .inventory import Limits
+from .inventory import DEFAULT_ZIP_MEMBERS, MAX_ZIP_MEMBERS, Limits
 from .native_runner import private_bytes
 from .native_status import CATEGORIES, DIAGNOSTIC_PREFIX, SUCCESS
 from .protected_export import ExportAuthenticationError
@@ -71,7 +71,10 @@ def load_admission(path, approval_key):
     expected = hmac.new(approval_key, DOMAIN + canonical_json(policy).encode(), sha256)
     if not hmac.compare_digest(envelope["hmac_sha256"], expected.hexdigest()):
         raise ValueError("custodian admission authentication")
-    if set(policy) != FIELDS or policy["mode"] != "protected-native-import":
+    if (
+        set(policy) not in (FIELDS, FIELDS | {"max_zip_members"})
+        or policy["mode"] != "protected-native-import"
+    ):
         raise ValueError("custodian admission scope")
     if not all(
         TOKEN.fullmatch(policy[k])
@@ -87,6 +90,9 @@ def load_admission(path, approval_key):
     ):
         if type(policy[field]) is not int or not low <= policy[field] <= high:
             raise ValueError("custodian resource bounds")
+    members = policy.get("max_zip_members", DEFAULT_ZIP_MEMBERS)
+    if type(members) is not int or not 1 <= members <= MAX_ZIP_MEMBERS:
+        raise ValueError("custodian ZIP member limit outside reviewed bounds")
     binding = policy["binding"]
     if (
         set(binding) != BINDING
@@ -262,6 +268,7 @@ def main():
             limits=Limits(
                 archive_bytes=binding["plaintext_length"],
                 expanded_bytes=policy["max_expanded_bytes"],
+                members=policy.get("max_zip_members", DEFAULT_ZIP_MEMBERS),
                 top_level_rows=policy["max_top_level_rows"],
             ),
         )

@@ -111,3 +111,36 @@ unexpected output. Runner-reported success still requires independent
 receipt reconciliation. Bind the wrapper to this source/package and test
 the exact wrapper's allowlist, authority, detach and exit-code paths using
 fabricated input before authorizing any manual use with the real archive.
+
+### Signed ZIP member allowance
+
+A fresh signed policy may include `max_zip_members` from 1 to 25,000.
+A policy without the field retains the 4,096 default. Directories count
+toward the total. The authority should pin the actual verified member
+count when a larger allowance is needed. Never substitute the ceiling
+for an unmeasured archive. A count above the ceiling requires separate
+review. Editing a signed admission invalidates its authentication.
+
+For an already available, approved private closed ZIP, the operator can
+run the pinned metadata-only command locally:
+
+```sh
+python -B -m integrations.mse_health_history.native_zip_metadata "$approved_closed_zip"
+```
+
+This checks the EOCD and counts the central records without opening or
+decompressing members. It emits only the verified total member count and
+central-directory byte size, or a fixed refusal. It cannot inspect
+ciphertext. Keep the values private and share only the approved
+comparison results. The existing 4 MiB central-directory bound remains
+in force. Before creating ZipInfo objects, import checks the declared
+count and independently counts the central records. The parsed-member
+count check still applies. Per-member bytes, aggregate expansion, ratio,
+paths, XML quotas, catalog and operational budgets retain their previous
+limits.
+
+A fabricated ceiling-sized ZIP with 25,000 entries and a 4,099,912-byte
+central directory peaked at 21,699,747 traced Python bytes during the
+inventory-only scan on the qualification Mac. This measures allocations
+made in that scan. It excludes whole-process memory, native allocations,
+SQLite, and the authenticated import workload.

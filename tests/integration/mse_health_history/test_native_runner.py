@@ -10,7 +10,7 @@ import os
 import plistlib
 from pathlib import Path
 import sqlite3
-from struct import unpack_from
+from struct import pack_into, unpack_from
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -43,7 +43,14 @@ from integrations.mse_health_history.files import (
     LimitKind,
     NamedHistoryLimit,
 )
-from integrations.mse_health_history.inventory import BP_TYPE, Limits, scan
+from integrations.mse_health_history.inventory import (
+    BP_TYPE,
+    DEFAULT_ZIP_MEMBERS,
+    MAX_ZIP_MEMBERS,
+    Limits,
+    scan,
+)
+from integrations.mse_health_history.native_zip_metadata import zip_metadata
 from integrations.mse_health_history.vault import CiphertextVault, Enrollment, utc
 
 
@@ -121,6 +128,134 @@ class NativeRunnerTests(unittest.TestCase):
                     refused.exception, "ARCHIVE_OR_XML"
                 ),
                 expected,
+            )
+
+    def test_large_native_layout_keeps_directory_and_attachment_accounting(self):
+        source = self.root / "fabricated-large.zip"
+        route_count = DEFAULT_ZIP_MEMBERS - 2
+        with ZipFile(source, "w", ZIP_DEFLATED) as archive:
+            archive.writestr("apple_health_export/", "")
+            archive.writestr("apple_health_export/workout-routes/", "")
+            archive.writestr("apple_health_export/electrocardiograms/", "")
+            archive.writestr(
+                "apple_health_export/export.xml",
+                xml(correlation(record(SYSTOLIC, "124") + record(DIASTOLIC, "81"))),
+            )
+            for number in range(route_count):
+                archive.writestr(
+                    f"apple_health_export/workout-routes/route-{number:05d}.gpx",
+                    f"<gpx>{number}</gpx>",
+                )
+            archive.writestr(
+                "apple_health_export/electrocardiograms/sample.csv", "synthetic"
+            )
+        source.chmod(0o600)
+        count, directory_bytes = zip_metadata(source)
+        self.assertEqual(count, route_count + 5)
+        self.assertGreater(count, DEFAULT_ZIP_MEMBERS)
+        self.assertLess(directory_bytes, Limits().directory_bytes)
+
+        with (
+            source.open("rb") as stream,
+            self.assertRaises(NamedHistoryLimit) as refused,
+        ):
+            scan(stream, Limits(), lambda *_: None, lambda *_: None)
+        self.assertIs(refused.exception.kind, LimitKind.ZIP_MEMBERS)
+        with (
+            source.open("rb") as stream,
+            self.assertRaises(NamedHistoryLimit) as refused,
+        ):
+            scan(
+                stream,
+                Limits(members=count, expanded_bytes=1024),
+                lambda *_: None,
+                lambda *_: None,
+            )
+        self.assertIs(refused.exception.kind, LimitKind.ZIP_EXPANDED)
+
+        dest = self.root / "large-catalog"
+        dest.mkdir(mode=0o700)
+        catalog = SyntheticHistoryCatalog(
+            dest,
+            enrollment="synthetic-large-directory",
+            key=b"f" * 32,
+            limits=Limits(members=count),
+        )
+        catalog.initialize()
+        receipt = catalog.ingest(source)
+        members = catalog.members(receipt["sha256"])
+        self.assertEqual(len(members), count)
+        self.assertEqual(
+            receipt["attachment_members_retained_unnormalized"], route_count + 1
+        )
+        self.assertEqual(receipt["healthdata_xml_members"], 1)
+        self.assertEqual(receipt["bp_pairing_counts"]["paired"], 1)
+        selected = next(
+            row for row in members if row["path"].endswith("route-00000.gpx")
+        )
+        self.assertEqual(selected["sha256"], sha256(b"<gpx>0</gpx>").hexdigest())
+
+        with ZipFile(source, "a", ZIP_DEFLATED) as archive:
+            archive.writestr("../fabricated-escape.gpx", "reject")
+        with (
+            source.open("rb") as stream,
+            self.assertRaisesRegex(InvalidHistory, "unsafe ZIP"),
+        ):
+            scan(stream, Limits(members=count + 1), lambda *_: None, lambda *_: None)
+        with self.assertRaises(ValueError):
+            Limits(members=MAX_ZIP_MEMBERS + 1)
+
+    def test_central_directory_is_counted_before_zipfile_materialization(self):
+        source = BytesIO()
+        with ZipFile(source, "w") as archive:
+            archive.writestr("export.xml", xml("<Record/>"))
+            archive.writestr("attachment.csv", "synthetic")
+        raw = bytearray(source.getvalue())
+        offset = raw.rindex(b"PK\x05\x06")
+        pack_into("<HH", raw, offset + 8, 1, 1)
+        with (
+            patch(
+                "integrations.mse_health_history.inventory.ZipFile",
+                side_effect=AssertionError("materialized"),
+            ),
+            self.assertRaises(NamedHistoryLimit) as refused,
+        ):
+            scan(BytesIO(raw), Limits(members=1), lambda *_: None, lambda *_: None)
+        self.assertIs(refused.exception.kind, LimitKind.ZIP_MEMBERS)
+        with self.assertRaisesRegex(InvalidHistory, "count mismatch"):
+            scan(BytesIO(raw), Limits(members=2), lambda *_: None, lambda *_: None)
+
+    def test_zip64_metadata_is_supported_without_opening_members(self):
+        source = self.root / "synthetic-zip64.zip"
+        with patch("zipfile.ZIP_FILECOUNT_LIMIT", 1), ZipFile(source, "w") as archive:
+            archive.writestr("export.xml", xml("<Record/>"))
+            archive.writestr("attachment.csv", "synthetic")
+        source.chmod(0o600)
+        with patch(
+            "integrations.mse_health_history.inventory.ZipFile",
+            side_effect=AssertionError("opened members"),
+        ):
+            self.assertEqual(zip_metadata(source)[0], 2)
+        ready = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "integrations.mse_health_history.native_zip_metadata",
+                str(source),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(
+            set(json.loads(ready.stdout)), {"member_count", "central_directory_bytes"}
+        )
+        self.assertEqual(ready.stderr, "")
+        with source.open("rb") as stream:
+            self.assertEqual(
+                scan(stream, Limits(), lambda *_: None, lambda *_: None)[1],
+                source.stat().st_size,
             )
 
     def test_actual_sqlite_full_and_file_errors_keep_safe_categories(self):
@@ -508,6 +643,19 @@ class NativeRunnerTests(unittest.TestCase):
         self.assertEqual(run(sign(policy), EncryptionThisVolumeProper=False)[0], 1)
         self.assertFalse(list(catalog.iterdir()))
 
+        for member_cap in (MAX_ZIP_MEMBERS + 1, False):
+            selected = dict(policy, max_zip_members=member_cap)
+            self.assertEqual(
+                run(sign(selected), selected=selected, diagnostic=True),
+                (1, "Protected native import category ADMISSION\n"),
+            )
+        unsigned_change = dict(policy, max_zip_members=MAX_ZIP_MEMBERS)
+        self.assertEqual(
+            run(sign(policy), selected=unsigned_change, diagnostic=True),
+            (1, "Protected native import category ADMISSION\n"),
+        )
+        self.assertFalse(list(catalog.iterdir()))
+
         recipient = subprocess.check_output(
             [age.with_name("age-keygen"), "-y", identity]
         ).strip()
@@ -571,6 +719,7 @@ class NativeRunnerTests(unittest.TestCase):
             ("ARCHIVE_OR_XML", parser_case, nullcontext()),
             ("ARCHIVE_OR_XML", damaged_case, nullcontext()),
             ("XML_ROW_LIMIT", dict(policy, max_top_level_rows=1), nullcontext()),
+            ("ZIP_MEMBER_COUNT_LIMIT", dict(policy, max_zip_members=1), nullcontext()),
             (
                 "PRECOMMIT_WINDOW",
                 policy,
@@ -612,7 +761,36 @@ class NativeRunnerTests(unittest.TestCase):
                 self.assertFalse((catalog / "history.sqlite3-journal").exists())
                 self.assertFalse(list(scratch.iterdir()))
 
-        self.assertEqual(run(sign(policy)), (0, ""))
+        large_fixture = BytesIO()
+        attachment_count = 24_675 - 3
+        with ZipFile(large_fixture, "w", ZIP_DEFLATED) as archive:
+            archive.writestr("apple_health_export/", "")
+            archive.writestr("apple_health_export/workout-routes/", "")
+            archive.writestr("apple_health_export/export.xml", xml("<Record/>"))
+            for number in range(attachment_count):
+                archive.writestr(
+                    f"apple_health_export/workout-routes/{number:05d}.gpx", "synthetic"
+                )
+        large_policy = bind_fixture(
+            large_fixture.getvalue(), "synthetic-large-directory.age"
+        )
+        self.assertEqual(
+            run(sign(large_policy), selected=large_policy, diagnostic=True),
+            (1, "Protected native import category ZIP_MEMBER_COUNT_LIMIT\n"),
+        )
+        with sqlite3.connect(
+            (catalog / "history.sqlite3").as_uri() + "?mode=ro", uri=True
+        ) as db:
+            self.assertEqual(
+                db.execute("SELECT count(*) FROM artifacts").fetchone(), (0,)
+            )
+        larger_admission = dict(large_policy, max_zip_members=attachment_count + 3)
+        self.assertEqual(
+            run(sign(larger_admission), selected=larger_admission), (0, "")
+        )
+
+        selected = dict(policy, max_zip_members=2)
+        self.assertEqual(run(sign(selected), selected=selected), (0, ""))
         self.assertEqual(run(sign(policy)), (0, ""))
         reopened = _HistoryCatalog(
             catalog,
@@ -625,4 +803,10 @@ class NativeRunnerTests(unittest.TestCase):
             reopened.receipt(binding["plaintext_sha256"])["ciphertext_receipt"],
             binding["receipt"],
         )
+        larger_receipt = reopened.receipt(large_policy["binding"]["plaintext_sha256"])
+        self.assertEqual(larger_receipt["members"], attachment_count + 3)
+        self.assertEqual(
+            larger_receipt["attachment_members_retained_unnormalized"], attachment_count
+        )
+        self.assertFalse(list(scratch.iterdir()))
         self.assertFalse(list(reopened.objects.iterdir()))
