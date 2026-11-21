@@ -60,3 +60,24 @@ Exact private platform, mount, network and runtime locators remain in the previo
 6. **Evidence standard.** Supply a clean-room reproduction with timestamps, environment, failed attempts, exact checks and passed/failed/skipped counts. Mark configuration, historical readback and test evidence separately. Document expected generated IDs separately from immutable artifact hashes.
 
 **Next discussion:** GADGET and Chad select which topology to qualify and define practical operator access. ATLAS compares boundary options, FORGE supplies the pinned persistence and schema manifest, and SENTINEL reviews operator, host, key and backup separation. This checkpoint does not select hardware, VM, container, database engine or retention. No deployment scope has been opened.
+
+## Selected topology for design
+
+Chad selected a dedicated evidence archive and database VM on the established LLM host, starting from a copy of the existing baseline VM. Database engine and deployment authorization remain open. A separate Codex session owns IDS and security-tool hardening. This archive work owns the reproducible VM handoff, storage, database startup and controlled access boundaries.
+
+The saved inventory establishes that the LLM host previously hosted local system libvirt and that the November 14 QA guest was built and restored on local ext4. That guest is historical evidence of a workable isolation and restore pattern. The precise source domain meant by “existing baseline VM,” its present state and its backing chain have not been confirmed for this decision. Do not substitute the historical QA guest based on similarity. The dedicated archive guest will share the physical host and hypervisor administrative boundary. Its backups need a separately selected failure domain.
+
+### Baseline clone prerequisites for later qualification
+
+- **Identify and preserve the source.** Confirm the exact approved domain UUID, template/release revision, OS and package inventory, domain XML, firmware and disk identities, snapshots and backing dependencies. Record the source VM owner, current consumers, power state and authorized copy method. Require a consistent source cut, before/after fingerprints and no changes to the source VM.
+- **Review inherited state before using the copy.** Establish whether it contains application data, secrets, existing identities, tokens, certificates, stored mounts or external registrations. Plan how to keep those out of the archive guest and give the clone distinct machine, network and service identities. Preserve the approved IDS handoff boundary with the session that owns it.
+- **Specify isolated first boot.** Pin the clone disk location, backing chain, capacity, guest resources, mount ordering and host startup behavior. Separate guest system and durable archive data where the selected storage supports it. Define the private initial console, explicit network attachment decision, allowed callers and stop conditions before enabling access.
+- **Verify reproduction and recovery.** Record exact copy and verify commands, expected output, source and copy digests where meaningful, disposition of generated identities, first boot versus restart, and rollback limited to positively identified clone resources. Qualify independent restore of archive data and receipt linkage separately from VM-image recovery.
+
+### Database and access decision still open
+
+Compare engines against exact original-byte custody, atomic receipt/revision linkage, required concurrent writes, controlled relational reads and exports, backup cut consistency, point-in-time recovery needs, and operating burden. Evaluate these against the actual archive schema and measured workload supplied by FORGE. The presence of native PostgreSQL on the host and prior PF-001 SQLite restore evidence each informs the comparison. Neither is an engine selection.
+
+Design separate access paths for archive writers, Chad and authorized evidence operators, and API or special-purpose database consumers. Publish only explicitly approved tables, views or versioned exports with scoped authorization, provenance/cutoff, audit receipts, and revocation behavior. Consumers must not need direct reads of archive database files, original bytes or the identity vault simply to obtain a controlled view. Evaluate access through an archive-owned API, audited query role, or exported read model based on the selected engine and actual consumer requirements. Exact operator inspection and export commands remain to be specified.
+
+No clone, host inspection, provisioning, installation or credential action was performed for this decision.
