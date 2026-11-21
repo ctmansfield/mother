@@ -406,18 +406,34 @@ class Custody:
                 elif stored[0] != encoded:
                     raise AccessDenied("Access denied")
 
+    def _published(self, grant, view_id):
+        with self._projection.open() as db:
+            stored = db.execute(
+                "SELECT payload FROM projections WHERE view_id=?", (view_id,)
+            ).fetchone()
+        if stored is None:
+            raise AccessDenied("Access denied")
+        try:
+            return validate_projection(
+                json.loads(stored[0]), view_id=view_id, grant=grant
+            )
+        except ValueError:
+            raise StoreUnavailable("Stored projection is invalid") from None
+
     def read_projection(self, credential, view_id):
         with self._decision(credential, "analyst") as (authority, grant):
             self._view(authority, grant, view_id)
-            with self._projection.open() as db:
-                stored = db.execute(
-                    "SELECT payload FROM projections WHERE view_id=?", (view_id,)
-                ).fetchone()
-            if stored is None:
-                raise AccessDenied("Access denied")
-            try:
-                return validate_projection(
-                    json.loads(stored[0]), view_id=view_id, grant=grant
-                )
-            except ValueError:
-                raise StoreUnavailable("Stored projection is invalid") from None
+            return self._published(grant, view_id)
+
+    def published_projection_digest(self, credential, view_id):
+        """Privately verify an immutable publication for lineage."""
+        with self._decision(credential, "projection_writer", "lineage_auditor") as (
+            authority,
+            grant,
+        ):
+            self._view(authority, grant, view_id)
+            payload = self._published(grant, view_id)
+            encoded = json.dumps(
+                payload, separators=(",", ":"), sort_keys=True, allow_nan=False
+            )
+            return sha256(encoded.encode("utf-8")).hexdigest()

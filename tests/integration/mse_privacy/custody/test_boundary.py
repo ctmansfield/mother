@@ -3,6 +3,8 @@ from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+import json
 import os
 from pathlib import Path
 import sqlite3
@@ -379,6 +381,24 @@ except StoreUnavailable:
                 self.assertEqual(change.result(timeout=2), 2)
         with self.assertRaises(AccessDenied):
             other.read_projection(self.tokens["reader"], view)
+
+    def test_lineage_digest_requires_actual_publication_and_current_grant(self):
+        view = self.service.issue_view(self.tokens["writer"])
+        digest = self.service.published_projection_digest
+        with self.assertRaises(AccessDenied):
+            digest(self.tokens["writer"], view)
+        payload = view_payload(view)
+        self.service.put_projection(self.tokens["writer"], view, payload)
+        expected = sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        self.assertEqual(digest(self.tokens["writer"], view), expected)
+        self.assertEqual(digest(self.tokens["audit"], view), expected)
+        with self.assertRaises(AccessDenied):
+            digest(self.tokens["reader"], view)
+        self.service.revoke(self.tokens["revoke"])
+        with self.assertRaises(AccessDenied):
+            digest(self.tokens["audit"], view)
 
     def test_bootstrap_refuses_grants_for_existing_stores(self):
         view, expected = self.publish()

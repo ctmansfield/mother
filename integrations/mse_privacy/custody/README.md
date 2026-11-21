@@ -101,3 +101,9 @@ failures, ordinary failures and timeouts return a nonzero status.
 ```sh
 python -B integrations/mse_privacy/custody/verify_offline.py
 ```
+
+The private `published_projection_digest(credential, view_id)` returns SHA-256
+of the validated, canonical compact sorted-key JSON payload actually published
+under a live reservation. Only scoped projection writers and lineage auditors
+can request it. A reservation without a publication is denied. Lineage can
+use this digest to compare exact canonical output bytes before binding.
