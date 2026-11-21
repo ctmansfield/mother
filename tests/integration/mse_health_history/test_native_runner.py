@@ -24,6 +24,8 @@ from test_history import (
     xml,
 )
 
+from test_typed_vm_support import verify_guest
+
 from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
 from integrations.mse_health_history.inventory import Limits, scan
 from integrations.mse_health_history.vault import CiphertextVault, Enrollment, utc
@@ -253,3 +255,13 @@ class NativeRunnerTests(unittest.TestCase):
             self.assertNotIn("source_ref", body)
             with self.assertRaises(sqlite3.OperationalError):
                 conn.execute("DELETE FROM facts")
+
+        verify_guest(
+            self,
+            self.root,
+            typed_catalog,
+            value["plaintext_sha256"],
+            bound["receipt_id"],
+            UTC,
+            THROUGH,
+        )
