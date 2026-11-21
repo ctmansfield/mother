@@ -13,6 +13,7 @@ from .receipt_bound_handoff import (
     ReceiptPin,
     Result,
     _unique_object,
+    check_candidate,
     derive_handoff,
 )
 
@@ -84,15 +85,78 @@ def _qualify(directive_path: Path, receipt_paths: list[Path], as_of: int) -> Res
     return derive_handoff(directive, receipts, as_of=as_of)
 
 
+def _candidate_output(result: Result, reason: str, defects: list[str]) -> dict:
+    handoff = asdict(result.handoff) if result.handoff is not None else None
+    return {
+        "disposition": "HOLD",
+        "reason": reason,
+        "handoff": handoff,
+        "defects": defects,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directive", required=True, type=Path)
     parser.add_argument("--as-of", required=True, type=int)
+    parser.add_argument("--candidate", type=Path)
     parser.add_argument("receipts", nargs="*", type=Path)
     args = parser.parse_args()
+
     result = _qualify(args.directive, args.receipts, args.as_of)
-    print(json.dumps(asdict(result), sort_keys=True))
-    return 0 if result.disposition == "ELIGIBLE_FOR_REVIEW" else 2
+
+    if args.candidate is None:
+        print(json.dumps(asdict(result), sort_keys=True))
+        return 0 if result.disposition == "ELIGIBLE_FOR_REVIEW" else 2
+
+    # Candidate mode: receipt qualification must succeed first
+    if result.disposition != "ELIGIBLE_FOR_REVIEW" or result.handoff is None:
+        out = {
+            "disposition": "HOLD",
+            "reason": result.reason,
+            "handoff": None,
+            "defects": ["unverified_receipts"],
+        }
+        print(json.dumps(out, sort_keys=True))
+        return 2
+
+    # Read candidate bytes
+    try:
+        candidate_bytes = args.candidate.read_bytes()
+    except OSError:
+        out = _candidate_output(result, "unreadable_candidate", ["unreadable_candidate"])
+        print(json.dumps(out, sort_keys=True))
+        return 2
+
+    # Parse candidate JSON
+    try:
+        candidate = json.loads(candidate_bytes.decode("utf-8"), object_pairs_hook=_unique_object)
+    except (ValueError, RecursionError, UnicodeDecodeError):
+        out = _candidate_output(result, "invalid_candidate_document", ["malformed_candidate"])
+        print(json.dumps(out, sort_keys=True))
+        return 2
+
+    if not isinstance(candidate, dict):
+        out = _candidate_output(result, "invalid_candidate_document", ["malformed_candidate"])
+        print(json.dumps(out, sort_keys=True))
+        return 2
+
+    # Check candidate against authoritative handoff
+    review = check_candidate(result, candidate)
+
+    if review.disposition == "ELIGIBLE_FOR_REVIEW":
+        out = {
+            "disposition": "ELIGIBLE_FOR_REVIEW",
+            "reason": None,
+            "handoff": asdict(result.handoff),
+            "defects": [],
+        }
+        print(json.dumps(out, sort_keys=True))
+        return 0
+    else:
+        out = _candidate_output(result, "candidate_mismatch", list(review.defects))
+        print(json.dumps(out, sort_keys=True))
+        return 2
 
 
 if __name__ == "__main__":
