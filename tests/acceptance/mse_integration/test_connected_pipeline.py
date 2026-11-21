@@ -178,3 +178,71 @@ class ConnectedPipeline(unittest.TestCase):
                 )
                 self.assertEqual(result["lineage"]["snapshot_manifest_sha256"],
                                  snapshot["snapshot_sha256"])
+
+    def test_direct_ingest_rejects_export_that_disagrees_with_retained_source(self):
+        from integrations.healthbridge.export import normalize_capture
+
+        fixture = CASES["baseline"]["source_compatible_file"]
+        original = (FIXTURES / fixture).read_bytes()
+        alternatives = {
+            "different-value": original.replace(b"41.5", b"42.5"),
+            "different-source": original.replace(b"Synthetic QA", b"Synthetic other"),
+            # Change metric and unit together so the submitted export remains
+            # schema-valid for the asserted metric.
+            "different-source-unit": original.replace(b"HRV (SDNN)", b"Heart rate").replace(
+                b'"unit": "ms"', b'"unit": "bpm"'
+            ),
+            "different-source-clock": original.replace(b"785000010", b"785000011"),
+        }
+        # Derive valid facts using the real adapter, then pass the wrong raw
+        # capture with its correct artifact identity. No hand-built facts.
+        for name, raw in alternatives.items():
+            with self.subTest(name=name):
+                self.assertNotEqual(original, raw)
+                options = dict(subject_id=self.scope.subject_id, source_instance=self.scope.source_instance,
+                               batch_id=name, capture_id=name, capture_kind="full_file")
+                export = normalize_capture(original, **options)
+                revised = normalize_capture(raw, **options)
+                revised["artifact"] = export["artifact"]
+                with self.assertRaises((ValueError, self.errors[1])):
+                    self.ledger().ingest_export(original, revised)
+
+    def test_direct_ingest_rejects_omitted_source_tombstone(self):
+        from integrations.healthbridge.export import normalize_capture
+
+        original = (FIXTURES / CASES["baseline"]["source_compatible_file"]).read_bytes()
+        export = normalize_capture(
+            original, subject_id=self.scope.subject_id, source_instance=self.scope.source_instance,
+            batch_id="omission", capture_id="omission", capture_kind="full_file",
+        )
+        unknown_id = CASES["baseline"]["tombstone_ids"][-1].lower()
+        export["revisions"] = [row for row in export["revisions"] if row["native_id"] != unknown_id]
+        with self.assertRaises((ValueError, self.errors[1])):
+            self.ledger().ingest_export(original, export)
+
+    def test_decimal_precision_retains_source_and_records_conversion_loss(self):
+        from decimal import Decimal
+        from mother.physiology.archive import Archive
+
+        original = (FIXTURES / CASES["baseline"]["source_compatible_file"]).read_bytes()
+        lexeme = "41.500000000000000001"
+        precise = original.replace(b"41.5", lexeme.encode(), 1)
+        delivery = self.ingest_capture(
+            self.ledger(), precise, batch_id="decimal-edge", capture_id="decimal-edge",
+            capture_kind="full_file",
+        )
+        sdnn = next(row["observation"] for row in delivery.export["revisions"]
+                    if row.get("observation", {}).get("channel") == "hrv_sdnn")
+        self.assertEqual(sdnn["original_value"], lexeme)
+        with Archive(self.ledger().archive) as archive:
+            records = archive.records(current=False)
+        snapshot = self.snapshot(delivery.receipt["commit_sequence"])
+        self.assertEqual(self.verified_replay(snapshot)["lineage"]["snapshot_manifest_sha256"],
+                         snapshot["snapshot_sha256"])
+        if records:
+            self.assertNotEqual(Decimal(lexeme), Decimal.from_float(records[0]["value"]))
+        self.assertTrue(
+            any("precision" in loss["reason"] or "rounding" in loss["reason"]
+                for loss in snapshot["losses"] if loss["field"] in {"value", "original_value"}),
+            "PF-001 projection or exclusion requires an explicit value precision loss",
+        )
