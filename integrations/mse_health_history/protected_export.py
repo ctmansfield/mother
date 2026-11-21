@@ -14,6 +14,10 @@ from .files import CHUNK, HistoryLimit, hash_stream, private_path
 from .vault import DIGEST, TOKEN
 
 
+class ExportAuthenticationError(ValueError):
+    """The bound ciphertext could not authenticate under age."""
+
+
 @contextmanager
 def authenticate_export(
     *,
@@ -104,7 +108,9 @@ def authenticate_export(
                     digest.update(block)
                     stage.write(block)
                 if operation.wait() != 0:
-                    raise ValueError("protected export age authentication failed")
+                    raise ExportAuthenticationError(
+                        "protected export age authentication failed"
+                    )
             except BaseException:
                 if operation.poll() is None:
                     operation.kill()
