@@ -24,6 +24,12 @@ PROVENANCE = "7be9ea31c6c68643573afdf37ccfa0a41901a368"
 REFERENCE = "research/mse/reference-v0.1.0/prototype"
 COMBINED = "877eeb66ae2c26ab8ee2144d34adeba87c988e8f"
 SOURCE_PINS = dict(atlas=ATLAS, forge=FORGE, oracle=ORACLE, provenance=PROVENANCE)
+CORRECTED = dict(
+    atlas=ATLAS,
+    forge="e4219cdf3dba73f586e3820990f3ab34f1a7c1d9",
+    oracle="ac3fbf61389ca2a6e82683aa520c15181ac1aa80",
+    provenance="5799879c1d7dcc0fa684754833f331957ae5deb3",
+)
 CONTRACTS = "docs/mse/integration/contracts"
 MEMBERS = ("custody.sqlite3", "physiology.sqlite3", "original.json")
 LAYOUT = {
@@ -54,18 +60,18 @@ def copy_sqlite(source, target):
                 raise ValueError("Backup is not standalone")
 
 
-def seal(backup, receipt):
+def seal(backup, receipt, pins):
     manifest = {
         "receipt": receipt,
-        "source_pins": SOURCE_PINS,
+        "source_pins": pins,
         "members": {name: file_digest(backup / name) for name in MEMBERS},
     }
     (backup / "manifest.json").write_text(json.dumps(manifest))
 
 
-def restore(backup, destination, expected_original):
+def restore(backup, destination, expected_original, pins):
     manifest = json.loads((backup / "manifest.json").read_text())
-    if manifest["source_pins"] != SOURCE_PINS:
+    if manifest["source_pins"] != pins:
         raise ValueError("Unexpected backup source pins")
     if set(manifest["members"]) != set(MEMBERS):
         raise ValueError("Unexpected backup inventory")
@@ -88,10 +94,10 @@ def restore(backup, destination, expected_original):
     return manifest["receipt"]
 
 
-def load_siblings(checkout, directory):
+def load_siblings(checkout, directory, pins):
     for commit, *paths in (
-        (ORACLE, "integrations/healthbridge"),
-        (PROVENANCE, "integrations/mse_snapshot", REFERENCE),
+        (pins["oracle"], "integrations/healthbridge"),
+        (pins["provenance"], "integrations/mse_snapshot", REFERENCE),
     ):
         data = git(checkout, "archive", commit, *paths)
         with tarfile.open(fileobj=BytesIO(data)) as source:
@@ -99,8 +105,9 @@ def load_siblings(checkout, directory):
     sys.path[:0] = [str(directory), str(directory / REFERENCE), str(checkout)]
 
 
-def run_rehearsal(checkout, directory, *, combined=False):
-    expected = COMBINED if combined else FORGE
+def run_rehearsal(checkout, directory, *, combined=False, corrected=False):
+    pins = CORRECTED if corrected else SOURCE_PINS
+    expected = COMBINED if combined else pins["forge"]
     if (
         git(checkout, "rev-parse", "HEAD").decode().strip() != expected
         or git(checkout, "status", "--porcelain", "--untracked-files=all").strip()
@@ -115,11 +122,12 @@ def run_rehearsal(checkout, directory, *, combined=False):
     if combined:
         sys.path[:0] = [str(checkout), str(checkout / REFERENCE)]
     else:
-        load_siblings(checkout, directory)
+        load_siblings(checkout, directory, pins)
     from integrations.healthbridge.ingest import ingest_capture
     from integrations.mse_ingest import RecoveryError, Scope
     from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
     from integrations.mse_snapshot.ledger import replay_ledger_snapshot
+    from mother.physiology.archive import Archive
     from mse.contracts import canonical
 
     class PairedRestore(unittest.TestCase):
@@ -175,10 +183,10 @@ def run_rehearsal(checkout, directory, *, combined=False):
             copy_sqlite(source.journal, self.backup / MEMBERS[0])
             copy_sqlite(source.archive, self.backup / MEMBERS[1])
             (self.backup / MEMBERS[2]).write_bytes(self.original)
-            seal(self.backup, receipt)
+            seal(self.backup, receipt, pins)
             shutil.rmtree(self.primary)
             restored = self.root / "restored"
-            saved = restore(self.backup, restored, self.original)
+            saved = restore(self.backup, restored, self.original, pins)
             return self.service(restored), saved
 
         def test_finalized_restore_and_exact_retry(self):
@@ -241,9 +249,9 @@ def run_rehearsal(checkout, directory, *, combined=False):
             final = self.ingest(source)
             self.take_backup(source, final)
             (self.backup / "original.json").write_bytes(b"unrelated synthetic bytes")
-            seal(self.backup, final)
+            seal(self.backup, final, pins)
             with self.assertRaisesRegex(ValueError, "original differs"):
-                restore(self.backup, self.root / "other", self.original)
+                restore(self.backup, self.root / "other", self.original, pins)
 
         def test_final_receipt_with_stale_archive(self):
             source = self.service(self.primary)
@@ -267,7 +275,75 @@ def run_rehearsal(checkout, directory, *, combined=False):
             with self.assertRaises(RecoveryError):
                 target.verify_receipt(saved)
 
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(PairedRestore)
+    class CorrectedRestore(PairedRestore):
+        def test_source_binding_and_exact_numeric_loss_survive(self):
+            self.assertIn(b"4.20e1", self.original)
+            self.original = self.original.replace(b"4.20e1", b"9007199254740993", 1)
+            source = self.service(self.primary)
+            delivery = ingest_capture(
+                source,
+                self.original,
+                batch_id=self.batch,
+                capture_id=self.batch,
+                capture_kind="full_file",
+            )
+            receipt = delivery.receipt
+            sequence = receipt["commit_sequence"]
+            expected = self.snapshot(source, sequence)
+            expected_replay = self.replay(source, expected)
+            target, saved = self.take_backup(source, receipt)
+            self.assertEqual(target.verify_receipt(saved), receipt)
+            restored = self.snapshot(target, sequence)
+            self.assertEqual(restored, expected)
+            self.assertEqual(self.replay(target, restored), expected_replay)
+            self.assertEqual(
+                receipt["artifact_sha256"], hashlib.sha256(self.original).hexdigest()
+            )
+
+            (member,) = restored["observations"]
+            self.assertEqual(
+                member["source_revision"]["observation"]["value"], "9007199254740993"
+            )
+            losses = [
+                item
+                for item in restored["losses"]
+                if item["reason"] == "pf001_binary64_rounding"
+            ]
+            self.assertEqual(
+                {item["field"] for item in losses}, {"original_value", "value"}
+            )
+            self.assertEqual(expected_replay["input_losses"], restored["losses"])
+            with Archive(target.archive) as archive:
+                (record,) = archive.records(current=False)
+                self.assertEqual(record["value"], 9007199254740992.0)
+                numeric = record["metadata"]["numeric_projection_losses"]
+                self.assertEqual(
+                    {item["exact_decimal"] for item in numeric}, {"9007199254740993"}
+                )
+                self.assertEqual(
+                    {item["projected_binary64_hex"] for item in numeric},
+                    {float(9007199254740992).hex()},
+                )
+                artifact = archive.connection.execute(
+                    "SELECT content FROM raw_artifacts"
+                ).fetchone()
+                self.assertEqual(tuple(artifact), (self.original,))
+
+            incomplete = dict(delivery.export)
+            incomplete["revisions"] = [
+                item
+                for item in incomplete["revisions"]
+                if item["operation"] != "delete"
+            ]
+            self.assertNotEqual(incomplete["revisions"], delivery.export["revisions"])
+            with self.assertRaisesRegex(ValueError, "Export"):
+                target.ingest_export(self.original, incomplete)
+            self.assertEqual(target.verify_receipt(receipt), receipt)
+            self.assertEqual(self.snapshot(target, sequence), expected)
+
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(
+        CorrectedRestore if corrected else PairedRestore
+    )
     return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
 
 
@@ -277,16 +353,22 @@ if __name__ == "__main__":
     mode.add_argument("--plan", action="store_true")
     mode.add_argument("--forge-checkout", type=Path)
     mode.add_argument("--combined-checkout", type=Path)
+    mode.add_argument("--corrected-forge-checkout", type=Path)
     args = parser.parse_args()
     if args.plan:
         print(json.dumps(LAYOUT, indent=2))
     else:
         with TemporaryDirectory(prefix="mse-pinned-source-") as source:
-            checkout = args.combined_checkout or args.forge_checkout
+            checkout = (
+                args.combined_checkout
+                or args.corrected_forge_checkout
+                or args.forge_checkout
+            )
             sys.exit(
                 run_rehearsal(
                     checkout.resolve(),
                     Path(source),
                     combined=args.combined_checkout is not None,
+                    corrected=args.corrected_forge_checkout is not None,
                 )
             )

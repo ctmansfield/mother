@@ -63,3 +63,14 @@ The rehearsal removes its disposable primary to prove restore independence. It d
 - **Retention.** Keep each accepted synthetic artifact and both database copies until independent acceptance and rollback review. Propose a 30-day evidence cap after review, subject to owner-approved exceptions and cleanup boundaries.
 - **Recovery.** Propose a 24-hour maximum RPO and four-hour RTO as initial rehearsal targets, with a verified backup immediately before and after the bounded synthetic trial. Require shorter objectives and stronger acknowledgement semantics if owner policy cannot tolerate loss of an accepted batch. These targets are not measured or approved.
 - **Next.** SENTINEL independently reproduces the pinned connected restore and verifies file boundaries, coherent recovery and negative cases. FORGE and PHOENIX rerun if the connected candidate changes. GADGET and Chad select the concrete allocation, identity and storage policy before any host action.
+
+## Corrected source-integrity rehearsal
+
+The separate pinned mode runs the r7 fixes without changing the historical #34 candidate. Use a clean detached FORGE checkout at `e4219cdf3dba73f586e3820990f3ab34f1a7c1d9` with ORACLE `ac3fbf61389ca2a6e82683aa520c15181ac1aa80`, PROVENANCE `5799879c1d7dcc0fa684754833f331957ae5deb3` and normative ATLAS `769a0966da251da4d08633cc7663af9869da70e6` in its Git object store.
+
+```sh
+python3 -I -B tools/mse_integration/recovery/paired.py \
+  --corrected-forge-checkout /path/to/clean-pinned-forge
+```
+
+In addition to the four paired restore cases, this path verifies exact original bytes, decimal `9007199254740993`, its explicitly lossy binary64 projection and per-field warning through reopen, cutoff snapshot and derived replay. Direct ingest of a self-consistent export with the original deletion omitted is rejected after restore, and the genuine receipt and snapshot remain stable. The later immutable combined successor requires its own pinned run. The linked [decision sheet](DESTINATION_DECISION.md) includes evidence, identity, analytics and backup/key separation options for review.
