@@ -13,13 +13,17 @@
       "path": "tasks/archive-build-r1.json",
       "sha256": "b6c65b4204ff141096f617c5a2532f50f3f757645f08d2e6cb10777bb675963f"
     },
+    "MSE-HEALTH-HISTORY-20261121-06": {
+      "path": "tasks/health-history-r1.json",
+      "sha256": "05a18d2ad77dd105f3310abd7a03a2b54870224ef9c1bbcb0d0efe65715e4a72"
+    },
     "MSE-INTEGRATION-20261120-01": {
       "path": "tasks/mse-integration-r2.json",
       "sha256": "49b6fc4aa6a4a387ffc2a78880e888ef6fe4bc2b6eb12c390e49d2d2c9fab03a"
     },
     "MSE-LIVE-PILOT-20261121-05": {
-      "path": "tasks/live-pilot-r1.json",
-      "sha256": "bbf37667c74983b16a524dff02afaa77f03472b0e7ce05c77f29c6d81c4110b8"
+      "path": "tasks/live-pilot-r2.json",
+      "sha256": "e90be86fae863aaeadd6b67acb696ba289d8409c5c068761db5a20ea306f28de"
     },
     "MSE-LIVE-PILOT-PREP-20261121-04": {
       "path": "tasks/live-pilot-prep-r2.json",
