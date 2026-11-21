@@ -18,6 +18,7 @@ from .files import CHUNK, InvalidHistory, hash_stream, private_path
 from .inventory import Limits, scan
 from .sealed_page import authenticate_page
 from .protected_export import authenticate_export
+from .vault import TOKEN
 
 DIGEST = re.compile(r"[a-f0-9]{64}")
 DDL = """
@@ -73,8 +74,8 @@ def _clock_or_none(value):
         return None
 
 
-class SyntheticHistoryCatalog:
-    """Local synthetic source candidate. Production vault is deliberately separate."""
+class _HistoryCatalog:
+    """Shared exact custody and typed catalog internals."""
 
     def __init__(
         self,
@@ -87,21 +88,14 @@ class SyntheticHistoryCatalog:
         bp_cutoff=None,
         source_instance="synthetic-healthkit-store",
     ):
-        if not isinstance(enrollment, str) or not re.fullmatch(
-            r"synthetic-[A-Za-z0-9-]{1,100}", enrollment
+        if any(
+            not isinstance(value, str) or not TOKEN.fullmatch(value)
+            for value in (enrollment, archive_id, source_instance)
         ):
-            raise ValueError("synthetic history enrollment required")
+            raise ValueError("invalid history scope")
         self.root = Path(root).absolute()
         self.objects = self.root / "originals"
         self.db = self.root / "history.sqlite3"
-        if not isinstance(archive_id, str) or not re.fullmatch(
-            r"synthetic-[A-Za-z0-9-]{1,100}", archive_id
-        ):
-            raise ValueError("synthetic history archive identity required")
-        if not isinstance(source_instance, str) or not re.fullmatch(
-            r"synthetic-[A-Za-z0-9-]{1,100}", source_instance
-        ):
-            raise ValueError("synthetic history source instance required")
         self.archive_id = archive_id
         self.enrollment = enrollment
         self.source_instance = source_instance
@@ -213,7 +207,9 @@ class SyntheticHistoryCatalog:
                 return receipt
             return self._bp_page(db, stream, body, size, raw=raw)
 
-    def ingest_sealed_export(self, **custodian_inputs):
+    def ingest_sealed_export(
+        self, *, precommit=None, database_bytes=None, **custodian_inputs
+    ):
         """Import after authenticated custody, without a local plaintext original copy."""
         body = custodian_inputs["plaintext_sha256"]
         size = custodian_inputs["plaintext_length"]
@@ -222,6 +218,14 @@ class SyntheticHistoryCatalog:
             limit=self.limits.archive_bytes, **custodian_inputs
         ) as stage:
             with self._connection(write=True) as db:
+                if database_bytes is not None:
+                    page_size = db.execute("PRAGMA page_size").fetchone()[0]
+                    limit_pages = database_bytes // page_size
+                    if (
+                        db.execute(f"PRAGMA max_page_count={limit_pages}").fetchone()[0]
+                        != limit_pages
+                    ):
+                        raise InvalidHistory("protected catalog page limit unavailable")
                 existing = db.execute(
                     "SELECT receipt FROM artifacts WHERE digest=?", (body,)
                 ).fetchone()
@@ -231,10 +235,15 @@ class SyntheticHistoryCatalog:
                         raise InvalidHistory(
                             "historical original bound to different custody"
                         )
+                    if precommit is not None:
+                        precommit()
                     return receipt
-                return self._inventory(
+                receipt = self._inventory(
                     db, stage, body, size, ciphertext_receipt=sealed_receipt
                 )
+                if precommit is not None:
+                    precommit()
+                return receipt
 
     def _ingest(self, source, operation):
         private_path(self.root, directory=True)
@@ -545,3 +554,34 @@ class SyntheticHistoryCatalog:
                            ) ORDER BY identity,revision"""
             for (body,) in db.execute(query):
                 yield json.loads(body)
+
+
+class SyntheticHistoryCatalog(_HistoryCatalog):
+    """Local synthetic source candidate with an independent identity namespace."""
+
+    def __init__(
+        self,
+        root,
+        *,
+        enrollment,
+        key,
+        limits=Limits(),
+        archive_id="synthetic-bp-custody",
+        bp_cutoff=None,
+        source_instance="synthetic-healthkit-store",
+    ):
+        if any(
+            not isinstance(value, str)
+            or not re.fullmatch(r"synthetic-[A-Za-z0-9-]{1,100}", value)
+            for value in (enrollment, archive_id, source_instance)
+        ):
+            raise ValueError("synthetic history scope required")
+        super().__init__(
+            root,
+            enrollment=enrollment,
+            key=key,
+            limits=limits,
+            archive_id=archive_id,
+            bp_cutoff=bp_cutoff,
+            source_instance=source_instance,
+        )
