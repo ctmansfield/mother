@@ -1,0 +1,31 @@
+{
+  "connection": {
+    "schema": "bp-history-connection-v1",
+    "origin": "https://bp-history.example.invalid:8448",
+    "enrollment_id": "demo-enrollment",
+    "streams": {
+      "bp_correlation": "demo-correlation",
+      "systolic": "demo-systolic",
+      "diastolic": "demo-diastolic"
+    },
+    "transport_starts_at": "2026-11-22T00:00:00Z",
+    "transport_ends_at": "2026-11-22T02:00:00Z",
+    "snapshot": {
+      "sample_start_at": null,
+      "sample_end_before": "2026-11-21T00:00:00Z"
+    }
+  },
+  "exact_put_utf8": "{\"cursor_in\":null,\"cursor_out\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"deletions\":[],\"enrollment_id\":\"demo-enrollment\",\"page_seq\":1,\"scan_complete\":true,\"schema\":\"bp-history-page-v1\",\"stream_id\":\"demo-correlation\",\"upserts\":[]}",
+  "expected_receipt": {
+    "schema": "bp-history-receipt-v1",
+    "enrollment_id": "demo-enrollment",
+    "stream_id": "demo-correlation",
+    "page_seq": 1,
+    "page_sha256": "5b8b969fce8502ca21093a155996dfbc6a3b5de237b9917bdef37214a400be3f",
+    "cursor_out": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "upsert_count": 0,
+    "deletion_count": 0,
+    "scan_complete": true,
+    "receipt_id": "96728a4a5c3938d6baac52c087951e0ccfa60ba546553a27b7c2f0ab9db3bee2"
+  }
+}
