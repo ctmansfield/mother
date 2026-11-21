@@ -17,6 +17,7 @@ from .blood_pressure import BloodPressure, protected_ref, source_time
 from .files import CHUNK, InvalidHistory, hash_stream, private_path
 from .inventory import Limits, scan
 from .sealed_page import authenticate_page
+from .protected_export import authenticate_export
 
 DIGEST = re.compile(r"[a-f0-9]{64}")
 DDL = """
@@ -212,6 +213,29 @@ class SyntheticHistoryCatalog:
                 return receipt
             return self._bp_page(db, stream, body, size, raw=raw)
 
+    def ingest_sealed_export(self, **custodian_inputs):
+        """Import after authenticated custody, without a local plaintext original copy."""
+        body = custodian_inputs["plaintext_sha256"]
+        size = custodian_inputs["plaintext_length"]
+        sealed_receipt = custodian_inputs["receipt"]
+        with authenticate_export(
+            limit=self.limits.archive_bytes, **custodian_inputs
+        ) as stage:
+            with self._connection(write=True) as db:
+                existing = db.execute(
+                    "SELECT receipt FROM artifacts WHERE digest=?", (body,)
+                ).fetchone()
+                if existing is not None:
+                    receipt = json.loads(existing[0])
+                    if receipt.get("ciphertext_receipt") != sealed_receipt:
+                        raise InvalidHistory(
+                            "historical original bound to different custody"
+                        )
+                    return receipt
+                return self._inventory(
+                    db, stage, body, size, ciphertext_receipt=sealed_receipt
+                )
+
     def _ingest(self, source, operation):
         private_path(self.root, directory=True)
         private_path(self.objects, directory=True)
@@ -341,11 +365,13 @@ class SyntheticHistoryCatalog:
         )
         return receipt
 
-    def _inventory(self, db, stage, body, size):
+    def _inventory(self, db, stage, body, size, *, ciphertext_receipt=None):
         db.execute("INSERT INTO artifacts VALUES (?,?)", (body, "{}"))
         counts = {}
         normalizations = {"paired": 0, "unpaired": 0, "incomplete": 0, "ambiguous": 0}
         nested_unmapped = 0
+        nested_counts = {}
+        invalid_bp = 0
         files = 0
         attachments = 0
         source_xml = 0
@@ -360,8 +386,17 @@ class SyntheticHistoryCatalog:
                 (body, ordinal, path, kind, digest, size),
             )
 
+        def nested(family, source_type):
+            lookup = (family, source_type)
+            if (
+                lookup not in nested_counts
+                and len(nested_counts) >= self.limits.type_buckets
+            ):
+                raise InvalidHistory("HealthData nested type bucket limit exceeded")
+            nested_counts[lookup] = nested_counts.get(lookup, 0) + 1
+
         def row(member_index, ordinal, family, source_type, tag, attrs, children):
-            nonlocal nested_unmapped
+            nonlocal nested_unmapped, invalid_bp
             key = (family, source_type or tag)
             if key not in counts and len(counts) >= self.limits.type_buckets:
                 raise InvalidHistory("HealthData type bucket limit exceeded")
@@ -377,7 +412,8 @@ class SyntheticHistoryCatalog:
                 normalized = self.bp.normalize(
                     tag, attrs, children, (body, member_index, ordinal)
                 )
-            except ValueError:
+            except (ValueError, OverflowError):
+                invalid_bp += 1
                 normalized = None
             if normalized is None:
                 values[2] += 1
@@ -389,7 +425,7 @@ class SyntheticHistoryCatalog:
             self._record_bp(db, body, member_index, ordinal, normalized)
 
         try:
-            identity = scan(stage, self.limits, row, member)
+            identity = scan(stage, self.limits, row, member, nested)
         except (BadZipFile, EOFError):
             raise InvalidHistory("invalid HealthData ZIP structure") from None
         if identity != (body, size):
@@ -413,8 +449,16 @@ class SyntheticHistoryCatalog:
             "normalized_bp_top_level_rows": sum(normalizations.values()),
             "unnormalized_top_level_rows": sum(values[2] for values in counts.values()),
             "unmapped_bp_children": nested_unmapped,
+            "bp_invalid_top_level_rows": invalid_bp,
+            "nested_occurrences": [
+                {"family": family, "source_type": source_type, "observed": count}
+                for (family, source_type), count in sorted(nested_counts.items())
+            ],
             "bp_pairing_counts": normalizations,
         }
+        if ciphertext_receipt is not None:
+            receipt["protection"] = "custodian_verified_ciphertext"
+            receipt["ciphertext_receipt"] = ciphertext_receipt
         db.execute(
             "UPDATE artifacts SET receipt=? WHERE digest=?",
             (canonical_json(receipt), body),
@@ -462,6 +506,24 @@ class SyntheticHistoryCatalog:
                 (body,),
             )
             return [dict(zip(keys, row)) for row in rows]
+
+    def blood_pressure_lineage(self, body):
+        """Stream original/member/ordinal lineage from the typed destination."""
+        self.receipt(body)
+        with self._connection() as db:
+            for member, ordinal, revision, fact in db.execute(
+                """SELECT s.member,s.ordinal,s.revision,r.normalized FROM sightings s
+                   JOIN bp_revisions r ON s.revision=r.revision WHERE s.digest=?
+                   ORDER BY s.member,s.ordinal""",
+                (body,),
+            ):
+                yield {
+                    "original_sha256": body,
+                    "member": member,
+                    "ordinal": ordinal,
+                    "revision": revision,
+                    "fact": json.loads(fact),
+                }
 
     def blood_pressure(self, *, current=False):
         with self._connection() as db:
