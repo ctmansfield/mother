@@ -1,6 +1,7 @@
 """Fabricated native ZIP import and bounded streaming qualification."""
 
 from hashlib import sha256
+from io import BytesIO
 import json
 import os
 from pathlib import Path
@@ -27,7 +28,8 @@ from test_history import (
 from test_typed_vm_support import verify_guest
 
 from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
-from integrations.mse_health_history.inventory import Limits, scan
+from integrations.mse_health_history.files import InvalidHistory
+from integrations.mse_health_history.inventory import BP_TYPE, Limits, scan
 from integrations.mse_health_history.vault import CiphertextVault, Enrollment, utc
 
 
@@ -36,6 +38,42 @@ class NativeRunnerTests(unittest.TestCase):
         temp = TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name).resolve()
+
+    def test_inline_dtd_cannot_supply_native_row_types(self):
+        def document(declarations):
+            return BytesIO(
+                f"<!DOCTYPE HealthData [{declarations}]>"
+                "<HealthData><Correlation/></HealthData>".encode()
+            )
+
+        def collect(declarations, limits=Limits()):
+            rows = []
+            scan(
+                document(declarations),
+                limits,
+                lambda *row: rows.append(row),
+                lambda *_: None,
+            )
+            return rows
+
+        grammar = (
+            "<!ELEMENT HealthData (Correlation*)><!ELEMENT Correlation EMPTY>"
+            "<!ATTLIST Correlation type CDATA #IMPLIED>"
+        )
+        self.assertEqual(collect(grammar)[0][3], "")
+        refusals = (
+            (f'<!ATTLIST Correlation type CDATA "{BP_TYPE}">', Limits()),
+            (f'<!ATTLIST Correlation type CDATA #FIXED "{BP_TYPE}">', Limits()),
+            ('<!ENTITY injected "source">', Limits()),
+            ('<!ENTITY % injected "source">', Limits()),
+            ("<!--" + "x" * (192 * 1024) + "-->", Limits()),
+        )
+        for declaration, limits in refusals:
+            with (
+                self.subTest(declaration=declaration[:40]),
+                self.assertRaises(InvalidHistory),
+            ):
+                collect(declaration, limits)
 
     def test_large_stream_inventory_does_not_retain_xml_or_nested_elements(self):
         count = 80_000

@@ -33,6 +33,7 @@ class Limits:
     directory_bytes: int = 4 * 1024**2
     ratio: int = 2000
     xml_depth: int = 32
+    xml_dtd_bytes: int = 128 * 1024
     xml_token_bytes: int = 256 * 1024
     top_level_rows: int = 30_000_000
     total_xml_elements: int = 90_000_000
@@ -93,6 +94,7 @@ def _kind(tag, source_type):
 
 def _scan_xml(stream, member_index, limits, on_row, on_nested):
     parser = expat.ParserCreate()
+    parser.specified_attributes = True
     parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
     parser.EntityDeclHandler = _forbidden
     parser.ExternalEntityRefHandler = _forbidden
@@ -104,11 +106,27 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
     elements = 0
     pending = None
     root_seen = False
+    dtd_start = None
 
     def doctype(name, system, public, _internal_subset):
+        nonlocal dtd_start
         # Apple exports may carry an inline grammar. No DTD entity or external
         # resolution is needed to interpret source records.
         if name != "HealthData" or system is not None or public is not None:
+            _forbidden()
+        dtd_start = parser.CurrentByteIndex
+
+    def check_dtd(position):
+        if dtd_start is not None and position - dtd_start > limits.xml_dtd_bytes:
+            raise InvalidHistory("inline HealthData DTD limit exceeded")
+
+    def end_doctype():
+        nonlocal dtd_start
+        check_dtd(parser.CurrentByteIndex)
+        dtd_start = None
+
+    def attlist(_element, _attribute, _type, default, _required):
+        if default is not None:
             _forbidden()
 
     def start(tag, attrs):
@@ -162,6 +180,8 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
         depth -= 1
 
     parser.StartDoctypeDeclHandler = doctype
+    parser.EndDoctypeDeclHandler = end_doctype
+    parser.AttlistDeclHandler = attlist
     parser.StartElementHandler = start
     parser.EndElementHandler = end
     hashing = sha256()
@@ -172,6 +192,7 @@ def _scan_xml(stream, member_index, limits, on_row, on_nested):
                 raise InvalidHistory("XML member limit exceeded")
             hashing.update(chunk)
             parser.Parse(chunk, False)
+            check_dtd(cursor)
             if cursor - parser.CurrentByteIndex > limits.xml_token_bytes:
                 raise InvalidHistory("XML token limit exceeded")
         parser.Parse(b"", True)

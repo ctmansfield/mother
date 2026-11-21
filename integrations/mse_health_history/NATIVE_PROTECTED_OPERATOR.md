@@ -74,8 +74,9 @@ limits and XML depth, lexical token, element and type-bucket limits. ZIP
 entries are never extracted to named paths. Duplicate/equivalent paths,
 path escape, special members, unsupported encodings and invalid local/central
 pointers refuse. Inline Apple Health DTD element declarations are allowed.
-Entity declarations, external resolution and parameter entity parsing are
-disabled. Embedded file-reference attributes are inventoried without
+The inline declaration subset is byte-bounded. Default and fixed
+attribute values, entity declarations and external resolution are refused.
+Only explicitly supplied attributes reach classification. Embedded file-reference attributes are inventoried without
 following the path. Archive members, top-level source occurrences and
 nested occurrences are separate counts. Family labels report evidence
 present in the input. An absent family does not establish lack of
