@@ -21,7 +21,6 @@ from .vault import TOKEN, VaultCapacity, VaultClosed, VaultConflict
 MAX_BYTES = 1024**2
 MAX_ROWS = 512
 MAX_PAGES = 100_000
-FOREVER = "9999-12-31T23:59:59.999999Z"
 FEEDS = {
     "correlation": "correlation",
     "systolic": "systolic",
@@ -133,7 +132,11 @@ class BPStore:
                     "reserve_bytes",
                 )
             }
-            | {"key_pin": digest(key), "layout": "bp-history-sqlite/3"}
+            | {
+                "key_pin": digest(key),
+                "layout": "bp-history-sqlite/3",
+                "snapshot_policy": "bounded-sample-interval/1",
+            }
         )
 
     def writable(self, now=None):
@@ -220,11 +223,16 @@ class BPStore:
         seen = set()
         for row in page["upserts"]:
             identity, revision, fact = bp_page.normalize(
-                row, feed, FOREVER, self.normalizer
+                row, feed, upper, self.normalizer
             )
-            start = fact["clocks"]["event_start"]
-            if (lower is not None and start < lower) or start >= upper:
-                raise ValueError("BP sample outside frozen predicate")
+            if fact["unsupported_component_count"]:
+                raise ValueError("BP component lacks verifiable snapshot bounds")
+            for sample in (fact, *fact["components"]):
+                clocks = sample["clocks"]
+                if (lower is not None and clocks["event_start"] < lower) or clocks[
+                    "event_end"
+                ] >= upper:
+                    raise ValueError("BP sample outside frozen predicate")
             if identity in seen:
                 raise ValueError("duplicate BP upsert identity")
             seen.add(identity)

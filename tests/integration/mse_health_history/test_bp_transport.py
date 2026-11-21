@@ -271,7 +271,15 @@ class BPTransportTests(unittest.TestCase):
         self.addCleanup(stop)
 
     def request(
-        self, method, suffix, role, payload=None, *, host="localhost", client_cert=None
+        self,
+        method,
+        suffix,
+        role,
+        payload=None,
+        *,
+        host="localhost",
+        client_cert=None,
+        route=ROUTE,
     ):
         context = self.ca
         if client_cert:
@@ -285,7 +293,7 @@ class BPTransportTests(unittest.TestCase):
             headers = {"Authorization": "Bearer " + ROLES[role]} if role else {}
             if payload is not None:
                 headers["Content-Type"] = "application/json"
-            client.request(method, ROUTE + suffix, payload, headers)
+            client.request(method, route + suffix, payload, headers)
             reply = client.getresponse()
             return reply.status, reply.read()
 
@@ -523,3 +531,88 @@ class BPTransportTests(unittest.TestCase):
             self.assertEqual(db.execute("SELECT COUNT(*) FROM pages").fetchone(), (1,))
         self.now = END
         self.assertEqual(self.request("GET", "/pages/1", "receipt"), committed)
+
+    def test_snapshot_bounds_refuse_entire_invalid_page_before_staging(self):
+        self.state = self.root / "bounded-store"
+        self.state.mkdir(mode=0o700)
+        self.config = dict(
+            self.config, snapshot=dict(self.config["snapshot"], sample_start_at=SAMPLE)
+        )
+        self.store = self.open()
+        self.store.initialize()
+        self.serve(self.store)
+        after = "2026-11-21T00:00:00.000001Z"
+        before = "2026-11-20T23:59:59.999999Z"
+        offset_end = "2026-11-21T10:00:00.000000+10:00"
+        refusals = (
+            ("root exact END", None, SAMPLE, SNAPSHOT),
+            ("root after END", None, SAMPLE, after),
+            ("root starts before and straddles END", None, before, after),
+            ("systolic exact END", 0, SAMPLE, SNAPSHOT),
+            ("diastolic after END", 1, SAMPLE, after),
+            ("component straddles END", 1, before, after),
+            ("noncanonical timezone equivalent END", 0, SAMPLE, offset_end),
+            ("reversed component interval", 0, before, SAMPLE),
+            (
+                "component starts before lower bound",
+                1,
+                "2025-10-10T12:33:59.999999Z",
+                SAMPLE,
+            ),
+            ("standalone component exact END", "standalone", SAMPLE, SNAPSHOT),
+            ("unsupported component with no bounds", "unsupported", SAMPLE, SAMPLE),
+        )
+        for label, component, start, end in refusals:
+            with self.subTest(label=label):
+                packet = json.loads(self.page())
+                root = packet["upserts"][0]
+                route = ROUTE
+                if component == "unsupported":
+                    root["unexpected_component_ids"] = [root["lineage"]["uuid"]]
+                elif component == "standalone":
+                    root = root["components"][0]
+                    packet.update(feed="systolic", upserts=[root])
+                    route = ROUTE.removesuffix("correlation") + "systolic"
+                    root["lineage"].update(start=start, end=end)
+                else:
+                    item = root if component is None else root["components"][component]
+                    item["lineage"].update(start=start, end=end)
+                self.assertEqual(
+                    self.request(
+                        "PUT",
+                        "/pages/1",
+                        "upload",
+                        json.dumps(packet).encode(),
+                        route=route,
+                    ),
+                    (400, b'{"error":"invalid_page"}'),
+                )
+        with self.store.connect() as db:
+            for table in ("pages", "checkpoints", "cursors", "results"):
+                self.assertEqual(
+                    db.execute(f"SELECT count(*) FROM {table}").fetchone(), (0,)
+                )
+        self.assertEqual(self.request("GET", "/pages/1", "receipt")[0], 404)
+        self.assertEqual(self.store.export("correlation", 1, 1)["rows"], [])
+
+        # The last representable UTC microsecond belongs to the snapshot.
+        packet = json.loads(self.page(sample=before))
+        packet["upserts"][0]["components"][0]["lineage"]["start"] = SAMPLE
+        body = json.dumps(packet).encode()
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
+        self.assertEqual(
+            self.request(
+                "PUT",
+                "/pages/1/custody",
+                None,
+                self.proof(body),
+                client_cert=self.custodian,
+            )[0],
+            200,
+        )
+        fact = self.open().export("correlation", 1, 1)["rows"][0]["fact"]
+        self.assertEqual(fact["pairing"], "paired")
+        self.assertEqual(
+            [entry["clocks"]["event_end"] for entry in (fact, *fact["components"])],
+            [before] * 3,
+        )
