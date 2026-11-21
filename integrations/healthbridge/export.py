@@ -1,4 +1,5 @@
 """ATLAS draft 0.2 exchange encoding, separate from capture validation."""
+
 from __future__ import annotations
 
 import hashlib
@@ -17,7 +18,11 @@ SOURCE_REVISION = "mse.source-revision/0.2"
 def canonical_json(value: object) -> bytes:
     """Encode an adapter-generated exchange value in canonical UTF-8."""
     return json.dumps(
-        value, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
+        value,
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
     ).encode("utf-8")
 
 
@@ -30,7 +35,10 @@ def export_sha256(export: dict) -> str:
 
 
 def _token(value: str) -> str:
-    if not isinstance(value, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}", value) is None:
+    if (
+        not isinstance(value, str)
+        or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}", value) is None
+    ):
         raise CaptureError("Expected explicit bounded exchange token")
     return value
 
@@ -64,13 +72,17 @@ def normalize_capture(
     def revision(
         native: str, operation: str, payload: dict, fact: object, locators: list
     ) -> None:
-        revisions.append({
-            "native_id": native,
-            "operation": operation,
-            **payload,
-            "revision_sha256": _digest([SOURCE_REVISION, scope, native, operation, fact]),
-            "locators": sorted(set(locators)),
-        })
+        revisions.append(
+            {
+                "native_id": native,
+                "operation": operation,
+                **payload,
+                "revision_sha256": _digest(
+                    [SOURCE_REVISION, scope, native, operation, fact]
+                ),
+                "locators": sorted(set(locators)),
+            }
+        )
 
     findings = list(capture.losses)
     for native, (observation, fact, locators) in capture.upserts.items():
@@ -83,7 +95,11 @@ def normalize_capture(
                 _, reason = project_binary64(observation[field])
                 if reason is not None:
                     findings.extend(
-                        {"field": field, "reason": reason, "locator": pointer + "/value"}
+                        {
+                            "field": field,
+                            "reason": reason,
+                            "locator": pointer + "/value",
+                        }
                         for pointer in locators
                     )
         revision(native, "upsert", {"observation": observation}, fact, locators)
@@ -91,7 +107,9 @@ def normalize_capture(
         for seconds, (date, locators, lexemes) in facts.items():
             payload = {"deleted_at": date, "original_deleted_at": sorted(lexemes)}
             revision(native, "delete", payload, _decimal_text(seconds), locators)
-    revisions.sort(key=lambda row: (row["native_id"], row["operation"], row["revision_sha256"]))
+    revisions.sort(
+        key=lambda row: (row["native_id"], row["operation"], row["revision_sha256"])
+    )
     losses = {canonical_json(loss): loss for loss in findings}
     return {
         "schema_version": "mse.healtharchive-export/0.2",

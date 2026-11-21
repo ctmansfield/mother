@@ -34,7 +34,8 @@ class CapturedArchiveFixtures(unittest.TestCase):
                 tombstones = set(archive["tombstones"])
                 self.assertEqual(set(case["tombstone_ids"]), tombstones)
                 live = {
-                    row["id"] for row in archive["readings"]
+                    row["id"]
+                    for row in archive["readings"]
                     if row["id"] not in tombstones and "deletedAt" not in row
                 }
                 self.assertEqual(set(case["live_ids"]), live)
@@ -50,10 +51,12 @@ class CapturedArchiveFixtures(unittest.TestCase):
         self.assertTrue(set(CASES["partial"]["live_ids"]) < set(baseline["live_ids"]))
         self.assertEqual(source("empty")["readings"], [])
         self.assertEqual(CASES["empty"]["coverage"], "unknown")
-        late, = source("late")["readings"]
+        (late,) = source("late")["readings"]
         originals = source("baseline")["readings"]
         self.assertLess(late["start"], min(row["start"] for row in originals))
-        self.assertGreater(late["receivedAt"], max(row["receivedAt"] for row in originals))
+        self.assertGreater(
+            late["receivedAt"], max(row["receivedAt"] for row in originals)
+        )
         combined = EXPECTED["replay"]["after_baseline_partial_empty_late"]
         self.assertEqual(set(combined["live_ids"]), {*baseline["live_ids"], late["id"]})
         self.assertEqual(combined["tombstone_ids"], baseline["tombstone_ids"])
@@ -63,7 +66,7 @@ class CapturedArchiveFixtures(unittest.TestCase):
         tombstones = set(archive["tombstones"])
         ids = {row["id"] for row in archive["readings"]}
         self.assertEqual(len(tombstones - ids), 1)
-        deleted, = (row for row in archive["readings"] if "deletedAt" in row)
+        (deleted,) = (row for row in archive["readings"] if "deletedAt" in row)
         self.assertEqual(deleted["deletedAt"], archive["tombstones"][deleted["id"]])
 
     def test_malformed_duplicate_and_delivery_conflict_are_distinct(self):
@@ -72,8 +75,12 @@ class CapturedArchiveFixtures(unittest.TestCase):
         first, second = source("conflicting-uuid")["readings"]
         self.assertEqual(first["id"], second["id"])
         self.assertNotEqual(first["value"], second["value"])
-        self.assertEqual(CASES["changed-batch"]["batch_id"], CASES["baseline"]["batch_id"])
-        self.assertNotEqual(CASES["changed-batch"]["sha256"], CASES["baseline"]["sha256"])
+        self.assertEqual(
+            CASES["changed-batch"]["batch_id"], CASES["baseline"]["batch_id"]
+        )
+        self.assertNotEqual(
+            CASES["changed-batch"]["sha256"], CASES["baseline"]["sha256"]
+        )
 
 
 if __name__ == "__main__":

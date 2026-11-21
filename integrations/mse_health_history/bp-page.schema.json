@@ -1,0 +1,449 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Historical BP page and receipt review seam 0.1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/page"
+    },
+    {
+      "$ref": "#/$defs/receipt"
+    }
+  ],
+  "$defs": {
+    "clock": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{6}Z$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+    },
+    "label": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,100}$"
+    },
+    "decimal": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^(?:0|-?(?:[1-9][0-9]*(?:\\.[0-9]*[1-9])?|0\\.[0-9]*[1-9]))$"
+    },
+    "lineage": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "$ref": "#/$defs/uuid"
+        },
+        "start": {
+          "$ref": "#/$defs/clock"
+        },
+        "end": {
+          "$ref": "#/$defs/clock"
+        },
+        "source_bundle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "source_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sync_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sync_version": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "uuid",
+        "start",
+        "end",
+        "source_bundle",
+        "source_version",
+        "sync_id",
+        "sync_version"
+      ],
+      "additionalProperties": false
+    },
+    "component": {
+      "type": "object",
+      "properties": {
+        "feed": {
+          "enum": [
+            "systolic",
+            "diastolic"
+          ]
+        },
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        },
+        "mmhg": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/decimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "feed",
+        "lineage",
+        "mmhg"
+      ],
+      "additionalProperties": false
+    },
+    "correlation": {
+      "type": "object",
+      "properties": {
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "maxItems": 16
+        },
+        "unexpected_component_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uuid"
+          },
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "lineage",
+        "components",
+        "unexpected_component_ids"
+      ],
+      "additionalProperties": false
+    },
+    "vault_receipt": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "mse.historical-ciphertext-receipt/0.1"
+        },
+        "vault_id": {
+          "$ref": "#/$defs/label"
+        },
+        "import_id": {
+          "$ref": "#/$defs/label"
+        },
+        "recipient_fingerprint": {
+          "$ref": "#/$defs/digest"
+        },
+        "ciphertext_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "status": {
+          "const": "opaque_ciphertext_durable"
+        },
+        "receipt_id": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "schema_version",
+        "vault_id",
+        "import_id",
+        "recipient_fingerprint",
+        "ciphertext_sha256",
+        "byte_length",
+        "status",
+        "receipt_id"
+      ],
+      "additionalProperties": false
+    },
+    "page": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "mse.historical-bp-page/0.1"
+        },
+        "enrollment": {
+          "$ref": "#/$defs/label"
+        },
+        "through": {
+          "$ref": "#/$defs/clock"
+        },
+        "feed": {
+          "enum": [
+            "correlation",
+            "systolic",
+            "diastolic"
+          ]
+        },
+        "exhausted": {
+          "type": "boolean"
+        },
+        "upserts": {
+          "type": "array",
+          "maxItems": 128
+        },
+        "deleted_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uuid"
+          },
+          "maxItems": 128
+        },
+        "cursor_in": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/cursor_token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor_out": {
+          "$ref": "#/$defs/cursor_token"
+        },
+        "source_instance": {
+          "$ref": "#/$defs/label"
+        }
+      },
+      "required": [
+        "schema_version",
+        "enrollment",
+        "through",
+        "feed",
+        "exhausted",
+        "upserts",
+        "deleted_ids",
+        "cursor_in",
+        "cursor_out",
+        "source_instance"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "feed": {
+                "const": "correlation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "upserts": {
+                "items": {
+                  "$ref": "#/$defs/correlation"
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "upserts": {
+                "items": {
+                  "$ref": "#/$defs/component"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "exhausted": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "upserts": {
+                "maxItems": 0
+              },
+              "deleted_ids": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "anyOf": [
+              {
+                "properties": {
+                  "upserts": {
+                    "minItems": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "deleted_ids": {
+                    "minItems": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "mse.historical-bp-page-receipt/0.1"
+        },
+        "status": {
+          "const": "typed_and_cursor_durable"
+        },
+        "archive_id": {
+          "$ref": "#/$defs/label"
+        },
+        "enrollment": {
+          "$ref": "#/$defs/label"
+        },
+        "through": {
+          "$ref": "#/$defs/clock"
+        },
+        "feed": {
+          "enum": [
+            "correlation",
+            "systolic",
+            "diastolic"
+          ]
+        },
+        "exhausted": {
+          "type": "boolean"
+        },
+        "receipt_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "typed_upserts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 128
+        },
+        "typed_tombstones": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 128
+        },
+        "protection": {
+          "enum": [
+            "synthetic_unencrypted",
+            "custodian_verified_ciphertext"
+          ]
+        },
+        "ciphertext_receipt": {
+          "$ref": "#/$defs/vault_receipt"
+        },
+        "cursor_in": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/cursor_token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor_out": {
+          "$ref": "#/$defs/cursor_token"
+        },
+        "source_instance": {
+          "$ref": "#/$defs/label"
+        }
+      },
+      "required": [
+        "schema_version",
+        "status",
+        "archive_id",
+        "enrollment",
+        "through",
+        "feed",
+        "exhausted",
+        "receipt_id",
+        "sha256",
+        "byte_length",
+        "typed_upserts",
+        "typed_tombstones",
+        "protection",
+        "cursor_in",
+        "cursor_out",
+        "source_instance"
+      ],
+      "additionalProperties": false,
+      "if": {
+        "properties": {
+          "protection": {
+            "const": "custodian_verified_ciphertext"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "ciphertext_receipt"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "ciphertext_receipt"
+          ]
+        }
+      }
+    },
+    "cursor_token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    }
+  }
+}
