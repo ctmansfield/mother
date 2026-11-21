@@ -1,4 +1,5 @@
 """Connect synthetic HealthArchive exports to the local FORGE ingest service."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

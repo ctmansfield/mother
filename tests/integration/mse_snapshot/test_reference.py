@@ -28,15 +28,17 @@ def observation(native_id):
 
 
 def projection(observations=(), deleted=(), *, synthetic=True):
-    return json.dumps({
-        "schema_version": "mse.replay/0.1",
-        "synthetic": synthetic,
-        "observations": list(observations),
-        "tombstones": [
-            {"observation_id": key, "deleted_at": "2026-01-01T00:03:00Z"}
-            for key in deleted
-        ],
-    }).encode()
+    return json.dumps(
+        {
+            "schema_version": "mse.replay/0.1",
+            "synthetic": synthetic,
+            "observations": list(observations),
+            "tombstones": [
+                {"observation_id": key, "deleted_at": "2026-01-01T00:03:00Z"}
+                for key in deleted
+            ],
+        }
+    ).encode()
 
 
 class ReferenceReplayTests(unittest.TestCase):
@@ -47,7 +49,9 @@ class ReferenceReplayTests(unittest.TestCase):
         self.assertNotEqual(
             result["result_id"], _replay_projection(b"snapshot-b", payload)["result_id"]
         )
-        self.assertEqual(result["lineage"]["projection_sha256"], hashlib.sha256(payload).hexdigest())
+        self.assertEqual(
+            result["lineage"]["projection_sha256"], hashlib.sha256(payload).hexdigest()
+        )
         self.assertEqual(result["epistemic_class"], "derived")
         run = result["reference_result"]
         self.assertFalse(run["historical_mother_availability_established"])
@@ -57,11 +61,15 @@ class ReferenceReplayTests(unittest.TestCase):
 
     def test_tombstones_suppress_observations_and_retain_unknown_id(self):
         record = observation("1")
-        payload = projection([record], [record["observation_id"], observation("2")["observation_id"]])
+        payload = projection(
+            [record], [record["observation_id"], observation("2")["observation_id"]]
+        )
         result = _replay_projection(b"snapshot-a", payload)
         self.assertEqual(result["status"], "unavailable")
         self.assertEqual(result["reference_result"]["states"], [])
-        self.assertEqual(len(result["reference_result"]["evidence_manifest"]["tombstone_ids"]), 2)
+        self.assertEqual(
+            len(result["reference_result"]["evidence_manifest"]["tombstone_ids"]), 2
+        )
 
     def test_rejects_ambiguous_revision_selection_or_non_synthetic_input(self):
         record = observation("1")
@@ -71,6 +79,9 @@ class ReferenceReplayTests(unittest.TestCase):
             _replay_projection(b"snapshot-a", projection(synthetic=False))
 
     def test_refuses_unexpected_reference_code(self):
-        with patch("integrations.mse_snapshot.reference.implementation_sha256", return_value="changed"):
+        with patch(
+            "integrations.mse_snapshot.reference.implementation_sha256",
+            return_value="changed",
+        ):
             with self.assertRaises(ContractError):
                 _replay_projection(b"snapshot-a", projection())

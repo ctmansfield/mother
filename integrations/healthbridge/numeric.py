@@ -1,4 +1,5 @@
 """Exact-decimal accounting for the auxiliary PF-001 binary64 projection."""
+
 from __future__ import annotations
 
 from decimal import Decimal

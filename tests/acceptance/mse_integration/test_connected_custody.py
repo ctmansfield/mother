@@ -23,13 +23,18 @@ class ConnectedCustody(unittest.TestCase):
             from integrations.mse_ingest import BatchConflict, RecoveryError, Scope
             from integrations.mse_ingest.connected import ConnectedIngest
         except ModuleNotFoundError as error:
-            if error.name not in {"integrations", "integrations.healthbridge",
-                                  "integrations.mse_ingest", "integrations.mse_ingest.connected"}:
+            if error.name not in {
+                "integrations",
+                "integrations.healthbridge",
+                "integrations.mse_ingest",
+                "integrations.mse_ingest.connected",
+            }:
                 raise
             raise unittest.SkipTest("assemble the pinned 0.2 adapter and ledger")
         from test_atlas_vectors import atlas_file
 
         cls.normalize = staticmethod(normalize_capture)
+
         class InterruptedIngest(ConnectedIngest):
             def _checkpoint(self, phase):
                 if phase == "custody":
@@ -39,7 +44,9 @@ class ConnectedCustody(unittest.TestCase):
         cls.ingest_cls = InterruptedIngest
         cls.conflict = BatchConflict
         cls.recovery_error = RecoveryError
-        cls.scope = Scope("synthetic-acceptance", "healthkit", "synthetic-store", "healtharchive")
+        cls.scope = Scope(
+            "synthetic-acceptance", "healthkit", "synthetic-store", "healtharchive"
+        )
         try:
             cls.schema = json.loads(atlas_file("offline-integration.schema.json"))
         except subprocess.CalledProcessError:
@@ -47,14 +54,21 @@ class ConnectedCustody(unittest.TestCase):
 
     def open_ledger(self, root):
         return self.ingest_cls(
-            root, archive_id="synthetic-acceptance", scope=self.scope, schema=self.schema,
+            root,
+            archive_id="synthetic-acceptance",
+            scope=self.scope,
+            schema=self.schema,
             clock=lambda: datetime(2026, 11, 21, tzinfo=timezone.utc),
         )
 
     def exported(self, raw, subject_id="synthetic-acceptance"):
         return self.normalize(
-            raw, subject_id=subject_id, source_instance="synthetic-store",
-            batch_id="synthetic-baseline", capture_id="synthetic-baseline", capture_kind="full_file",
+            raw,
+            subject_id=subject_id,
+            source_instance="synthetic-store",
+            batch_id="synthetic-baseline",
+            capture_id="synthetic-baseline",
+            capture_kind="full_file",
         )
 
     def ingest(self, ledger, raw, export):

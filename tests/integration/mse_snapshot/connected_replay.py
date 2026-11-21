@@ -1,4 +1,5 @@
 """Opt-in tests against exact ORACLE, FORGE, PF-001 and ATLAS source heads."""
+
 from contextlib import closing
 from copy import deepcopy
 from hashlib import sha256
@@ -15,7 +16,10 @@ from integrations.healthbridge.export import export_sha256, normalize_capture
 from integrations.healthbridge.ingest import ingest_capture
 from integrations.mse_ingest import RecoveryError, Scope
 from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
-from integrations.mse_snapshot.ledger import replay_ledger_snapshot, verify_ledger_replay_manifest
+from integrations.mse_snapshot.ledger import (
+    replay_ledger_snapshot,
+    verify_ledger_replay_manifest,
+)
 from mse import MODEL_VERSION, implementation_sha256
 from mse.contracts import ContractError, canonical, digest
 
@@ -23,7 +27,9 @@ from mse.contracts import ContractError, canonical, digest
 class ConnectedReplayTests(unittest.TestCase):
     def setUp(self):
         contract_dir = Path(os.environ["MSE_ATLAS_CONTRACT_DIR"])
-        self.schema = json.loads((contract_dir / "offline-integration.schema.json").read_bytes())
+        self.schema = json.loads(
+            (contract_dir / "offline-integration.schema.json").read_bytes()
+        )
         self.vectors = json.loads((contract_dir / "golden-vectors.json").read_bytes())
         self.original = self.vectors["source_utf8"].encode()
         self.scope = self.vectors["snapshot"]["scope"]
@@ -33,8 +39,11 @@ class ConnectedReplayTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
         delivery = ingest_capture(
-            self.ledger(), self.original, batch_id="batch-1",
-            capture_kind="full_file", capture_id="capture-1",
+            self.ledger(),
+            self.original,
+            batch_id="batch-1",
+            capture_kind="full_file",
+            capture_id="capture-1",
         )
         self.export, self.receipt = delivery.export, delivery.receipt
         self.assertEqual(self.receipt["status"], "normalized")
@@ -48,20 +57,27 @@ class ConnectedReplayTests(unittest.TestCase):
 
     def ledger(self, root=None):
         return ConnectedIngest(
-            self.root if root is None else root, archive_id=self.archive_id,
-            scope=Scope(**self.scope), schema=self.schema,
+            self.root if root is None else root,
+            archive_id=self.archive_id,
+            scope=Scope(**self.scope),
+            schema=self.schema,
         )
 
     def replay(self, snapshot):
         return replay_ledger_snapshot(
-            canonical(snapshot).encode(), ledger=self.reopened,
-            expected_scope=self.scope, expected_archive_id=self.archive_id,
-            max_bytes=64_000, max_members=128,
+            canonical(snapshot).encode(),
+            ledger=self.reopened,
+            expected_scope=self.scope,
+            expected_archive_id=self.archive_id,
+            max_bytes=64_000,
+            max_members=128,
         )
 
     def test_real_capture_reopened_snapshot_and_derived_lineage(self):
         self.assertEqual(self.reopened.verify_receipt(self.receipt), self.receipt)
-        self.assertEqual(self.receipt["artifact_sha256"], sha256(self.original).hexdigest())
+        self.assertEqual(
+            self.receipt["artifact_sha256"], sha256(self.original).hexdigest()
+        )
         self.assertEqual(self.receipt["export_sha256"], export_sha256(self.export))
         self.assertTrue(self.reopened.verify_snapshot(self.snapshot))
         result = self.replay(self.snapshot)
@@ -69,36 +85,71 @@ class ConnectedReplayTests(unittest.TestCase):
         self.assertEqual(result["epistemic_class"], "derived")
         self.assertEqual(result["reference_result"]["active_observation_count"], 1)
         self.assertEqual(len(self.snapshot["tombstones"]), 1)
-        self.assertEqual(result["lineage"]["deletion_facts"], self.snapshot["tombstones"])
-        self.assertEqual(result["lineage"]["snapshot_sha256"], sha256(canonical(self.snapshot).encode()).hexdigest())
-        self.assertEqual(result["lineage"]["reference_run_id"], result["reference_result"]["run_id"])
-        self.assertEqual(result["lineage"]["reference_result_sha256"], digest(result["reference_result"]))
+        self.assertEqual(
+            result["lineage"]["deletion_facts"], self.snapshot["tombstones"]
+        )
+        self.assertEqual(
+            result["lineage"]["snapshot_sha256"],
+            sha256(canonical(self.snapshot).encode()).hexdigest(),
+        )
+        self.assertEqual(
+            result["lineage"]["reference_run_id"], result["reference_result"]["run_id"]
+        )
+        self.assertEqual(
+            result["lineage"]["reference_result_sha256"],
+            digest(result["reference_result"]),
+        )
         self.assertEqual(result["result_id"], "derived:" + digest(result["lineage"]))
         member = result["lineage"]["observation_revisions"][0]
         self.assertEqual(member["receipt_id"], self.receipt["receipt_id"])
         self.assertEqual(member["artifact_sha256"], self.receipt["artifact_sha256"])
-        self.assertEqual(member["revision_sha256"], self.export["revisions"][0]["revision_sha256"])
+        self.assertEqual(
+            member["revision_sha256"], self.export["revisions"][0]["revision_sha256"]
+        )
         selected = self.snapshot["observations"][0]
-        for field in ("pf001_revision_id", "processing_revision_sha256", "commit_sequence", "committed_at", "mother_received_at"):
+        for field in (
+            "pf001_revision_id",
+            "processing_revision_sha256",
+            "commit_sequence",
+            "committed_at",
+            "mother_received_at",
+        ):
             self.assertEqual(member[field], selected[field])
-        self.assertEqual(result["lineage"]["snapshot_manifest_sha256"], self.snapshot["snapshot_sha256"])
+        self.assertEqual(
+            result["lineage"]["snapshot_manifest_sha256"],
+            self.snapshot["snapshot_sha256"],
+        )
         golden_projection = deepcopy(self.vectors["native_projection"])
         observation = golden_projection["observations"][0]
         processing_fields = (
-            "channel", "value", "unit", "event_start", "event_end", "epistemic_type",
-            "classification_basis", "classification_evidence_sha256",
+            "channel",
+            "value",
+            "unit",
+            "event_start",
+            "event_end",
+            "epistemic_type",
+            "classification_basis",
+            "classification_evidence_sha256",
         )
         source = self.vectors["snapshot"]["observations"][0]["source_revision"]
-        processing = digest([
-            "mse.processing-revision/0.2", source["revision_sha256"], self.normalizer_version,
-            {key: source["observation"][key] for key in processing_fields},
-        ])
+        processing = digest(
+            [
+                "mse.processing-revision/0.2",
+                source["revision_sha256"],
+                self.normalizer_version,
+                {key: source["observation"][key] for key in processing_fields},
+            ]
+        )
         self.assertEqual(member["processing_revision_sha256"], processing)
         observation["provenance"]["processing_revision_sha256"] = processing
-        self.assertEqual(result["lineage"]["native_projection_sha256"],
-                         digest(["mse.native-projection/0.2", golden_projection]))
+        self.assertEqual(
+            result["lineage"]["native_projection_sha256"],
+            digest(["mse.native-projection/0.2", golden_projection]),
+        )
         run, lineage = result["reference_result"], result["lineage"]
-        self.assertEqual(lineage["reference_implementation_sha256"], implementation_sha256())
+        self.assertEqual(
+            lineage["reference_implementation_sha256"], implementation_sha256()
+        )
         self.assertEqual(lineage["model_version"], MODEL_VERSION)
         self.assertEqual(lineage["model_config_sha256"], digest(run["configuration"]))
 
@@ -108,11 +159,17 @@ class ConnectedReplayTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, restored)
         for source in (self.reopened.journal, self.reopened.archive):
             destination = restored / source.name
-            with closing(sqlite3.connect(source.as_uri() + "?mode=ro", uri=True)) as reader:
+            with closing(
+                sqlite3.connect(source.as_uri() + "?mode=ro", uri=True)
+            ) as reader:
                 with closing(sqlite3.connect(destination)) as writer:
                     reader.backup(writer)
-                    self.assertEqual(writer.execute("PRAGMA integrity_check").fetchone(), ("ok",))
-                    self.assertIsNone(writer.execute("PRAGMA foreign_key_check").fetchone())
+                    self.assertEqual(
+                        writer.execute("PRAGMA integrity_check").fetchone(), ("ok",)
+                    )
+                    self.assertIsNone(
+                        writer.execute("PRAGMA foreign_key_check").fetchone()
+                    )
             destination.chmod(0o600)
 
         return self.ledger(restored)
@@ -124,9 +181,14 @@ class ConnectedReplayTests(unittest.TestCase):
 
         def verify(output):
             return verify_ledger_replay_manifest(
-                canonical(self.snapshot).encode(), canonical(output).encode(),
-                ledger=reopened, expected_scope=self.scope, expected_archive_id=self.archive_id,
-                max_bytes=64_000, max_members=128, max_manifest_bytes=128_000,
+                canonical(self.snapshot).encode(),
+                canonical(output).encode(),
+                ledger=reopened,
+                expected_scope=self.scope,
+                expected_archive_id=self.archive_id,
+                max_bytes=64_000,
+                max_members=128,
+                max_manifest_bytes=128_000,
             )
 
         self.assertEqual(verify(original), original)
@@ -140,7 +202,9 @@ class ConnectedReplayTests(unittest.TestCase):
         original_artifact = self.export["artifact"]
         variants = {
             "revised-value": self.original.replace(b"4.20e1", b"43", 1),
-            "changed-source": self.original.replace("Synthetic µ".encode(), b"Other source", 1),
+            "changed-source": self.original.replace(
+                "Synthetic µ".encode(), b"Other source", 1
+            ),
             "omitted-deletion": self.original.replace(
                 b'"00000000-0000-4000-8000-000000000002":3', b"", 1
             ),
@@ -149,14 +213,19 @@ class ConnectedReplayTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertNotEqual(modified, self.original)
                 forged = normalize_capture(
-                    modified, subject_id=self.scope["subject_id"],
-                    source_instance=self.scope["source_instance"], batch_id=name,
-                    capture_id=name, capture_kind="full_file",
+                    modified,
+                    subject_id=self.scope["subject_id"],
+                    source_instance=self.scope["source_instance"],
+                    batch_id=name,
+                    capture_id=name,
+                    capture_kind="full_file",
                 )
                 forged["artifact"] = original_artifact.copy()
                 self.assertNotEqual(export_sha256(forged), export_sha256(self.export))
                 try:
-                    receipt = self.ledger(self.root / name).ingest_export(self.original, forged)
+                    receipt = self.ledger(self.root / name).ingest_export(
+                        self.original, forged
+                    )
                 except (ValueError, RecoveryError):
                     continue
                 self.assertNotEqual(receipt["status"], "normalized")
@@ -166,17 +235,27 @@ class ConnectedReplayTests(unittest.TestCase):
         exact = "42.000000000000000001"
         original = self.original.replace(b"4.20e1", exact.encode(), 1).replace(
             b'"00000000-0000-4000-8000-000000000001"',
-            b'"00000000-0000-4000-8000-000000000003"', 1,
+            b'"00000000-0000-4000-8000-000000000003"',
+            1,
         )
         delivery = ingest_capture(
-            self.reopened, original, batch_id="precision", capture_id="precision",
+            self.reopened,
+            original,
+            batch_id="precision",
+            capture_id="precision",
             capture_kind="partial",
         )
         self.assertEqual(delivery.receipt["status"], "normalized")
-        revision = next(fact for fact in delivery.export["revisions"] if fact["operation"] == "upsert")
+        revision = next(
+            fact
+            for fact in delivery.export["revisions"]
+            if fact["operation"] == "upsert"
+        )
         self.assertEqual(revision["observation"]["original_value"], exact)
         self.assertEqual(revision["observation"]["value"], exact)
-        self.assertEqual(delivery.receipt["artifact_sha256"], sha256(original).hexdigest())
+        self.assertEqual(
+            delivery.receipt["artifact_sha256"], sha256(original).hexdigest()
+        )
         snapshot = self.reopened.build_snapshot(
             measurement_start=self.snapshot["measurement_start"],
             measurement_end=self.snapshot["measurement_end"],
@@ -186,17 +265,29 @@ class ConnectedReplayTests(unittest.TestCase):
         result = self.replay(snapshot)
         self.assertEqual(result["input_losses"], snapshot["losses"])
         precision_losses = [
-            {"field": field, "reason": "pf001_binary64_rounding", "locator": "/readings/0/value"}
+            {
+                "field": field,
+                "reason": "pf001_binary64_rounding",
+                "locator": "/readings/0/value",
+            }
             for field in ("original_value", "value")
         ]
-        self.assertTrue(all(loss in delivery.export["losses"] for loss in precision_losses))
+        self.assertTrue(
+            all(loss in delivery.export["losses"] for loss in precision_losses)
+        )
         self.assertTrue(all(loss in snapshot["losses"] for loss in precision_losses))
-        selected = next(member for member in snapshot["observations"]
-                        if member["source_revision"]["revision_sha256"] == revision["revision_sha256"])
+        selected = next(
+            member
+            for member in snapshot["observations"]
+            if member["source_revision"]["revision_sha256"]
+            == revision["revision_sha256"]
+        )
         self.assertEqual(selected["source_revision"], revision)
         reopened = self.restored_ledger()
-        with closing(sqlite3.connect(reopened.archive.as_uri() + "?mode=ro", uri=True)) as archive:
-            row, = archive.execute(
+        with closing(
+            sqlite3.connect(reopened.archive.as_uri() + "?mode=ro", uri=True)
+        ) as archive:
+            (row,) = archive.execute(
                 "SELECT record_json FROM normalized_records WHERE revision_id=?",
                 (selected["pf001_revision_id"],),
             ).fetchone()
@@ -206,42 +297,76 @@ class ConnectedReplayTests(unittest.TestCase):
         self.assertEqual(record["metadata"]["exact_decimal_value"], exact)
         self.assertEqual(reopened.verify_receipt(delivery.receipt), delivery.receipt)
         options = dict(
-            ledger=reopened, expected_scope=self.scope, expected_archive_id=self.archive_id,
-            max_bytes=64_000, max_members=128, max_manifest_bytes=128_000,
+            ledger=reopened,
+            expected_scope=self.scope,
+            expected_archive_id=self.archive_id,
+            max_bytes=64_000,
+            max_members=128,
+            max_manifest_bytes=128_000,
         )
         raw = canonical(snapshot).encode()
         self.assertEqual(
-            verify_ledger_replay_manifest(raw, canonical(result).encode(), **options), result
+            verify_ledger_replay_manifest(raw, canonical(result).encode(), **options),
+            result,
         )
         counterfeit = deepcopy(result)
-        counterfeit["input_losses"] = [loss for loss in result["input_losses"] if loss not in precision_losses]
+        counterfeit["input_losses"] = [
+            loss for loss in result["input_losses"] if loss not in precision_losses
+        ]
         counterfeit["result_id"] = "derived:" + digest(counterfeit["lineage"])
         with self.assertRaisesRegex(ContractError, "differs from verified replay"):
-            verify_ledger_replay_manifest(raw, canonical(counterfeit).encode(), **options)
+            verify_ledger_replay_manifest(
+                raw, canonical(counterfeit).encode(), **options
+            )
 
     def test_resigned_forged_or_incomplete_snapshot_fails_before_replay(self):
         def replace_with_invented_fact(snapshot):
             member = snapshot["observations"][0]
             invented = normalize_capture(
                 self.original.replace(b"4.20e1", b"43", 1),
-                subject_id=self.scope["subject_id"], source_instance=self.scope["source_instance"],
-                batch_id="counterfeit", capture_id="counterfeit", capture_kind="full_file",
+                subject_id=self.scope["subject_id"],
+                source_instance=self.scope["source_instance"],
+                batch_id="counterfeit",
+                capture_id="counterfeit",
+                capture_kind="full_file",
             )["revisions"][0]
-            fields = ("channel", "value", "unit", "event_start", "event_end",
-                      "epistemic_type", "classification_basis", "classification_evidence_sha256")
+            fields = (
+                "channel",
+                "value",
+                "unit",
+                "event_start",
+                "event_end",
+                "epistemic_type",
+                "classification_basis",
+                "classification_evidence_sha256",
+            )
             member["source_revision"] = invented
-            member["processing_revision_sha256"] = digest([
-                "mse.processing-revision/0.2", invented["revision_sha256"], self.normalizer_version,
-                {field: invented["observation"][field] for field in fields},
-            ])
+            member["processing_revision_sha256"] = digest(
+                [
+                    "mse.processing-revision/0.2",
+                    invented["revision_sha256"],
+                    self.normalizer_version,
+                    {field: invented["observation"][field] for field in fields},
+                ]
+            )
 
         changes = {
             "self-consistent invented fact": replace_with_invented_fact,
-            "invented-receipt": lambda s: s["observations"][0].update(receipt_id="f" * 64),
-            "wrong-source": lambda s: s["observations"][0]["source_revision"].update(revision_sha256="e" * 64),
-            "wrong-processing": lambda s: s["observations"][0].update(processing_revision_sha256="d" * 64),
-            "past-cutoff": lambda s: s.update(knowledge_cutoff_sequence=self.receipt["commit_sequence"] - 1),
-            "future-cutoff": lambda s: s.update(knowledge_cutoff_sequence=self.receipt["commit_sequence"] + 1),
+            "invented-receipt": lambda s: s["observations"][0].update(
+                receipt_id="f" * 64
+            ),
+            "wrong-source": lambda s: s["observations"][0]["source_revision"].update(
+                revision_sha256="e" * 64
+            ),
+            "wrong-processing": lambda s: s["observations"][0].update(
+                processing_revision_sha256="d" * 64
+            ),
+            "past-cutoff": lambda s: s.update(
+                knowledge_cutoff_sequence=self.receipt["commit_sequence"] - 1
+            ),
+            "future-cutoff": lambda s: s.update(
+                knowledge_cutoff_sequence=self.receipt["commit_sequence"] + 1
+            ),
             "omitted-tombstone": lambda s: s.update(tombstones=[]),
         }
         for name, change in changes.items():
@@ -250,7 +375,9 @@ class ConnectedReplayTests(unittest.TestCase):
                 del forged["snapshot_sha256"]
                 change(forged)
                 forged["snapshot_sha256"] = digest(["mse.snapshot/0.2", forged])
-                with patch("integrations.mse_snapshot.ledger._replay_validated_snapshot") as run:
+                with patch(
+                    "integrations.mse_snapshot.ledger._replay_validated_snapshot"
+                ) as run:
                     with self.assertRaises((ContractError, RecoveryError, ValueError)):
                         self.replay(forged)
                     run.assert_not_called()
