@@ -37,6 +37,7 @@ class ExactLineage:
     """Restricted view evidence. Return only via the authorized audit boundary."""
 
     binding: ViewBinding
+    view_id: str
     archive_id: str
     projection_version: str
     snapshot_sha256: str
@@ -127,7 +128,7 @@ class LineageResolver:
             if open_ledger().verify_snapshot(snapshot) is not True:
                 raise LineageDenied(_DENIED)
             lineage = ExactLineage(
-                binding=binding, archive_id=self._archive_id,
+                binding=binding, view_id=view_id, archive_id=self._archive_id,
                 projection_version=projection["projection_version"],
                 snapshot_sha256=_digest(snapshot_bytes),
                 projection_sha256=_digest(projection_bytes),
@@ -153,7 +154,7 @@ class LineageResolver:
                 raise LineageDenied(_DENIED)
             record = json.loads(row[0])
             stored = ViewBinding(**record.pop("binding"))
-            if (record.get("archive_id") != self._archive_id
+            if (record.get("view_id") != view_id or record.get("archive_id") != self._archive_id
                     or current != stored or self._authorize(credential, view_id, "resolve") != current):
                 raise LineageDenied(_DENIED)
             return ExactLineage(binding=stored, **record)

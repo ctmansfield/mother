@@ -14,10 +14,12 @@ PYTHONPATH=.:research/mse/reference-v0.1.0/prototype python -B -m unittest disco
 
 The focused tests use real public capture ingestion, a reopened PF-001 ledger and exact MSE replay. A scoped fixture models the independently updated authority when run without the FORGE privacy candidate. Combined acceptance must use FORGE's actual privacy authority, ORACLE's projection writer and an independent stale-restore test.
 
-Actual FORGE boundary in an exact local assembly with #40:
+## Finite connected manifest audit
+
+Use Python with the documented PF-001 dependencies and an exact synthetic assembly of #35 `b7aae4f2216d27f0544eab9fe9698286fe49d716`, #40 `7623616a97c0ab0213b6a9b4ebcf9affdac1e80a`, #38 `58f78b1ed077fc0938b3540a517429500a40c663` and the audited #39 head. The command runs no fetches, treats missing dependencies, empty discovery and skips as failures, and caps execution at 45 seconds:
 
 ```sh
-PYTHONPATH=.:research/mse/reference-v0.1.0/prototype python -B tests/integration/mse_privacy/lineage/real_custody.py -v
+PYTHONPATH=.:research/mse/reference-v0.1.0/prototype python -B -c 'import subprocess,sys; subprocess.run([sys.executable, "-B", "tests/integration/mse_privacy/lineage/real_custody.py"], timeout=45, check=True)'
 ```
 
-The suite uses actual credentials, view reservation, restricted resolver and analytical custody. Denial cases assert no ledger factory calls. The #40 initial authority pin uses in-memory revocation and the test explicitly boots with the latest trusted generation. Durable independent revocation and aggregate restoration without a vault remain separate integration gates.
+The suite uses the real public ORACLE publisher, FORGE credentials and reservations, persisted aggregate read, restricted manifest re-verification and restart. It checks exact replay equality after a mapping restore, refuses swapped and fabricated handles, and denies derived access before the ledger opener after revocation. A stale authority backup is rejected while the separate current fence survives. Restoration of both trust roots from an old generation remains outside the tested protection.
