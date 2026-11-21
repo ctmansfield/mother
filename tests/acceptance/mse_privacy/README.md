@@ -17,3 +17,18 @@ Run the independent inputs and disclosure assertion checks from the repository r
 `python -B -m unittest discover -s tests/acceptance/mse_privacy -v`.
 These checks qualify the test inputs and scanner only. Real API tests require the exact
 custody, export, lineage and recovery heads and the policy revision they target.
+
+## Round 10 connected check
+
+From the exact combined checkout, set `PYTHON` to an existing Python 3.12
+environment with jsonschema and run
+`sh tests/acceptance/mse_privacy/run_connected.sh`.
+The independent suite uses the actual public HealthArchive ingest, ledger,
+custody credentials, publisher, projection reader and restricted resolver.
+The paired restore suite extracts the pinned product inputs from local Git
+objects. No listener or network access is needed.
+
+The stale authority case keeps the current independent fence. The checked
+denial applies to that split rollback. A rollback of both authority and its
+trusted fence remains outside this local check. Older R9 preview/authority
+findings apply only to the recorded R9 candidate.
