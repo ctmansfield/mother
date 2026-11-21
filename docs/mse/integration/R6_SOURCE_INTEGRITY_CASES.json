@@ -1,0 +1,146 @@
+{
+  "contract": "769a0966da251da4d08633cc7663af9869da70e6",
+  "binding": {
+    "options": {
+      "subject_id": "synthetic-atlas",
+      "source_instance": "fixture-store",
+      "batch_id": "batch-1",
+      "capture_id": "capture-1",
+      "capture_kind": "full_file"
+    },
+    "reference": {
+      "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+      "sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+      "byte_length": 306
+    },
+    "comparisons": [
+      {
+        "case": "changed_value",
+        "alternate": {
+          "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.30e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+          "sha256": "50e885678981483b912d13de6e3fbd0f87f73572ca70a5e15f03b975c7a70590",
+          "byte_length": 306
+        },
+        "affected_pointer": "/readings/0/value",
+        "expected": "different_semantic_export"
+      },
+      {
+        "case": "changed_event_end",
+        "alternate": {
+          "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":2,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+          "sha256": "32e99d42a92527e2a8bab9a10a7222a386f92c8a8d9567d0a428cea286ce1a30",
+          "byte_length": 306
+        },
+        "affected_pointer": "/readings/0/end",
+        "expected": "different_semantic_export"
+      },
+      {
+        "case": "changed_source_name",
+        "alternate": {
+          "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Alternate synthetic\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+          "sha256": "44037493c1e41baacf6617f39f82d1bc808ffdb2690dc8840289cbce534ffb35",
+          "byte_length": 313
+        },
+        "affected_pointer": "/readings/0/source",
+        "expected": "different_semantic_export"
+      },
+      {
+        "case": "changed_bundle",
+        "alternate": {
+          "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.alternate\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+          "sha256": "e8cf42a89e4b381b691f17ecb26c5a910bcc655f0d8d29a0c4e2e0f8e9212c3d",
+          "byte_length": 306
+        },
+        "affected_pointer": "/readings/0/bundleID",
+        "expected": "different_semantic_export"
+      },
+      {
+        "case": "omitted_unknown_delete",
+        "alternate": {
+          "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{},\"backfillStart\":0}",
+          "sha256": "2f9a5f3e6c05c22200565057402c535333d8df5868db6791358c137b080ae2a3",
+          "byte_length": 266
+        },
+        "affected_pointer": "/tombstones/00000000-0000-4000-8000-000000000002",
+        "expected": "different_semantic_export"
+      },
+      {
+        "case": "different_valid_channel_and_unit",
+        "alternate": {
+          "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"Heart rate\",\"value\":4.20e1,\"unit\":\"bpm\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+          "sha256": "0054f186c668f449bcad6f7b168701fcbbbed6106d2b38163697732b2abead92",
+          "byte_length": 307
+        },
+        "affected_pointer": "/readings/0/kind",
+        "expected": "different_semantic_export"
+      }
+    ]
+  },
+  "numeric": [
+    {
+      "case": "exact-binary",
+      "capture": {
+        "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":4.20e1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+        "sha256": "05c392b084c4f204d39021147c53ffbe485dd41ab5f64af4d12482ab13340816",
+        "byte_length": 306
+      },
+      "pointer": "/readings/0/value",
+      "original_lexeme": "4.20e1",
+      "canonical_decimal": "42",
+      "stored_binary64_hex_if_inexact": null,
+      "expected": "eligible"
+    },
+    {
+      "case": "exact-fraction",
+      "capture": {
+        "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":42.125,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+        "sha256": "1c34fb64314383dbd3e5097e9923e60136fd7223d313e6e2b8e243ce058f2b10",
+        "byte_length": 306
+      },
+      "pointer": "/readings/0/value",
+      "original_lexeme": "42.125",
+      "canonical_decimal": "42.125",
+      "stored_binary64_hex_if_inexact": null,
+      "expected": "eligible"
+    },
+    {
+      "case": "inexact-fraction",
+      "capture": {
+        "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":42.1,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+        "sha256": "a9aaafc5e1cef86d73d50827c7e7b89bd02a8366267b6edbc59b53ae6b013740",
+        "byte_length": 304
+      },
+      "pointer": "/readings/0/value",
+      "original_lexeme": "42.1",
+      "canonical_decimal": "42.1",
+      "stored_binary64_hex_if_inexact": "0x1.50ccccccccccdp+5",
+      "expected": "eligible_with_precision_loss"
+    },
+    {
+      "case": "integer-neighbor",
+      "capture": {
+        "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":9007199254740993,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+        "sha256": "afdc6918fd441216efea9b9fb2c633a98e16552ff0422b79b1d52a8d1f1ccfdc",
+        "byte_length": 316
+      },
+      "pointer": "/readings/0/value",
+      "original_lexeme": "9007199254740993",
+      "canonical_decimal": "9007199254740993",
+      "stored_binary64_hex_if_inexact": "0x1.0000000000000p+53",
+      "expected": "eligible_with_precision_loss"
+    },
+    {
+      "case": "signed-zero",
+      "capture": {
+        "source_utf8": "{\"readings\":[{\"id\":\"00000000-0000-4000-8000-000000000001\",\"kind\":\"HRV (SDNN)\",\"value\":-0.00,\"unit\":\"ms\",\"start\":0.0000005,\"end\":1,\"source\":\"Synthetic µ\",\"bundleID\":\"test.synthetic\",\"receivedAt\":2}],\"anchors\":{\"HRV (SDNN)\":\"AQI=\"},\"tombstones\":{\"00000000-0000-4000-8000-000000000002\":3},\"backfillStart\":0}",
+        "sha256": "97a34a05b50b9f234c98cbdb365223eb68300a34794a70cb7500afd42ffda1f9",
+        "byte_length": 305
+      },
+      "pointer": "/readings/0/value",
+      "original_lexeme": "-0.00",
+      "canonical_decimal": "0",
+      "stored_binary64_hex_if_inexact": null,
+      "expected": "source_only_nonpositive"
+    }
+  ]
+}
