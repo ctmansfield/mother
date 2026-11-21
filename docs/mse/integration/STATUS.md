@@ -18,6 +18,31 @@ Posted and visible through GitHub readback. Verified -05 ACKs at this checkpoint
 
 No shared health values, tokens or private endpoint inputs. No public route, LLM forwarding, watch, main merge, unrelated VM/IDS changes or committed fixture replay. Pilot scope is prospective only. iHealth Track KN-550BT is a separate research item. BP is outside current enrollment; no cuff pairing/sync or BP collection is recorded. Full 48-hour completion and cutoff still require receipts.
 
+### Later live checkpoint
+
+At **Nov 21 15:11:27 Guam**, PHOENIX reopened **five witnessed batches, 26 rows and four of 14 enrolled types**. Sequence 4 reached the server after the observed Home transition. This is server-side post-background evidence. The exact on-phone acknowledgment for that later commit, continuous locked-background delivery and full-window closeout remain unverified. All committed rows passed the prospective window check. No backfill. Runtime procedures published at `0ffbc5e0842530d7539b0ad72394248bec612e0d`. The previously matched 23 phone-acknowledged revisions remain an earlier checkpoint. [Server checkpoint](https://github.com/ctmansfield/production-framework/issues/44#issuecomment-7057745705)
+
+## All available HealthKit history, BP first
+
+**MSE-HEALTH-HISTORY-20261121-06 r1.** Chad selected all available HealthKit families for a separate finite history archive and Mother/Coach testing, with BP first. Current -05 live enrollment, anchors and cutoff remain unchanged. Archival retention is selected and backup/restore remains deferred. The directive is posted and visible. Verified ACKs: [LONESTAR](https://github.com/ctmansfield/mother/pull/23#issuecomment-7057783291) and [FORGE](https://github.com/ctmansfield/mother/pull/23#issuecomment-7057784088). [Directive](https://github.com/ctmansfield/mother/pull/23#issuecomment-7057772764)
+
+| Family | Coverage / raw retained | Normalized and consumer-ready |
+| --- | --- | --- |
+| BP correlations · priority | Existing cuff→MyVitals→Apple Health availability unverified. No history original received. Preserve cuff memory; no sync/reset or cloud enrollment. | Paired mmHg shape proposed, with component/correlation lineage, explicit incomplete states, correction/deletion and pulse separate unless explicitly linked. No real typed rows or consumer qualification yet. |
+| Other quantities, categories and correlations | Coverage inventory pending for native export and supported API supplementation. | Record family/member counts and exact source clocks, overlap/dedup and revision behavior before consumer claims. The current live counts do not qualify historical import. |
+| Characteristics, workouts/activity and series/routes | Coverage and attachment inventory pending. Route/location stays out of default analytical views. | Typed mapping and consumer eligibility await evidence. |
+| ECG, audiogram, vision, clinical and medication families | Availability, API/OS/entitlement, native permission, source absence and unsupported shapes require distinct coverage entries. | Unsupported shapes may retain protected originals. Raw receipt alone leaves typed/current/history and consumer counts open. |
+
+| Owner | Next handoff |
+| --- | --- |
+| ATLAS → ORACLE / FORGE | Pin BP pair/component and all-family coverage contracts, overlap rules and explicit inaccessible gaps. [BP design](https://github.com/ctmansfield/mother/pull/23#issuecomment-7057723309) |
+| ORACLE / FORGE → NICKY / PROVENANCE | Publish signed-candidate source and separately enrolled synthetic bulk/BP implementation, with bounded validation, restart/resume and exact raw→typed counts. |
+| PHOENIX / SENTINEL → GADGET | Prepare and review protected raw-vault transport, capacity, file/role isolation and independent key custody. Verify encryption facts before any user export handoff. |
+| NICKY → GADGET | Confirm actual BP source availability without values, practice synthetic and native preservation steps, then coordinate only ready user-only access/export actions. |
+| PROVENANCE → Mother/Coach boundary review | Reconcile manifest/member/type coverage, exact originals, normalized current/history and separately scoped pseudonymous read-only projection. Verify consumer contract and counts by family. |
+
+**Nightscout is a separate investigation.** Compare direct scoped reads with a separate pseudonymous store/API using source contracts and synthetic adapters. ATLAS/FORGE/PROVENANCE identify glucose/context, access and lineage constraints; SENTINEL reviews isolation and linkage risk before GADGET presents options. No real Nightscout credential access, endpoint polling/import, vendor cloud signup, cuff reset/sync, LLM forwarding, public route or main merge. No anonymity claim. Raw health, location and linkage material stay in restricted custody.
+
 ## Startup, CI and independent reproduction
 
 The directive is posted and visible through GitHub readback. Verified r1 ACKs: [LONESTAR](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056849836), [FORGE](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056850182), [ORACLE](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056850218), [PHOENIX](https://github.com/ctmansfield/production-framework/issues/44#issuecomment-7056850415), [SENTINEL](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056850457), [NICKY](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056850830) and [PROVENANCE](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056850987). Delivery, ACK and execution are distinct. [ATLAS ACK and guarded-target blocker](https://github.com/ctmansfield/mother/pull/23#issuecomment-7056852827) was also verified.
