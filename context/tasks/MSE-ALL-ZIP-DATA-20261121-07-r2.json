@@ -1,0 +1,150 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "task_id": "MSE-ALL-ZIP-DATA-20261121-07",
+  "task_revision": "2",
+  "observed_at": "2026-11-21T09:39:28Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SYNCED_AT_READBACK",
+    "detail": "Directive and owning handoff read back. Verify the current PM disposition before a new assignment."
+  },
+  "record_kind": "source_projection",
+  "goal": "Preserve ATLASv3 handoff for the complete user-run all-ZIP import path.",
+  "scope": [
+    "Universal schema, scoped Mother/Coach queries, source and fabricated functional evidence."
+  ],
+  "acceptance": [
+    "Verify every admitted member and parsed occurrence is retrievable; reconcile typed, descriptor, fallback and quarantine; require witnessed publication and a qualified manual artifact."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "source": "source",
+    "allowed": [
+      "Source, documentation and ordinary functional tests with fabricated fixtures in isolated development."
+    ],
+    "not_authorized": [
+      "Any automated real-data step, including metadata, read-only verification, admission, preflight or cleanup.",
+      "Live or adversarial probing, alert workarounds, model forwarding, merges or backups/restores."
+    ]
+  },
+  "constraints": [
+    "Preserve actual resources and the prior catalog. User executes all real-data actions and supplies sanitized results."
+  ],
+  "instruction_binding": {
+    "id": "MSE-ALL-ZIP-DATA-20261121-07",
+    "revision": "2",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+    "sha256": "3085cd52982b5b336bffce113d2cf8addd8b30460071e2182e3074da2c7186a6",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "ATLAS-V3-HANDOFF-20261121-R2",
+    "status": "COMPLETED",
+    "instruction_ref": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+      "sha256": "3085cd52982b5b336bffce113d2cf8addd8b30460071e2182e3074da2c7186a6"
+    },
+    "tests_performed": [
+      "GitHub comment exact readback and local context validation only."
+    ],
+    "limitations": [
+      "PR #64 is a source/fabricated candidate; successor and manual artifact are pending."
+    ],
+    "requested_decision": "PM launches replacement waves; ATLASv2 stands by.",
+    "next_action": "#next_action",
+    "source": "receipt"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+      "sha256": "3085cd52982b5b336bffce113d2cf8addd8b30460071e2182e3074da2c7186a6"
+    },
+    "source": "receipt"
+  },
+  "decisions": [
+    {
+      "id": "manual-only-r2",
+      "value": "Revision 2 makes all personal-data steps user-manual.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit user boundary update."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "PUBLISHED_CANDIDATE",
+      "detail": "PR #64 de9cf992c2da6f1c990629ea635a5e90ec6ec7dd; successor pending.",
+      "source": "receipt"
+    },
+    "test": {
+      "status": "FABRICATED_SCOPE_ONLY",
+      "detail": "Existing exact-package and loopback receipts cover their fixtures; no handoff reruns.",
+      "source": "receipt"
+    },
+    "merge": {
+      "status": "DRAFT_UNMERGED",
+      "detail": "No main merge authorized.",
+      "source": "receipt"
+    },
+    "deploy": {
+      "status": "TARGET_HOLD",
+      "detail": "No universal target acceptance.",
+      "source": "receipt"
+    },
+    "runtime": {
+      "status": "PRIOR_RECEIPTS_ONLY",
+      "detail": "Prior live 8446 preserved and 8447 closed at recorded closure; present state unverified.",
+      "source": "receipt"
+    }
+  },
+  "unknowns": [
+    "Next published successor pin, exact manual artifact and current runtime state."
+  ],
+  "conflicts": [],
+  "blockers": [
+    "Parsed-to-query parity, reference status, typed/descriptor accounting, scoped fallback/attachment access and opaque cursors."
+  ],
+  "dependencies": [
+    "PM dispatches ATLASv3; FORGE publishes successor; permitted review precedes NICKY manual artifact."
+  ],
+  "next_action": {
+    "action": "After PM assignment, review the successor using source and ordinary fabricated functional evidence only.",
+    "role": "ATLASv3"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/atlas-v3-directive-r2.json",
+      "sha256": "3085cd52982b5b336bffce113d2cf8addd8b30460071e2182e3074da2c7186a6",
+      "observation": {
+        "kind": "exact_body_envelope",
+        "environment": "GitHub connector",
+        "method": "Read exact comment and preserve its source locator and bytes.",
+        "result": "Canonical revision 2 exact body read through GitHub.",
+        "limitations": [
+          "No runtime or personal artifacts examined."
+        ],
+        "observed_at": "2026-11-21T09:39:28Z"
+      }
+    },
+    "receipt": {
+      "path": "evidence/atlas-v3-handoff-readback-r2.json",
+      "sha256": "1dc372b0f78bc1f63b0ad2f74c18663425db42ff4a04fb6998523073c06143e9",
+      "observation": {
+        "kind": "exact_body_envelope",
+        "environment": "GitHub connector",
+        "method": "Read exact comment and preserve its source locator and bytes.",
+        "result": "Owning PR #28 handoff comment read back byte-for-byte.",
+        "limitations": [
+          "No runtime or personal artifacts examined."
+        ],
+        "observed_at": "2026-11-21T09:39:28Z"
+      }
+    }
+  }
+}
