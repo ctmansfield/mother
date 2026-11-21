@@ -85,7 +85,7 @@ def _allowlist(raw):
 
 
 @contextmanager
-def _members(package):
+def _members(package, commits):
     if zipfile.is_zipfile(package):
         with zipfile.ZipFile(package) as archive:
             package.seek(0)
@@ -105,7 +105,11 @@ def _members(package):
         with tarfile.open(fileobj=package, mode="r:*") as archive:
             def entries():
                 for entry in archive:
-                    if (not entry.isdir() and not entry.isfile()) or entry.pax_headers:
+                    allowed_pax = {"comment": next(iter(commits))} if len(commits) == 1 else {}
+                    if (not entry.isdir() and not entry.isfile()
+                            or (entry.pax_headers and (
+                                entry.pax_headers != allowed_pax or archive.pax_headers != allowed_pax
+                            ))):
                         raise VerificationError("Unexpected TAR member type or metadata")
                     if entry.uname not in ("", "root") or entry.gname not in ("", "root", "wheel"):
                         raise VerificationError("Unexpected TAR owner metadata")
@@ -143,7 +147,7 @@ def verify_package(checkout, package, allowlist_bytes):
         or package_bytes[-2:] != b"\0\0"
     ):
         raise VerificationError("Unexpected ZIP envelope metadata")
-    with _members(archive_bytes) as entries:
+    with _members(archive_bytes, {commit for commit, _ in expected.values()}) as entries:
         for index, (raw_name, directory, size, opener) in enumerate(entries):
             if index >= 2 * MAX_MEMBERS:
                 raise VerificationError("Package exceeds member-count bound")

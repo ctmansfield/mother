@@ -46,6 +46,19 @@ class PackageVerificationTests(unittest.TestCase):
         with self.assertRaisesRegex(VerificationError, "Disallowed"):
             verify_package(ROOT, self.package, self.allowlist)
 
+    def test_pax_git_commit_only_metadata_and_exact_pin(self):
+        for metadata, permitted in ((PIN, True), ("0" * 40, False)):
+            with self.subTest(permitted=permitted):
+                with tarfile.open(self.package, "w", pax_headers={"comment": metadata}) as archive:
+                    entry = tarfile.TarInfo(MEMBER)
+                    entry.size = len(self.content)
+                    archive.addfile(entry, BytesIO(self.content))
+                if permitted:
+                    self.assertEqual(len(verify_package(ROOT, self.package, self.allowlist)["members"]), 1)
+                else:
+                    with self.assertRaisesRegex(VerificationError, "member type or metadata"):
+                        verify_package(ROOT, self.package, self.allowlist)
+
     def test_archive_link_and_metadata_are_rejected(self):
         with tarfile.open(self.package, "w") as archive:
             link = tarfile.TarInfo(MEMBER)
