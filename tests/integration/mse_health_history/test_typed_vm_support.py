@@ -420,3 +420,173 @@ def verify_shared_vector(test, root):
         json.loads(store.snapshot(descriptor))["count"],
         vector["expected_consumer_pairs"],
     )
+
+
+def verify_projection_window(test, root):
+    from copy import deepcopy
+    from unittest.mock import Mock
+
+    lower = "2026-11-21T00:00:00.000000Z"
+    before_lower = "2026-11-20T23:59:59.999999Z"
+    before = "2026-11-21T23:59:59.999999Z"
+    upper = "2026-11-22T00:00:00.000000Z"
+    after = "2026-11-22T00:00:00.000001Z"
+    bounds = (lower, upper)
+    original = "e" * 64
+    key = b"m" * 32
+    catalog = Mock(enrollment="synthetic-window", source_instance="synthetic-store")
+    scope = {
+        "store_id": "synthetic-guest",
+        "enrollment_id": catalog.enrollment,
+        "source_namespace_ref": protected_ref(
+            key, "native-namespace", catalog.enrollment, catalog.source_instance
+        ),
+        "import_ref": "synthetic-window",
+        "normalization_version": NORMALIZER,
+    }
+
+    def clocks(start, end):
+        return {"event_start": start, "event_end": end}
+
+    def sighting(ordinal, root_clock, child_clock):
+        return {
+            "member": 1,
+            "ordinal": ordinal,
+            "revision": f"revision-{ordinal}",
+            "fact": {
+                "identity": f"occurrence-{ordinal}",
+                "pairing": "paired",
+                "clocks": clocks(*root_clock),
+                "components": [
+                    {
+                        "role": "systolic",
+                        "value": "124.5",
+                        "native_ref": None,
+                        "clocks": clocks(*child_clock),
+                    },
+                    {
+                        "role": "diastolic",
+                        "value": "81",
+                        "native_ref": None,
+                        "clocks": clocks(lower, lower),
+                    },
+                ],
+            },
+        }
+
+    in_range = (lower, lower)
+    cases = [
+        (in_range, in_range),
+        ((before, before), (before, before)),
+        ((lower, upper), in_range),
+        ((lower, after), in_range),
+        ((before, after), in_range),
+        (in_range, (lower, upper)),
+        (in_range, (lower, after)),
+        (in_range, (before, after)),
+        (in_range, (before_lower, lower)),
+        ((before_lower, lower), in_range),
+    ]
+    all_sightings = [
+        sighting(n, root_clock, child_clock)
+        for n, (root_clock, child_clock) in enumerate(cases, 1)
+    ]
+    preserved = deepcopy(all_sightings)
+    catalog.blood_pressure_lineage.return_value = all_sightings
+    catalog.blood_pressure_component_lineage.return_value = [
+        (1, "systolic"),
+        (3, "diastolic"),
+    ]
+    catalog.members.return_value = []
+    receipt = {
+        "schema_version": "mse.historical-original-receipt/0.1",
+        "protection": "custodian_verified_ciphertext",
+        "receipt_id": "synthetic-artifact",
+        "observed_top_level_rows": 12,
+        "normalized_bp_top_level_rows": 10,
+        "unnormalized_top_level_rows": 2,
+        "bp_invalid_top_level_rows": 1,
+    }
+    catalog.receipt.return_value = receipt
+    private_ledger = []
+    raw, final = project(
+        catalog,
+        original,
+        scope,
+        bounds,
+        mapping_key=key,
+        record_accounting=private_ledger.append,
+    )
+    ops = json.loads(raw)["ops"]
+    manifest = json.loads(final)["manifest"]
+    test.assertEqual(
+        [(op["event_end"], op["pairing"], len(op["components"])) for op in ops],
+        [
+            (lower, "paired", 2),
+            (before, "paired", 2),
+        ],
+    )
+    test.assertEqual(
+        private_ledger,
+        [
+            {
+                "source_occurrence_count": 12,
+                "normalized_bp_count": 10,
+                "unnormalized_count": 2,
+                "parser_quarantined_bp_count": 1,
+                "snapshot_excluded_count": 8,
+                "emitted_upsert_count": 2,
+            }
+        ],
+    )
+    test.assertEqual(
+        (
+            manifest["source_occurrence_count"],
+            manifest["quarantined_count"],
+            manifest["upsert_count"],
+        ),
+        (12, 1, 2),
+    )
+    test.assertNotIn("snapshot_excluded_count", manifest)
+    test.assertEqual(all_sightings, preserved)
+    test.assertEqual(catalog.blood_pressure_component_lineage.call_count, 2)
+    test.assertEqual(
+        tuple(project(catalog, original, scope, bounds, mapping_key=key)), (raw, final)
+    )
+
+    store = TypedStore(
+        root / "window.sqlite3",
+        scope,
+        bounds,
+        manifest["artifact_receipt_ref"],
+        manifest["member_inventory_ref"],
+        max_batches=2,
+        max_bytes=1024**2,
+    )
+    store.initialize()
+    slipped = json.loads(raw)
+    slipped["ops"][0]["components"][0]["event_end"] = upper
+    with test.assertRaises(ValueError):
+        store.ingest(1, encoded(slipped), lambda: lower)
+    with test.assertRaises(KeyError):
+        store.receipt(1)
+    test.assertEqual(store.ingest(1, raw, lambda: lower)[0], 201)
+    test.assertEqual(store.ingest(2, final, lambda: lower)[0], 201)
+
+    catalog.blood_pressure_lineage.return_value = all_sightings[2:]
+    catalog.receipt.return_value = dict(
+        receipt, observed_top_level_rows=10, normalized_bp_top_level_rows=8
+    )
+    (empty,) = project(
+        catalog,
+        original,
+        scope,
+        bounds,
+        mapping_key=key,
+        record_accounting=private_ledger.append,
+    )
+    empty_batch = json.loads(empty)
+    test.assertTrue(empty_batch["final"])
+    test.assertEqual(empty_batch["batch_seq"], 1)
+    test.assertEqual(empty_batch["manifest"]["upsert_count"], 0)
+    test.assertEqual(private_ledger[-1]["snapshot_excluded_count"], 8)

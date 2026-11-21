@@ -321,11 +321,17 @@ def build_batches(
     yield terminal
 
 
-def project(catalog, original_sha256, scope, bounds, *, mapping_key):
+def project(
+    catalog, original_sha256, scope, bounds, *, mapping_key, record_accounting=None
+):
     """Project only authenticated native sightings, keeping locator mappings off-guest."""
     require(
         isinstance(mapping_key, bytes) and len(mapping_key) == 32,
         "private mapping key required",
+    )
+    require(
+        len(bounds) == 2 and all(map(valid_clock, bounds)) and bounds[0] < bounds[1],
+        "invalid native projection interval",
     )
     receipt = catalog.receipt(original_sha256)
     require(
@@ -339,14 +345,29 @@ def project(catalog, original_sha256, scope, bounds, *, mapping_key):
         "authenticated native origin scope required",
     )
 
+    quarantined = receipt["bp_invalid_top_level_rows"]
+
     def ref(domain, *parts):
         return protected_ref(
             mapping_key, domain, scope["source_namespace_ref"], original_sha256, *parts
         )
 
     def ops():
+        snapshot_excluded = 0
+        emitted = 0
         for lineage in catalog.blood_pressure_lineage(original_sha256):
             fact = lineage["fact"]
+            if any(
+                not valid_interval(
+                    sample["clocks"]["event_start"],
+                    sample["clocks"]["event_end"],
+                    *bounds,
+                )
+                for sample in (fact, *fact["components"])
+            ):
+                snapshot_excluded += 1
+                continue
+            emitted += 1
             occurrence = ref(
                 "native-occurrence",
                 original_sha256,
@@ -392,6 +413,27 @@ def project(catalog, original_sha256, scope, bounds, *, mapping_key):
                 "components": components,
             }
 
+        normalized = receipt["normalized_bp_top_level_rows"]
+        unnormalized = receipt["unnormalized_top_level_rows"]
+        observed = receipt["observed_top_level_rows"]
+        require(
+            emitted + snapshot_excluded == normalized
+            and normalized + unnormalized == observed
+            and 0 <= quarantined <= unnormalized,
+            "native projection does not reconcile to source inventory",
+        )
+        if record_accounting is not None:
+            record_accounting(
+                {
+                    "source_occurrence_count": observed,
+                    "normalized_bp_count": normalized,
+                    "unnormalized_count": unnormalized,
+                    "parser_quarantined_bp_count": quarantined,
+                    "snapshot_excluded_count": snapshot_excluded,
+                    "emitted_upsert_count": emitted,
+                }
+            )
+
     return build_batches(
         scope,
         bounds,
@@ -401,7 +443,7 @@ def project(catalog, original_sha256, scope, bounds, *, mapping_key):
             "native-inventory", receipt["receipt_id"], catalog.members(original_sha256)
         ),
         observed=receipt["observed_top_level_rows"],
-        quarantined=receipt["unnormalized_top_level_rows"],
+        quarantined=quarantined,
     )
 
 
