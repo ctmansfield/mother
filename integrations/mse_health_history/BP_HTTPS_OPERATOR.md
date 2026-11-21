@@ -57,9 +57,16 @@ peer rules, and guest-terminated TLS at explicit port 8448. The SQLite
 file contains plaintext typed BP facts and encrypted originals. Restrict
 the mount and account independently. Verify trusted guest UTC at each
 start and during the lease. Transport lease and sample snapshot are
-independent. Apply the frozen sample-start predicate to admitted API rows
-as specified by ATLAS. Store observed times unmodified. The predicate is
-not a guarantee of transactional HealthKit snapshot completeness.
+independent. The frozen sample window requires the root and each supplied
+BP component to start at or after `sample_start_at` when configured and
+end strictly before `sample_end_before`. A component with invalid clocks
+or an unsupported component ID without clocks causes HTTP 400 for the
+entire page before staging. Preserve the pending client bytes for operator
+review. Observed times are stored unmodified. This candidate binds the
+new sample policy into the store identity and requires fresh state.
+Preserve any earlier store under its original scope. The sample window
+bounds the admitted facts. HealthKit
+snapshot completeness requires separate evidence.
 
 The service-owned private JSON config contains exactly these fields
 (example placeholders, no actual acceptance authority):
