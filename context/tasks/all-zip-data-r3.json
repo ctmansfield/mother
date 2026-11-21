@@ -1,0 +1,138 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-ALL-ZIP-DATA-20261121-07",
+  "task_revision": "2",
+  "observed_at": "2026-11-21T09:35:34Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Explicit user manual-only correction published and read back; stop/boundary messages delivered to all8 existing chats."
+  },
+  "goal": "Make every native Health ZIP member and source record retrievable in the protected database for Mother and Coach, with manual real import.",
+  "scope": [
+    "Universal lossless structured XML records and protected attachment payloads, typed family adapters, database query access and manual full-data import script."
+  ],
+  "acceptance": [
+    "Every member and occurrence reconciled as typed, lossless queryable fallback or retained quarantine; content retrieval, deterministic lineage/replay and actual protected VM query/readback.",
+    "Document typed support separately from full-fidelity availability; prepare reviewed exact-pinned user-manual pipeline."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Source/documentation and ordinary functional tests with explicitly fabricated fixtures; prepare user-run scripts."
+    ],
+    "not_authorized": [
+      "Any automated personal-data access including metadata/hash/mount/unlock/decrypt/parse/query/copy/transfer, private real-bound admission/key preparation or actual service checks.",
+      "Live security probing/adversarial access tests; reproducing or working around restricted requests.",
+      "Main merge, uncontrolled model forwarding, real Nightscout access."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "All personal-data actions and verification/admission/cleanup are user-run only. Preserve actual data/runtime unchanged. Backups/restores deferred."
+  ],
+  "instruction_binding": {
+    "id": "MSE-ALL-ZIP-DATA-20261121-07",
+    "revision": "2",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+    "sha256": "bd8c4b30b44d54f007b849364bbf1951bd8f7a4ad724cd6aacb61cf4b48f1c14",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "ALL-ZIP-MANUAL-BOUNDARY-R2",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+      "sha256": "bd8c4b30b44d54f007b849364bbf1951bd8f7a4ad724cd6aacb61cf4b48f1c14"
+    },
+    "source": "source",
+    "tests_performed": [
+      "Canonical revision2 posted and exact readback confirmed; all8 chat stop/boundary deliveries accepted."
+    ],
+    "limitations": [
+      "Individual ACKs pending; delivery does not prove in-flight work stopped. Universal implementation/manual artifact still pending."
+    ],
+    "requested_decision": "Only genuine native export or grant steps when ready.",
+    "next_action": "#next_action"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-ALL-ZIP-DATA-20261121-07",
+      "revision": "2",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7060675355",
+      "sha256": "bd8c4b30b44d54f007b849364bbf1951bd8f7a4ad724cd6aacb61cf4b48f1c14"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "all-personal-data-manual",
+      "value": "Every personal-data step including read-only checks and admissions is manual/user-owned.",
+      "source": "source",
+      "supersedes": [
+        "agent-private-read-only-checks"
+      ],
+      "reason": "Explicit user correction after restricted-content alert."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "PUSHED",
+      "detail": "Universal PR64 de9cf992 published; exact independent review assigned.",
+      "source": "source"
+    },
+    "test": {
+      "status": "PENDING",
+      "detail": "All8hosted checks pass; author32local/32extracted reported; independent review and actual guest pending.",
+      "source": "source"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge.",
+      "source": "source"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "No real all-data destination activated; existing live pilot preserved.",
+      "source": "source"
+    },
+    "runtime": {
+      "status": "NOT_IMPORTED",
+      "detail": "Successful prior local BP/catalog import does not establish full-data availability.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Exact all-family schemas, fallback/blob query interfaces, storage capacity and coverage reconciliation."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "ATLAS contract, FORGE store/adapters, ORACLE queries, PHOENIX storage, NICKY manual artifact, SENTINEL security, PROVENANCE completeness, LONESTAR board."
+  ],
+  "next_action": {
+    "role": "GADGET and eight existing owners",
+    "action": "Obtain worker ACKs, continue source/fabricated functional work, and prepare transparent manual full-data pipeline without personal-data access."
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/all-zip-data-manual-r2.json",
+      "sha256": "bd8c4b30b44d54f007b849364bbf1951bd8f7a4ad724cd6aacb61cf4b48f1c14",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact comment readback.",
+        "result": "Posted and visible; individual ACKs separate.",
+        "limitations": [
+          "No personal-data action performed."
+        ],
+        "observed_at": "2026-11-21T09:35:34Z"
+      }
+    }
+  }
+}
