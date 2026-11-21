@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import sqlite3
 import stat
+import subprocess
 import sys
 from datetime import timedelta
 from time import monotonic
@@ -99,6 +100,20 @@ def load_config(path):
     ):
         raise ValueError("invalid selected synthetic allowlist")
     return value
+
+
+def clock_synchronized():
+    """Check the guest clock's systemd synchronization state without changing it."""
+    try:
+        result = subprocess.run(
+            ["/usr/bin/timedatectl", "show", "--property=NTPSynchronized", "--value"],
+            capture_output=True,
+            timeout=1,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.stdout.strip() == b"yes"
 
 
 class PilotClock:
@@ -311,6 +326,7 @@ def main():
             allowed_artifact_sha256=config.get("allowed_artifact_sha256"),
             pilot=config["pilot"],
             clock=PilotClock(),
+            clock_synchronized=clock_synchronized,
         )
         if args.operation == "init":
             archive.initialize()

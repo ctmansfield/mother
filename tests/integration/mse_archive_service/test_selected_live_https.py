@@ -69,13 +69,14 @@ class SelectedLiveTests(unittest.TestCase):
             }
         }
 
-    def archive(self, pilot=None, cls=SelectedArchive):
+    def archive(self, pilot=None, cls=SelectedArchive, synchronized=None):
         return cls(
             self.state,
             archive_id="pilot-fabricated-archive",
             scope=self.scope,
             pilot=self.pilot if pilot is None else pilot,
             clock=lambda: self.now,
+            clock_synchronized=synchronized,
         )
 
     def body(self, name, records=None, scope=None):
@@ -408,6 +409,59 @@ class SelectedLiveTests(unittest.TestCase):
         self.assertEqual(self.request("GET", OP + "receipts/one", "reader")[0], 429)
         self.now = LATER
         self.assertEqual(self.request("GET", OP + "receipts/one", "reader")[0], 401)
+
+    def test_collector_clock_tolerance_keeps_authoritative_window_exact(self):
+        strict = self.archive()
+        strict.initialize()
+        strict.prepare_release()
+        pilot = replace(self.pilot, collector_clock_tolerance_ms=2000)
+        tolerant = self.archive(pilot, synchronized=lambda: True)
+        unavailable = self.archive(pilot, synchronized=lambda: False)
+        self.start(tolerant)
+        point = dict(
+            self.records[0],
+            event_start="2026-11-21T01:00:02.000000Z",
+            event_end="2026-11-21T01:00:02.000000Z",
+            collector_received_at="2026-11-21T01:00:02.000000Z",
+        )
+        raw = self.body("bound", [point])
+        with self.assertRaisesRegex(ValueError, "collector clock"):
+            strict.put("bound", raw)
+        with self.assertRaisesRegex(PilotClosed, "synchronized UTC"):
+            unavailable.put("bound", raw)
+        with self.assertRaises(KeyError):
+            strict.get("bound")
+
+        status, response = self.request("PUT", BATCH + "bound", "phone", raw)
+        self.assertEqual(status, 200)
+        receipt = json.loads(response)
+        self.assertEqual(receipt["mother_received_at"], NOW)
+        self.assertEqual(tolerant.original("bound"), raw)
+        exact = json.loads(tolerant.export(1, 1))["view"]["rows"][0]["record"]
+        self.assertEqual(exact, point)
+
+        for name, changes in (
+            ("beyond-bound", {"collector_received_at": "2026-11-21T01:00:02.000001Z"}),
+            ("end-after-collection", {"event_end": "2026-11-21T01:00:02.000001Z"}),
+            ("historical-start", {"event_start": BEFORE}),
+        ):
+            with self.subTest(name=name):
+                body = self.body(name, [dict(point, **changes)])
+                self.assertEqual(
+                    self.request("PUT", BATCH + name, "phone", body)[0], 400
+                )
+                with self.assertRaises(KeyError):
+                    tolerant.get(name)
+
+        self.now = "2026-11-22T23:59:59.999999Z"
+        at_end = dict(point, event_start=END, event_end=END, collector_received_at=END)
+        with self.assertRaisesRegex(ValueError, "collector clock"):
+            tolerant.put("reported-at-end", self.body("reported-at-end", [at_end]))
+        self.now = END
+        with self.assertRaises(PilotClosed):
+            tolerant.put("server-at-end", self.body("server-at-end", [point]))
+        with self.assertRaisesRegex(ValueError, "tolerance"):
+            replace(self.pilot, collector_clock_tolerance_ms=2001)
 
     def test_cli_accepts_explicit_private_port_and_refuses_wildcard(self):
         config = self.root / "config.json"

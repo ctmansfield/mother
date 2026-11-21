@@ -43,7 +43,8 @@ evidence expiry can be later and remain finite.
     "end": null,
     "enabled": false,
     "max_commits": 20000,
-    "reserve_bytes": 1073741824
+    "reserve_bytes": 1073741824,
+    "collector_clock_tolerance_ms": 0
   },
   "grants": {
     "phone": {"sha256": "<digest>", "expires_at": "<UTC with six fractional digits>"},
@@ -88,6 +89,24 @@ true. For intentional stop, remove phone ingress and set `enabled` false
 before restarting. The first enabled startup records an immutable window.
 No restart extends it. The passive cutoff latch persists when observed;
 trusted UTC and external phone ingress expiry still need operator verification.
+
+## Collector clock policy
+
+Omitting `collector_clock_tolerance_ms` or setting it to 0 preserves strict
+admission. A reviewed enrollment can set a whole number of milliseconds
+from 1 to 2000. Before using a nonzero setting, verify the time source and
+measured phone/guest offset in restricted custody. The selected service
+requires the guest's `timedatectl` synchronization flag to be affirmative
+for each affected PUT. An unavailable, negative or timed-out check denies
+the PUT before custody. Synchronization status alone does not measure skew.
+
+The bound applies only to reported collector time relative to the server's
+receipt time. Both reported and server times must still be inside the
+immutable pilot window. Source completion must precede or equal the
+reported collector time. Exact bytes and reported clocks are preserved.
+There is no tolerance on server cutoff, data durability or receipt
+durability. The optional setting is configuration-only. Existing archive
+layout and original/receipt schema are unchanged.
 
 ## Request and evidence behavior
 

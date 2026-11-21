@@ -91,6 +91,7 @@ class Pilot:
     enabled: bool
     max_commits: int
     reserve_bytes: int
+    collector_clock_tolerance_ms: int = 0
 
     def __post_init__(self):
         if not isinstance(self.enrollment_id, str) or not TOKEN.fullmatch(
@@ -105,6 +106,11 @@ class Pilot:
             or not 32 * 1024**2 <= self.reserve_bytes <= 1024**4
         ):
             raise ValueError("invalid pilot storage bounds")
+        if (
+            type(self.collector_clock_tolerance_ms) is not int
+            or not 0 <= self.collector_clock_tolerance_ms <= 2000
+        ):
+            raise ValueError("invalid selected collector clock tolerance")
         if self.start is None and self.end is None and not self.enabled:
             return
         if parse_clock(self.end) - parse_clock(self.start) != timedelta(hours=48):
@@ -114,9 +120,18 @@ class Pilot:
         if not self.enabled or not self.start <= now < self.end:
             raise PilotClosed("selected pilot is closed")
 
-    def validate_records(self, records, now):
+    def validate_records(self, records, now, *, clock_synchronized=False):
+        self.writable(now)
+        received = parse_clock(now)
+        tolerance = timedelta(milliseconds=self.collector_clock_tolerance_ms)
+        if tolerance and not clock_synchronized:
+            raise PilotClosed("selected collector tolerance requires synchronized UTC")
         for record in records:
-            if not self.start <= record["collector_received_at"] <= now:
+            observed = record["collector_received_at"]
+            if (
+                not self.start <= observed < self.end
+                or parse_clock(observed) - received > tolerance
+            ):
                 raise ValueError("selected collector clock outside pilot")
             if record["operation"] == "upsert" and not (
                 self.start
@@ -166,6 +181,7 @@ class SelectedArchive:
         allowed_artifact_sha256=None,
         pilot=None,
         clock=_clock,
+        clock_synchronized=None,
     ):
         self.root = Path(root).absolute()
         self.path = self.root / "selected-healthkit.sqlite3"
@@ -197,6 +213,7 @@ class SelectedArchive:
             raise ValueError("invalid selected synthetic grant")
         self.pilot = pilot
         self.clock = clock
+        self.clock_synchronized = clock_synchronized
         self.archive_id = archive_id
         self.scope = dict(scope)
         identity = {
@@ -467,7 +484,15 @@ class SelectedArchive:
             self.pilot.writable(received)
         records = self._parse(batch, original)
         if self.pilot is not None:
-            self.pilot.validate_records(records, received)
+            self.pilot.validate_records(
+                records,
+                received,
+                clock_synchronized=bool(
+                    self.pilot.collector_clock_tolerance_ms
+                    and self.clock_synchronized is not None
+                    and self.clock_synchronized()
+                ),
+            )
         rows = list(self._rows(records))
         pending_sequence = None
         with self._connection(write=True) as db:
