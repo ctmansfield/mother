@@ -1,0 +1,147 @@
+{
+  "schema": "context-projection-task",
+  "version": 2,
+  "record_kind": "source_projection",
+  "task_id": "MSE-LIVE-PILOT-PREP-20261121-04",
+  "task_revision": "2",
+  "observed_at": "2026-11-21T04:12:32Z",
+  "source_freshness": {
+    "state": "observed_at_publication",
+    "sync_state": "SOURCE_REVIEWED",
+    "detail": "Directive and final owning reports read back. Device profile removal is user-confirmed."
+  },
+  "goal": "Implement expanded selected HealthKit collection and archival retention in the next app candidate.",
+  "scope": [
+    "Next app source and signed build; additive archive contract and source adapters; synthetic qualification."
+  ],
+  "acceptance": [
+    "Selected 14 types, collector preservation, all-type synthetic archive/export lineage, archival history semantics and live transmission disabled by default."
+  ],
+  "authorization": {
+    "state": "explicit_user_instruction",
+    "allowed": [
+      "Select high-value types and implement next app/source candidate with archival retention."
+    ],
+    "not_authorized": [
+      "Live health upload, device install, runtime migration, new route, main merge or LLM forwarding."
+    ],
+    "source": "source"
+  },
+  "constraints": [
+    "Preserve collector and accepted evidence. Backups/restores remain deferred. Existing startup/CI/reproduction task continues."
+  ],
+  "instruction_binding": {
+    "id": "MSE-LIVE-PILOT-PREP-20261121-04",
+    "revision": "1",
+    "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056948768",
+    "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759",
+    "ref": "source"
+  },
+  "report": {
+    "report_id": "LIVE-PILOT-PREP-CANDIDATE-R2",
+    "status": "IN_PROGRESS",
+    "instruction_ref": {
+      "id": "MSE-LIVE-PILOT-PREP-20261121-04",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056948768",
+      "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759"
+    },
+    "tests_performed": [
+      "Independent 42 host tests, collector preservation and strict signed product binding. Actual Swift selected-type bytes\u2192offline adapter\u2192retained original/receipt/history/current export matched."
+    ],
+    "limitations": [
+      "No device install/live endpoint or physical availability/background acceptance. Source bundle aliases do not distinguish devices sharing a bundle. Formal loader separate."
+    ],
+    "requested_decision": "None for source/build preparation.",
+    "next_action": "#next_action",
+    "source": "report"
+  },
+  "receipt": {
+    "state": "VISIBLE-NOT-ACKNOWLEDGED",
+    "instruction_binding": {
+      "id": "MSE-LIVE-PILOT-PREP-20261121-04",
+      "revision": "1",
+      "source": "https://github.com/ctmansfield/mother/pull/23#issuecomment-7056948768",
+      "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759"
+    },
+    "source": "source"
+  },
+  "decisions": [
+    {
+      "id": "archival-retention",
+      "value": "No automatic age purge of accepted exported originals and revision history; current views reflect explicit tombstones.",
+      "source": "source",
+      "supersedes": [],
+      "reason": "Explicit user archival retention selection."
+    }
+  ],
+  "state": {
+    "code": {
+      "status": "SIGNED_CANDIDATE",
+      "detail": "All 14 selected types in signed cf698870; separate test-only revisions do not change production source.",
+      "source": "source"
+    },
+    "test": {
+      "status": "HOST_QUALIFIED",
+      "detail": "42 independently reproduced host tests; signed source/product checked; actual Swift all-type envelope accepted/reopened/exported by offline adapter. Physical acquisition pending.",
+      "source": "source"
+    },
+    "merge": {
+      "status": "UNMERGED",
+      "detail": "No main merge authorized.",
+      "source": "source"
+    },
+    "deploy": {
+      "status": "UNCHANGED",
+      "detail": "Existing archive and phone remain unchanged.",
+      "source": "source"
+    },
+    "runtime": {
+      "status": "NOT_ACTIVATED",
+      "detail": "Live transfer remains disabled; existing phone relay closed.",
+      "source": "source"
+    }
+  },
+  "unknowns": [
+    "Per-type implementation and physical background behavior pending candidate; exact live pilot window not set."
+  ],
+  "conflicts": [],
+  "blockers": [],
+  "dependencies": [
+    "ATLAS selected-type contract; FORGE CI prerequisite; ORACLE candidate; independent review."
+  ],
+  "next_action": {
+    "action": "Preserve signed candidate; complete remaining independent source acceptance and prepare separately scoped physical pilot launch prerequisites.",
+    "role": "GADGET and existing owners"
+  },
+  "refs": {
+    "source": {
+      "path": "evidence/live-pilot-prep-source-r1.json",
+      "sha256": "2358d55bd5b129f63adc5b632b5bca561d01bed5adc25f26405ae183c22b1759",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Authenticated exact comment readback.",
+        "result": "Directive published and visible.",
+        "limitations": [
+          "No completion implied."
+        ],
+        "observed_at": "2026-11-21T04:04:22Z"
+      }
+    },
+    "report": {
+      "path": "evidence/live-pilot-prep-report-r2.json",
+      "sha256": "9e5a375f8fee394cd75917e74163410b6822ad060e23728ff58b2ee9c11ace55",
+      "observation": {
+        "kind": "github_readback",
+        "environment": "GitHub",
+        "method": "Read exact PM checkpoint with owning evidence links.",
+        "result": "Candidate and synthetic compatibility reported; no live activation.",
+        "limitations": [
+          "No recipient acknowledgement implied."
+        ],
+        "observed_at": "2026-11-21T04:12:32Z"
+      }
+    }
+  }
+}

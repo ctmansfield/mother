@@ -18,8 +18,8 @@
       "sha256": "49b6fc4aa6a4a387ffc2a78880e888ef6fe4bc2b6eb12c390e49d2d2c9fab03a"
     },
     "MSE-LIVE-PILOT-PREP-20261121-04": {
-      "path": "tasks/live-pilot-prep-r1.json",
-      "sha256": "b8fc5762f0b198b3993493fdc58006a7727b55b7050edc99f6da04f090f474cf"
+      "path": "tasks/live-pilot-prep-r2.json",
+      "sha256": "0ea53e72a957694de43e0c7597d179806d71c777572059029d774592249432cf"
     }
   },
   "version": 1
