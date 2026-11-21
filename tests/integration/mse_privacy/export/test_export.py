@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+import traceback
 
 from integrations.healthbridge.ingest import ingest_capture
 from integrations.mse_ingest import Scope
@@ -37,7 +38,8 @@ class AnalyticalExportTests(unittest.TestCase):
             "id": "a0000000-0000-4000-8000-000000000001",
             "kind": "Heart rate", "value": 64.25, "unit": "bpm",
             "start": 1, "end": 2, "receivedAt": 9,
-            "source": "source-name-marker", "bundleID": "bundle.marker",
+            "source": "/synthetic/source-path-marker", "bundleID": "bundle.marker",
+            "extension-key-marker/private": "extension-value-marker",
         }
         hr = dict(row, kind="Heart rate")
         sdnn = dict(row, id="a0000000-0000-4000-8000-000000000002",
@@ -51,6 +53,7 @@ class AnalyticalExportTests(unittest.TestCase):
         deleted = "a0000000-0000-4000-8000-000000000003"
         raw = json.dumps({"readings": [hr, sdnn, sdnn2, sdnn3, sparse, zero, negative], "anchors": {}, "tombstones": {deleted: 10},
                           "backfillStart": 0}).encode()
+        self.raw = raw
         self.delivery = ingest_capture(
             self.ledger(), raw, batch_id="batch-marker", capture_id="capture-marker",
             capture_kind="full_file",
@@ -111,9 +114,18 @@ class AnalyticalExportTests(unittest.TestCase):
             "relative_time_binning", "some_inputs_excluded", "some_outputs_suppressed",
             "value_aggregation_and_rounding",
         ])
-        text = json.dumps(output)
+        self.assertEqual(set(output), {
+            "schema_version", "purpose", "policy_version", "projection_version",
+            "time_basis", "view_id", "rows", "projection_loss",
+        })
+        self.assertIn(b"extension-value-marker", self.raw)
+        self.assertTrue(any("extension-key-marker" in str(loss)
+                            for loss in self.delivery.export["losses"]))
+        text = json.dumps(output) + repr(self.binding) + repr(self.exporter)
         for forbidden in (
-            "subject-marker", "source-marker", "source-name-marker", "bundle.marker",
+            "subject-marker", "source-marker", "source-path-marker", "bundle.marker",
+            "extension-key-marker", "extension-value-marker", "recipient-marker",
+            self.credentials["writer"],
             "archive-marker", "a0000000", "2001-01", "batch-marker", "capture-marker",
             self.snapshot["snapshot_sha256"], self.delivery.receipt["artifact_sha256"],
             str(self.root),
@@ -159,6 +171,18 @@ class AnalyticalExportTests(unittest.TestCase):
         with self.assertRaisesRegex(ExportDenied, "^Analytical export denied$"):
             self.export(status_only=True)
 
+    def test_projection_reserves_before_snapshot_load_and_status_does_not(self):
+        original = self.custody.issue_view
+        def record_reservation(credential):
+            self.opens.append("reservation")
+            return original(credential)
+        self.custody.issue_view = record_reservation
+        self.export()
+        self.assertEqual(self.opens, ["reservation", "snapshot", "ledger"])
+        self.opens.clear()
+        self.export(status_only=True)
+        self.assertEqual(self.opens, ["snapshot", "ledger"])
+
     def test_empty_interval_emits_no_channel_or_absence_claim(self):
         self.snapshot = self.ledger().build_snapshot(
             measurement_start="2001-02-01T00:00:00.000000Z",
@@ -182,4 +206,6 @@ class AnalyticalExportTests(unittest.TestCase):
         with self.assertRaisesRegex(ExportDenied, "^Analytical export denied$") as caught:
             self.exporter.export(self.credentials["writer"], fail)
         self.assertTrue(caught.exception.__suppress_context__)
+        formatted = "".join(traceback.format_exception(caught.exception))
+        self.assertNotIn("private/path/and-source-marker", formatted)
         self.assertEqual(self.opens, [])

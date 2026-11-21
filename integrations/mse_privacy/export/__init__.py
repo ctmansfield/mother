@@ -65,6 +65,10 @@ class AnalyticalExporter:
                 raise ExportDenied("Analytical export denied")
             # Do not open or parse any restricted input before authenticating.
             self._authorize(credential)
+            view_id = None
+            if not status_only:
+                view_id = self._custody.issue_view(credential)
+                self._authorize(credential, view_id)
             snapshot = self._snapshot(load_snapshot())
             start = _instant(snapshot["measurement_start"])
             end = _instant(snapshot["measurement_end"])
@@ -82,8 +86,6 @@ class AnalyticalExporter:
                 self._authorize(credential)
                 return {"status": "available"}
             rows, losses = _aggregate(snapshot, start, end)
-            self._authorize(credential)
-            view_id = self._custody.issue_view(credential)
             self._authorize(credential, view_id)
             self._custody.put_projection(credential, view_id, {
                 "schema_version": "mse.analytics-view/0.1",
