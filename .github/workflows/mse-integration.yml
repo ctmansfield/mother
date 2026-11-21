@@ -38,7 +38,8 @@ jobs:
           MSE_R3_DEPENDENCY_ROOT: ${{ github.workspace }}
           PYTHONPATH: ${{ github.workspace }}/research/mse/reference-v0.1.0/prototype
         run: |
-          python -B -m pytest -q --junitxml="$RUNNER_TEMP/mse-semantic.xml" \
+          export TMPDIR="$(mktemp -d "$RUNNER_TEMP/mse-test.XXXXXX")"
+          python -B -m pytest -q -rs --junitxml="$RUNNER_TEMP/mse-semantic.xml" \
             tests/acceptance/mse_integration tests/integration/healthbridge \
             tests/integration/mse_ingest tests/integration/mse_snapshot
           python - "$RUNNER_TEMP/mse-semantic.xml" <<'PY'
