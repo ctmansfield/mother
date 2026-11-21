@@ -53,13 +53,15 @@ The optional `--diagnostic-category` changes refusal reporting only.
 Use it on a separately reviewed invocation. It prints one static label
 in place of the generic refusal and never renders exception text.
 
-- `ADMISSION`, `ENVIRONMENT` and `ADMISSION_WINDOW` identify preflight
+- `ADMISSION`, `ENVIRONMENT` and `PRECOMMIT_WINDOW` identify preflight
   or precommit authorization and environment phases.
-- `BINDING_OR_AUTHENTICATION` covers input binding, executable pin,
-  identity or ciphertext authentication, and exact plaintext checks.
-- `INVENTORY` identifies rejection while parsing or inventorying the
-  authenticated original. `RESOURCE_LIMIT` and `RUNTIME_LIMIT` identify
-  recognized limits regardless of the phase.
+- `BINDING` covers input binding, the executable and ciphertext pins,
+  and exact plaintext checks. `AUTHENTICATION` identifies an age
+  authentication failure after the ciphertext pin matched.
+- `ARCHIVE_OR_XML` identifies refusal during inventory.
+  `INVENTORY_LIMIT` identifies an approved archive or parser quota.
+  `RESOURCE_LIMIT` covers recognized storage or file limits elsewhere.
+  `RUNTIME_LIMIT` identifies a wall-time limit.
 - `CATALOG` identifies a catalog operation. Older Python SQLite
   bindings may expose only this coarse phase for database capacity errors.
 - `COMMIT` and `READBACK` require receipt reconciliation before any

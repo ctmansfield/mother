@@ -220,7 +220,7 @@ class _HistoryCatalog:
         size = custodian_inputs["plaintext_length"]
         sealed_receipt = custodian_inputs["receipt"]
         if report_phase is not None:
-            report_phase("BINDING_OR_AUTHENTICATION")
+            report_phase("BINDING")
         with authenticate_export(
             limit=self.limits.archive_bytes, **custodian_inputs
         ) as stage:
@@ -248,7 +248,7 @@ class _HistoryCatalog:
                         precommit()
                     return receipt
                 if report_phase is not None:
-                    report_phase("INVENTORY")
+                    report_phase("ARCHIVE_OR_XML")
                 receipt = self._inventory(
                     db, stage, body, size, ciphertext_receipt=sealed_receipt
                 )

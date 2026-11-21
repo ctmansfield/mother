@@ -1,6 +1,6 @@
 """Fabricated native ZIP import and bounded streaming qualification."""
 
-from contextlib import ExitStack, redirect_stderr, redirect_stdout
+from contextlib import ExitStack, nullcontext, redirect_stderr, redirect_stdout
 from hashlib import sha256
 import hmac
 from io import BytesIO, StringIO
@@ -433,16 +433,51 @@ class NativeRunnerTests(unittest.TestCase):
                 plaintext_length=len(malformed),
             ),
         )
+        wrong_key = self.root / "synthetic-wrong-identity"
+        subprocess.run(
+            [age.with_name("age-keygen"), "-pq", "-o", wrong_key],
+            check=True,
+            capture_output=True,
+        )
         cases = (
             (
-                "BINDING_OR_AUTHENTICATION",
+                "BINDING",
                 dict(policy, binding=dict(binding, plaintext_sha256="0" * 64)),
+                nullcontext(),
             ),
-            ("INVENTORY", parser_case),
-            ("RESOURCE_LIMIT", dict(policy, max_top_level_rows=1)),
+            (
+                "AUTHENTICATION",
+                dict(policy, identity_file=str(wrong_key)),
+                nullcontext(),
+            ),
+            ("ARCHIVE_OR_XML", parser_case, nullcontext()),
+            ("INVENTORY_LIMIT", dict(policy, max_top_level_rows=1), nullcontext()),
+            (
+                "PRECOMMIT_WINDOW",
+                policy,
+                patch.object(
+                    native_custodian,
+                    "lease",
+                    side_effect=[None, ValueError("fabricated private marker")],
+                ),
+            ),
+            (
+                "RESOURCE_LIMIT",
+                policy,
+                patch.object(
+                    native_custodian,
+                    "ensure_space",
+                    side_effect=[
+                        None,
+                        native_custodian.HistoryLimit(
+                            "fabricated private resource marker"
+                        ),
+                    ],
+                ),
+            ),
         )
-        for category, selected in cases:
-            with self.subTest(category=category):
+        for category, selected, injected in cases:
+            with self.subTest(category=category), injected:
                 self.assertEqual(
                     run(sign(selected), selected=selected, diagnostic=True),
                     (1, f"Protected native import category {category}\n"),

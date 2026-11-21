@@ -24,6 +24,7 @@ from .catalog import _HistoryCatalog
 from .files import HistoryLimit, private_path
 from .inventory import Limits
 from .native_runner import private_bytes
+from .protected_export import ExportAuthenticationError
 from .vault import DIGEST, TOKEN
 
 DOMAIN = b"mse.native-custodian-admission/0.1\x00"
@@ -201,7 +202,7 @@ def main():
         os.environ["TMPDIR"] = str(scratch)
 
         def precommit():
-            report_phase("ADMISSION_WINDOW")
+            report_phase("PRECOMMIT_WINDOW")
             lease(policy)
             ensure_space(policy, catalog_root)
             report_phase("COMMIT")
@@ -259,6 +260,10 @@ def main():
         if args.diagnostic_category:
             if isinstance(error, TimeoutError):
                 phase = "RUNTIME_LIMIT"
+            elif isinstance(error, ExportAuthenticationError):
+                phase = "AUTHENTICATION"
+            elif isinstance(error, HistoryLimit) and phase == "ARCHIVE_OR_XML":
+                phase = "INVENTORY_LIMIT"
             elif (
                 isinstance(error, HistoryLimit)
                 or getattr(error, "errno", None)
@@ -267,7 +272,7 @@ def main():
                 == getattr(sqlite3, "SQLITE_FULL", 13)
             ):
                 phase = "RESOURCE_LIMIT"
-            elif isinstance(error, sqlite3.Error) and phase == "INVENTORY":
+            elif isinstance(error, sqlite3.Error) and phase == "ARCHIVE_OR_XML":
                 phase = "CATALOG"
             print(f"Protected native import category {phase}", file=sys.stderr)
         else:
