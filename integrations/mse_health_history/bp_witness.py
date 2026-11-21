@@ -1,162 +1,66 @@
-"""Detached Ed25519 witness. Only the custodian runs decryption and signing."""
+"""Prepare an exact r4 callback after custodian-only age authentication."""
 
-import argparse
 import base64
-import json
-import binascii
 from pathlib import Path
-import subprocess
-from tempfile import TemporaryDirectory
 
 from mother.physiology.contracts import canonical_json
 
-from .files import hash_stream, private_path
-from .sealed_page import authenticate_page
+from .sealed_page import MAX_CIPHERTEXT, authenticate_page
+
+BINDINGS = {
+    "archive_id",
+    "enrollment",
+    "source_instance",
+    "through",
+    "stream_id",
+    "feed",
+    "page_seq",
+    "sha256",
+    "byte_length",
+}
 
 
-def _execute(openssl, mode, key, message, sig=None):
-    # Temporary inputs contain only signed custody metadata and a signature.
-    # Decrypted bytes and normalized facts never enter these files.
-    with TemporaryDirectory(prefix="bp-witness-") as directory:
-        root = Path(directory)
-        payload = root / "metadata"
-        payload.write_bytes(message)
-        command = [
-            str(openssl),
-            "pkeyutl",
-            mode,
-            "-rawin",
-            "-inkey",
-            str(key),
-            "-in",
-            str(payload),
-        ]
-        if sig is not None:
-            signature = root / "signature"
-            signature.write_bytes(sig)
-            command.extend(["-pubin", "-sigfile", str(signature)])
-        return subprocess.run(
-            command, capture_output=True, timeout=5, check=True
-        ).stdout
-
-
-class CustodianVerifier:
-    def __init__(self, key, pin, openssl="/usr/bin/openssl"):
-        self.key = Path(key).absolute()
-        self.pin = pin
-        self.openssl = Path(openssl).resolve(strict=True)
-        self.check()
-
-    def check(self):
-        private_path(self.key, directory=False)
-        with self.key.open("rb") as stream:
-            if hash_stream(stream, 8192)[0] != self.pin:
-                raise ValueError("custodian public key pin mismatch")
-
-    def __call__(self, message, signature):
-        try:
-            self.check()
-            if not isinstance(signature, str) or len(signature) != 86:
-                return False
-            raw = base64.b64decode(signature + "==", altchars=b"-_", validate=True)
-            if (
-                len(raw) != 64
-                or base64.urlsafe_b64encode(raw).decode().rstrip("=") != signature
-            ):
-                return False
-            _execute(self.openssl, "-verify", self.key, message, raw)
-            return True
-        except (OSError, ValueError, binascii.Error, subprocess.SubprocessError):
-            return False
-
-
-def authenticate_and_sign(
-    statement, *, expected_binding, signing_key, openssl="/usr/bin/openssl", **inputs
-):
-    """Run with independently trusted binding and keys inside custodian custody."""
-    fields = {
-        "archive_id",
-        "enrollment_id",
-        "source_instance",
-        "feed",
-        "page_seq",
-        "plaintext_sha256",
-        "plaintext_length",
-        "ciphertext_receipt",
-        "typed_receipt_id",
-    }
+def verify_and_prepare(envelope, *, expected, ciphertext_path, **custodian_inputs):
+    """Return callback bytes only after an independent binding and exact decrypt."""
     if (
-        not isinstance(statement, dict)
-        or set(statement) != fields | {"schema"}
-        or statement["schema"] != "bp-history-custodian-witness-v1"
-        or not isinstance(expected_binding, dict)
-        or set(expected_binding) != fields - {"ciphertext_receipt", "typed_receipt_id"}
-        or any(statement[field] != value for field, value in expected_binding.items())
+        set(envelope) != {"witness", "ciphertext_receipt", "ciphertext_base64"}
+        or set(expected) != BINDINGS
+        or set(envelope["witness"])
+        != BINDINGS
+        | {
+            "schema_version",
+            "ciphertext_receipt_id",
+            "ciphertext_sha256",
+            "recipient_fingerprint",
+        }
     ):
-        raise ValueError("custodian statement does not match independent page binding")
+        raise ValueError("BP custody envelope shape mismatch")
+    witness = envelope["witness"]
+    receipt = envelope["ciphertext_receipt"]
+    if (
+        witness["schema_version"] != "mse.historical-bp-custody-witness/0.1"
+        or any(
+            witness[k] != v or type(witness[k]) is not type(v)
+            for k, v in expected.items()
+        )
+        or witness["ciphertext_receipt_id"] != receipt["receipt_id"]
+        or witness["ciphertext_sha256"] != receipt["ciphertext_sha256"]
+        or witness["recipient_fingerprint"] != receipt["recipient_fingerprint"]
+    ):
+        raise ValueError("BP custody binding mismatch")
+    encoded = envelope["ciphertext_base64"]
+    if not isinstance(encoded, str) or len(encoded) > 4 * ((MAX_CIPHERTEXT + 2) // 3):
+        raise ValueError("BP custody ciphertext exceeds bound")
+    pinned_ciphertext = base64.b64decode(encoded, validate=True)
+    with Path(ciphertext_path).open("rb") as stream:
+        if stream.read(MAX_CIPHERTEXT + 1) != pinned_ciphertext:
+            raise ValueError("BP custody ciphertext differs from response")
     plaintext, _ = authenticate_page(
-        **inputs,
-        vault_receipt=statement["ciphertext_receipt"],
-        plaintext_sha256=statement["plaintext_sha256"],
-        plaintext_length=statement["plaintext_length"],
+        ciphertext=ciphertext_path,
+        vault_receipt=receipt,
+        plaintext_sha256=expected["sha256"],
+        plaintext_length=expected["byte_length"],
+        **custodian_inputs,
     )
     plaintext.close()
-    key = Path(signing_key).absolute()
-    private_path(key, directory=False)
-    signature = _execute(openssl, "-sign", key, canonical_json(statement).encode())
-    if len(signature) != 64:
-        raise ValueError("expected Ed25519 witness signature")
-    return {
-        "statement": statement,
-        "signature": base64.urlsafe_b64encode(signature).decode().rstrip("="),
-    }
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    for field in (
-        "statement",
-        "binding",
-        "ciphertext",
-        "signing_key",
-        "identity_file",
-        "age_executable",
-        "age_sha256",
-        "recipient_fingerprint",
-        "openssl",
-    ):
-        parser.add_argument("--" + field.replace("_", "-"), required=True)
-    parser.add_argument("--output", required=True, type=Path)
-    args = vars(parser.parse_args())
-    output = args.pop("output")
-    try:
-        for flag in ("statement", "binding"):
-            path = Path(args[flag]).absolute()
-            private_path(path, directory=False)
-            with path.open("rb") as stream:
-                raw = stream.read(8193)
-            if len(raw) > 8192:
-                raise ValueError("custodian metadata exceeds bound")
-            args[flag] = json.loads(raw)
-        proof = authenticate_and_sign(
-            args.pop("statement"), expected_binding=args.pop("binding"), **args
-        )
-        import os
-
-        with os.fdopen(
-            os.open(
-                output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600
-            ),
-            "wb",
-        ) as result:
-            result.write(canonical_json(proof).encode())
-            result.flush()
-            os.fsync(result.fileno())
-    except (OSError, ValueError, TypeError, subprocess.SubprocessError):
-        print("BP witness refused", file=__import__("sys").stderr)
-        return 1
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+    return canonical_json(witness).encode("utf-8")

@@ -1,6 +1,7 @@
 """Private HTTPS typed BP history service for one finite enrollment."""
 
 import argparse
+import base64
 from datetime import datetime, timedelta, timezone
 from http.server import HTTPServer
 from ipaddress import IPv4Address
@@ -15,17 +16,16 @@ from time import monotonic
 
 from .blood_pressure import source_time
 from .bp_transport import BPStore, FEEDS, MAX_BYTES, MAX_PAGES, Sealer, _key
-from .bp_witness import CustodianVerifier
 from .files import private_path
 from .vault import DIGEST, VaultCapacity, VaultClosed, VaultConflict
 from .vault_server import Handler, PRIVATE, Server, _unique
 
-ROLES = {"upload", "receipt", "export", "custodian"}
+ROLES = {"upload", "receipt", "export"}
 LABEL = r"[A-Za-z0-9][A-Za-z0-9_-]{0,95}"
 PAGE = re.compile(
     rf"/v1/bp-history/enrollments/({LABEL})/streams/({LABEL})/pages/([1-9][0-9]{{0,8}})"
 )
-CUSTODY = re.compile(PAGE.pattern + r"/(custody|ciphertext|commit)")
+CUSTODY = re.compile(PAGE.pattern + r"/custody")
 
 EXPORT = re.compile(
     rf"/v1/bp-history/enrollments/({LABEL})/streams/({LABEL})/export\?from=([1-9][0-9]{{0,8}})&through=([1-9][0-9]{{0,8}})"
@@ -68,7 +68,7 @@ def read_config(path):
     fields = (
         "bind archive_id enrollment_id source_instance streams snapshot "
         "transport_starts_at transport_ends_at enabled max_pages max_bytes reserve_bytes grants "
-        "age_executable age_sha256 recipient_file recipient_sha256 provenance_key_file custodian_public_key_file custodian_public_sha256 openssl_executable"
+        "age_executable age_sha256 recipient_file recipient_sha256 provenance_key_file custodian_ca_file custodian_cert_sha256"
     )
     if not isinstance(config, dict) or set(config) != set(fields.split()):
         raise ValueError("BP config fields mismatch")
@@ -85,7 +85,7 @@ def read_config(path):
         not isinstance(streams, dict)
         or set(streams) != set(FEEDS)
         or not all(map(_key, streams.values()))
-        or streams != {name: name for name in FEEDS}
+        or len(set(streams.values())) != 3
     ):
         raise ValueError("BP enrollment requires three distinct streams")
     snapshot = config["snapshot"]
@@ -113,6 +113,10 @@ def read_config(path):
     ):
         if type(config[field]) is not int or not lo <= config[field] <= hi:
             raise ValueError("invalid BP quota")
+    if not isinstance(config["custodian_cert_sha256"], str) or not DIGEST.fullmatch(
+        config["custodian_cert_sha256"]
+    ):
+        raise ValueError("BP custodian certificate pin required")
     grants = config["grants"]
     if not isinstance(grants, dict) or set(grants) != ROLES:
         raise ValueError("BP requires independent roles")
@@ -150,12 +154,18 @@ class BPHandler(Handler):
         headers = self.headers.get_all("Authorization", [])
         match = BEARER.fullmatch(headers[0]) if len(headers) == 1 else None
         grant = self.server.grants[role]
-        if (
-            match
-            and self.server.store.clock() < grant["expires_at"]
-            and compare_digest(sha256(match[1].encode()).hexdigest(), grant["sha256"])
+        if match and compare_digest(
+            sha256(match[1].encode()).hexdigest(), grant["sha256"]
         ):
-            return True
+            now = self.server.store.clock()
+            if (
+                role == "upload"
+                and now >= self.server.store.config["transport_ends_at"]
+            ):
+                self.reply(403, {"error": "transport_closed"})
+                return False
+            if now < grant["expires_at"]:
+                return True
         self.reply(401, {"error": "unauthorized"})
         return False
 
@@ -187,6 +197,10 @@ class BPHandler(Handler):
         self.reply(code, body)
 
     def do_PUT(self):
+        custody = CUSTODY.fullmatch(self.path)
+        if custody:
+            self._put_custody(custody)
+            return
         match = PAGE.fullmatch(self.path)
         if not match:
             self.reply(404, {"error": "not_found"})
@@ -211,28 +225,42 @@ class BPHandler(Handler):
 
         def put():
             self.server.store.writable()
-            data = bytearray()
-            deadline = monotonic() + 10
-            while len(data) < size:
-                remaining = deadline - monotonic()
-                if remaining <= 0:
-                    raise ValueError("BP body deadline")
-                self.connection.settimeout(min(5, remaining))
-                chunk = self.rfile.read1(min(size - len(data), 65_536))
-                if not chunk:
-                    raise ValueError("BP truncated body")
-                data.extend(chunk)
-            self.connection.settimeout(5)
-            return self.server.store.put(match[2], int(match[3]), bytes(data))
+            data = self._read_body(size)
+            return self.server.store.put(match[2], int(match[3]), data)
 
         self._apply(put)
 
-    def do_POST(self):
-        match = CUSTODY.fullmatch(self.path)
-        if match is None or match[4] != "commit":
-            self.reply(404, {"error": "not_found"})
-            return
-        if not self.grant("custodian") or not self._scope(match):
+    def _read_body(self, size):
+        data = bytearray()
+        deadline = monotonic() + 10
+        while len(data) < size:
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise ValueError("BP body deadline")
+            self.connection.settimeout(min(5, remaining))
+            chunk = self.rfile.read1(min(size - len(data), 65_536))
+            if not chunk:
+                raise ValueError("BP truncated body")
+            data.extend(chunk)
+        self.connection.settimeout(5)
+        return bytes(data)
+
+    def _custodian_principal(self):
+        from hashlib import sha256
+        from hmac import compare_digest
+
+        peer = self.connection.getpeercert(binary_form=True)
+        principal = sha256(peer).hexdigest() if peer else ""
+        if not compare_digest(
+            principal, self.server.store.config["custodian_cert_sha256"]
+        ):
+            self.reply(403, {"error": "custodian_denied"})
+            return None
+        return principal
+
+    def _put_custody(self, match):
+        principal = self._custodian_principal()
+        if not principal or not self._scope(match):
             return
         lengths = self.headers.get_all("Content-Length", [])
         if (
@@ -248,14 +276,16 @@ class BPHandler(Handler):
         def commit():
             self.server.store.writable()
             size = int(lengths[0])
-            raw = self.rfile.read(size)
-            if len(raw) != size:
-                raise ValueError("incomplete witness")
-            proof = json.loads(raw, object_pairs_hook=_unique)
-            if not isinstance(proof, dict) or set(proof) != {"statement", "signature"}:
-                raise ValueError("invalid witness")
+            raw = self._read_body(size)
+            witness = json.loads(raw, object_pairs_hook=_unique)
+            if (
+                not isinstance(witness, dict)
+                or type(witness.get("page_seq")) is not int
+                or type(witness.get("byte_length")) is not int
+            ):
+                raise ValueError("invalid custody witness")
             return self.server.store.commit(
-                match[2], int(match[3]), proof["statement"], proof["signature"]
+                match[2], int(match[3]), witness, principal, raw
             )
 
         self._apply(commit)
@@ -271,12 +301,9 @@ class BPHandler(Handler):
                     try:
                         return 200, self.server.store.receipt(match[2], int(match[3]))
                     except KeyError:
-                        try:
-                            self.server.store.writable()
-                        except VaultClosed:
-                            raise KeyError("BP receipt absent") from None
-                        self.server.store.custody(match[2], int(match[3]))
-                        return 202, {"status": "pending_custodian_verification"}
+                        return 202, self.server.store.pending_lookup(
+                            match[2], int(match[3])
+                        )
 
                 self._apply(read)
         elif export:
@@ -289,18 +316,20 @@ class BPHandler(Handler):
                         ),
                     )
                 )
-        elif custody and custody[4] != "commit":
-            if self.grant("custodian") and self._scope(custody):
-                self._apply(
-                    lambda: (
-                        200,
-                        self.server.store.custody(
-                            custody[2],
-                            int(custody[3]),
-                            ciphertext=custody[4] == "ciphertext",
-                        ),
+        elif custody:
+            if self._custodian_principal() and self._scope(custody):
+
+                def read_custody():
+                    witness, receipt, cipher = self.server.store.custody(
+                        custody[2], int(custody[3])
                     )
-                )
+                    return 200, {
+                        "witness": witness,
+                        "ciphertext_receipt": receipt,
+                        "ciphertext_base64": base64.b64encode(cipher).decode("ascii"),
+                    }
+
+                self._apply(read_custody)
         else:
             self.reply(404, {"error": "not_found"})
 
@@ -328,19 +357,7 @@ def main():
             config["recipient_file"],
             config["recipient_sha256"],
         )
-        verifier = CustodianVerifier(
-            config["custodian_public_key_file"],
-            config["custodian_public_sha256"],
-            config["openssl_executable"],
-        )
-        store = BPStore(
-            args.root,
-            config,
-            sealer,
-            key.read_bytes(),
-            clock=Clock(),
-            verify_custodian=verifier,
-        )
+        store = BPStore(args.root, config, sealer, key.read_bytes(), clock=Clock())
         if args.operation == "init":
             store.initialize()
         else:
@@ -352,6 +369,8 @@ def main():
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             context.minimum_version = ssl.TLSVersion.TLSv1_2
             context.load_cert_chain(args.cert, args.key)
+            context.load_verify_locations(cafile=config["custodian_ca_file"])
+            context.verify_mode = ssl.CERT_OPTIONAL
             with BPServer((args.bind, args.port), store, context) as server:
                 server.serve_forever()
     except KeyboardInterrupt:

@@ -107,13 +107,12 @@ class Sealer:
 
 
 class BPStore:
-    def __init__(self, root, config, sealer, key, *, clock, verify_custodian):
+    def __init__(self, root, config, sealer, key, *, clock):
         self.root = Path(root).absolute()
         self.db = self.root / "bp-history.sqlite3"
         self.config = config
         self.clock = clock
         self.sealer = sealer
-        self.verify_custodian = verify_custodian
         self.normalizer = BloodPressure(config["source_instance"], key)
         self.identity = canonical_json(
             {
@@ -129,12 +128,12 @@ class BPStore:
                     "recipient_sha256",
                     "age_sha256",
                     "max_pages",
-                    "custodian_public_sha256",
+                    "custodian_cert_sha256",
                     "max_bytes",
                     "reserve_bytes",
                 )
             }
-            | {"key_pin": digest(key), "layout": "bp-history-sqlite/2"}
+            | {"key_pin": digest(key), "layout": "bp-history-sqlite/3"}
         )
 
     def writable(self, now=None):
@@ -198,7 +197,7 @@ class BPStore:
             BytesIO(raw), self.config["enrollment_id"], self.config["source_instance"]
         )
         if (
-            page["feed"] != stream
+            self.config["streams"].get(page["feed"]) != stream
             or page["through"] != self.config["snapshot"]["sample_end_before"]
         ):
             raise ValueError("BP page binding mismatch")
@@ -263,7 +262,7 @@ class BPStore:
             "archive_id": self.config["archive_id"],
             "enrollment": page["enrollment"],
             "source_instance": page["source_instance"],
-            "feed": stream,
+            "feed": page["feed"],
             "through": page["through"],
             "sha256": pin,
             "byte_length": len(raw),
@@ -286,7 +285,7 @@ class BPStore:
                 if previous[2] is None:
                     if previous[3] is None:
                         raise BPUnavailable("BP page requires sealed reconciliation")
-                    return 202, {"status": "pending_custodian_verification"}
+                    return 202, self.pending(stream, seq, pin, len(raw))
                 return 200, json.loads(previous[1])
             if db.execute(
                 "SELECT 1 FROM pages WHERE witness IS NULL LIMIT 1"
@@ -365,7 +364,31 @@ class BPStore:
                 "UPDATE pages SET custody_at=? WHERE stream=? AND seq=?",
                 (verified_at, stream, seq),
             )
-        return 202, {"status": "pending_custodian_verification"}
+        return 202, self.pending(stream, seq, pin, len(raw))
+
+    def pending(self, stream, seq, pin, size):
+        return {
+            "schema_version": "mse.historical-bp-page-pending/0.1",
+            "status": "awaiting_custodian_witness",
+            "enrollment": self.config["enrollment_id"],
+            "stream_id": stream,
+            "page_seq": seq,
+            "sha256": pin,
+            "byte_length": size,
+        }
+
+    def pending_lookup(self, stream, seq):
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT digest,raw_size,custody_at FROM pages WHERE stream=? AND seq=?",
+                (stream, seq),
+            ).fetchone()
+        if not row:
+            raise KeyError("BP page absent")
+        self.writable()
+        if not row[2]:
+            raise BPUnavailable("BP custody observation missing")
+        return self.pending(stream, seq, row[0], row[1])
 
     def _raw_receipt(self, stream, seq, cipher):
         record = {
@@ -399,30 +422,35 @@ class BPStore:
         body = json.loads(row[4])
         if body["ciphertext_receipt"] != self._raw_receipt(stream, seq, row[2]):
             raise BPUnavailable("BP custody receipt mismatch")
-        return {
-            "schema": "bp-history-custodian-witness-v1",
+        witness = {
+            "schema_version": "mse.historical-bp-custody-witness/0.1",
             "archive_id": self.config["archive_id"],
-            "enrollment_id": self.config["enrollment_id"],
+            "enrollment": self.config["enrollment_id"],
             "source_instance": self.config["source_instance"],
-            "feed": stream,
+            "through": body["through"],
+            "stream_id": stream,
+            "feed": body["feed"],
             "page_seq": seq,
-            "plaintext_sha256": row[0],
-            "plaintext_length": row[1],
-            "ciphertext_receipt": body["ciphertext_receipt"],
-            "typed_receipt_id": body["receipt_id"],
-        }, row[2]
+            "sha256": row[0],
+            "byte_length": row[1],
+            "ciphertext_receipt_id": body["ciphertext_receipt"]["receipt_id"],
+            "ciphertext_sha256": row[3],
+            "recipient_fingerprint": self.config["recipient_sha256"],
+        }
+        return witness, body["ciphertext_receipt"], row[2]
 
-    def custody(self, stream, seq, *, ciphertext=False):
+    def custody(self, stream, seq):
         with self.connect() as db:
-            return self._custody(db, stream, seq)[int(ciphertext)]
+            witness, receipt, cipher = self._custody(db, stream, seq)
+        return witness, receipt, cipher
 
-    def commit(self, stream, seq, statement, signature):
+    def commit(self, stream, seq, statement, principal, raw_witness):
         self.writable()
-        if not self.verify_custodian(canonical_json(statement).encode(), signature):
-            raise ValueError("invalid BP custodian signature")
+        if principal != self.config["custodian_cert_sha256"]:
+            raise ValueError("wrong custodian principal")
         with self.connect(write=True) as db:
             self.writable()
-            expected, _ = self._custody(db, stream, seq)
+            expected, _, _ = self._custody(db, stream, seq)
             if expected != statement:
                 raise VaultConflict("BP custodian witness mismatch")
             row = db.execute(
@@ -430,13 +458,26 @@ class BPStore:
                 (stream, seq),
             ).fetchone()
             if row[1] is not None:
+                saved = json.loads(row[0])
+                if saved["principal"] != principal or saved["sha256"] != digest(
+                    raw_witness
+                ):
+                    raise VaultConflict("BP witness replay changed")
                 return 200, self.receipt(stream, seq)
             if row[0] is not None:
                 raise BPUnavailable("BP typed decision is sealed")
             db.execute(
                 "UPDATE pages SET custodian_proof=? WHERE stream=? AND seq=?",
                 (
-                    canonical_json({"statement": statement, "signature": signature}),
+                    canonical_json(
+                        {
+                            "statement": statement,
+                            "principal": principal,
+                            "sha256": digest(raw_witness),
+                            "exact_utf8": raw_witness.decode("utf-8"),
+                            "received_at": self.clock(),
+                        }
+                    ),
                     stream,
                     seq,
                 ),

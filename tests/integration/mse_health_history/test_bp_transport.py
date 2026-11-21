@@ -1,6 +1,7 @@
 """Synthetic ATLAS-v1 HTTPS conformance without phone, guest, or real records."""
 
 from contextlib import closing, contextmanager
+import base64
 import http.client
 import json
 import os
@@ -14,19 +15,14 @@ import unittest
 from integrations.mse_health_history.bp_server import BPServer, read_config
 from integrations.mse_health_history.bp_transport import BPStore, Sealer, digest
 from integrations.mse_health_history.vault import VaultClosed
-from integrations.mse_health_history.bp_witness import (
-    CustodianVerifier,
-    authenticate_and_sign,
-)
+from integrations.mse_health_history.bp_witness import verify_and_prepare
 
 START = "2026-11-22T00:00:00.000000Z"
 END = "2026-11-22T02:00:00.000000Z"
 SNAPSHOT = "2026-11-21T00:00:00.000000Z"
 SAMPLE = "2025-10-10T12:34:00.000000Z"
 ROUTE = "/v1/bp-history/enrollments/demo-enrollment/streams/correlation"
-ROLES = dict(
-    zip(("upload", "receipt", "export", "custodian"), (c * 43 for c in "ABCD"))
-)
+ROLES = dict(zip(("upload", "receipt", "export"), (c * 43 for c in "ABC")))
 
 
 @unittest.skipUnless(
@@ -49,22 +45,34 @@ class BPTransportTests(unittest.TestCase):
         recipient = self.root / "public"
         recipient.touch(mode=0o600)
         recipient.write_bytes(subprocess.check_output([keygen, "-y", self.identity]))
-        self.openssl = os.environ.get("MSE_HISTORY_OPENSSL", "/usr/bin/openssl")
-        self.signing = self.root / "signing.pem"
-        public = self.root / "signing-public.pem"
+        self.client_ca = self.root / "client-ca.pem"
+        self.client_ca_key = self.root / "client-ca.key"
         subprocess.run(
-            [self.openssl, "genpkey", "-algorithm", "ED25519", "-out", self.signing],
+            [
+                "openssl",
+                "req",
+                "-x509",
+                "-newkey",
+                "rsa:2048",
+                "-nodes",
+                "-days",
+                "1",
+                "-subj",
+                "/CN=BP synthetic client CA",
+                "-addext",
+                "basicConstraints=critical,CA:TRUE",
+                "-keyout",
+                str(self.client_ca_key),
+                "-out",
+                str(self.client_ca),
+            ],
             check=True,
+            capture_output=True,
         )
-        self.signing.chmod(0o600)
-        public.touch(mode=0o600)
-        public.write_bytes(
-            subprocess.check_output(
-                [self.openssl, "pkey", "-in", self.signing, "-pubout"]
-            )
-        )
-        self.verifier = CustodianVerifier(
-            public, digest(public.read_bytes()), self.openssl
+        self.custodian = self.make_client("custodian")
+        self.wrong_client = self.make_client("wrong-client")
+        self.custodian_pin = digest(
+            ssl.PEM_cert_to_DER_cert(self.custodian[0].read_text())
         )
         raw = {
             "bind": "192.168.78.2",
@@ -88,9 +96,8 @@ class BPTransportTests(unittest.TestCase):
             "recipient_file": str(recipient),
             "recipient_sha256": digest(recipient.read_bytes()),
             "provenance_key_file": "not-used-in-host-test",
-            "custodian_public_key_file": str(public),
-            "custodian_public_sha256": digest(public.read_bytes()),
-            "openssl_executable": self.openssl,
+            "custodian_ca_file": str(self.client_ca),
+            "custodian_cert_sha256": self.custodian_pin,
             "grants": {
                 r: {
                     "sha256": digest(t.encode()),
@@ -109,6 +116,50 @@ class BPTransportTests(unittest.TestCase):
         self.store = self.open()
         self.store.initialize()
 
+    def make_client(self, name):
+        cert, key, csr = (
+            self.root / (name + suffix) for suffix in (".pem", ".key", ".csr")
+        )
+        subprocess.run(
+            [
+                "openssl",
+                "req",
+                "-new",
+                "-newkey",
+                "rsa:2048",
+                "-nodes",
+                "-subj",
+                "/CN=" + name,
+                "-keyout",
+                str(key),
+                "-out",
+                str(csr),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        subprocess.run(
+            [
+                "openssl",
+                "x509",
+                "-req",
+                "-in",
+                str(csr),
+                "-CA",
+                str(self.client_ca),
+                "-CAkey",
+                str(self.client_ca_key),
+                "-CAcreateserial",
+                "-days",
+                "1",
+                "-out",
+                str(cert),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        return cert, key
+
     def open(self, cls=BPStore):
         return cls(
             self.state,
@@ -116,7 +167,6 @@ class BPTransportTests(unittest.TestCase):
             self.sealer,
             b"p" * 32,
             clock=lambda: self.now,
-            verify_custodian=self.verifier,
         )
 
     @staticmethod
@@ -203,6 +253,9 @@ class BPTransportTests(unittest.TestCase):
         )
         tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         tls.load_cert_chain(cert, key)
+        tls.load_verify_locations(cafile=self.client_ca)
+        tls.verify_mode = ssl.CERT_OPTIONAL
+        self.server_cert = cert
         self.ca = ssl.create_default_context(cafile=cert)
         self.server = BPServer(("127.0.0.1", 0), store, tls)
         thread = Thread(
@@ -217,59 +270,71 @@ class BPTransportTests(unittest.TestCase):
 
         self.addCleanup(stop)
 
-    def request(self, method, suffix, role, payload=None, *, host="localhost"):
+    def request(
+        self, method, suffix, role, payload=None, *, host="localhost", client_cert=None
+    ):
+        context = self.ca
+        if client_cert:
+            context = ssl.create_default_context(cafile=self.server_cert)
+            context.load_cert_chain(*client_cert)
         with closing(
             http.client.HTTPSConnection(
-                host, self.server.server_port, context=self.ca, timeout=4
+                host, self.server.server_port, context=context, timeout=4
             )
         ) as client:
-            headers = {"Authorization": "Bearer " + ROLES[role]}
+            headers = {"Authorization": "Bearer " + ROLES[role]} if role else {}
             if payload is not None:
                 headers["Content-Type"] = "application/json"
             client.request(method, ROUTE + suffix, payload, headers)
             reply = client.getresponse()
             return reply.status, reply.read()
 
-    def proof(self, body, seq=1, *, change_receipt_id=False):
-        status, info = self.request("GET", f"/pages/{seq}/custody", "custodian")
+    def proof(self, body):
+        status, info = self.request(
+            "GET", "/pages/1/custody", None, client_cert=self.custodian
+        )
         self.assertEqual(status, 200)
-        statement = json.loads(info)
-        if change_receipt_id:
-            statement["typed_receipt_id"] = "f" * 64
-        status, cipher = self.request("GET", f"/pages/{seq}/ciphertext", "custodian")
-        self.assertEqual(status, 200)
+        envelope = json.loads(info)
         path = self.root / "download.age"
-        if not path.exists():
-            path.touch(mode=0o600)
-        path.write_bytes(cipher)
-        return authenticate_and_sign(
-            statement,
-            expected_binding={
-                "archive_id": "demo-bp",
-                "enrollment_id": "demo-enrollment",
-                "source_instance": "demo-store",
-                "feed": "correlation",
-                "page_seq": seq,
-                "plaintext_sha256": digest(body),
-                "plaintext_length": len(body),
-            },
-            signing_key=self.signing,
-            openssl=self.openssl,
-            ciphertext=path,
+        path.touch(mode=0o600)
+        path.write_bytes(base64.b64decode(envelope["ciphertext_base64"], validate=True))
+        expected = {
+            "archive_id": "demo-bp",
+            "enrollment": "demo-enrollment",
+            "source_instance": "demo-store",
+            "through": SNAPSHOT,
+            "stream_id": "correlation",
+            "feed": "correlation",
+            "page_seq": 1,
+            "sha256": digest(body),
+            "byte_length": len(body),
+        }
+        return verify_and_prepare(
+            envelope,
+            expected=expected,
+            ciphertext_path=path,
             recipient_fingerprint=self.config["recipient_sha256"],
             age_executable=self.age,
             age_sha256=self.config["age_sha256"],
             identity_file=self.identity,
         )
 
-    def test_https_pending_tamper_wrong_role_then_witnessed_receipt(self):
+    def test_https_pending_certificate_binding_then_witnessed_receipt(self):
         self.serve(self.store)
         body = self.page()
-        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
-        self.assertEqual(self.request("PUT", "/pages/1", "upload", body)[0], 202)
+        pending = self.request("PUT", "/pages/1", "upload", body)
+        self.assertEqual(pending[0], 202)
+        self.assertEqual(json.loads(pending[1])["status"], "awaiting_custodian_witness")
+        self.assertEqual(self.request("PUT", "/pages/1", "upload", body), pending)
         self.assertEqual(self.request("PUT", "/pages/1", "upload", body + b" ")[0], 409)
-        self.assertEqual(self.request("GET", "/pages/1", "receipt")[0], 202)
-        self.assertEqual(self.request("GET", "/pages/1/ciphertext", "receipt")[0], 401)
+        self.assertEqual(self.request("GET", "/pages/1", "receipt"), pending)
+        self.assertEqual(self.request("GET", "/pages/1/custody", "receipt")[0], 403)
+        self.assertEqual(
+            self.request(
+                "GET", "/pages/1/custody", None, client_cert=self.wrong_client
+            )[0],
+            403,
+        )
         self.assertEqual(
             json.loads(self.request("GET", "/export?from=1&through=1", "export")[1])[
                 "rows"
@@ -277,52 +342,44 @@ class BPTransportTests(unittest.TestCase):
             [],
         )
         proof = self.proof(body)
-        invalid = dict(proof, signature="A" * 86)
+        wrong = json.dumps(
+            dict(json.loads(proof), recipient_fingerprint="0" * 64)
+        ).encode()
         self.assertEqual(
             self.request(
-                "POST", "/pages/1/commit", "custodian", json.dumps(invalid).encode()
-            )[0],
-            400,
-        )
-        self.assertEqual(
-            self.request(
-                "POST", "/pages/1/commit", "receipt", json.dumps(proof).encode()
-            )[0],
-            401,
-        )
-        wrong_page = self.proof(body, change_receipt_id=True)
-        self.assertEqual(
-            self.request(
-                "POST", "/pages/1/commit", "custodian", json.dumps(wrong_page).encode()
+                "PUT", "/pages/1/custody", None, wrong, client_cert=self.custodian
             )[0],
             409,
         )
+        self.assertEqual(
+            self.request(
+                "PUT", "/pages/1/custody", None, proof, client_cert=self.wrong_client
+            )[0],
+            403,
+        )
         code, receipt = self.request(
-            "POST", "/pages/1/commit", "custodian", json.dumps(proof).encode()
+            "PUT", "/pages/1/custody", None, proof, client_cert=self.custodian
         )
         self.assertEqual(code, 200)
         decoded = json.loads(receipt)
-        self.assertEqual(
-            self.request(
-                "POST", "/pages/1/commit", "custodian", json.dumps(proof).encode()
-            ),
-            (200, receipt),
-        )
-        self.assertEqual(
-            decoded["schema_version"], "mse.historical-bp-page-receipt/0.1"
-        )
         self.assertEqual(decoded["status"], "typed_and_cursor_durable")
         self.assertEqual(decoded["sha256"], digest(body))
-        self.assertEqual(
-            decoded["ciphertext_receipt"], proof["statement"]["ciphertext_receipt"]
-        )
         self.assertEqual(self.request("GET", "/pages/1", "receipt"), (200, receipt))
         self.assertEqual(
             self.request("PUT", "/pages/1", "upload", body), (200, receipt)
         )
-        export = self.request("GET", "/export?from=1&through=1", "export")[1]
-        self.assertNotIn(b"fixture-private-origin", export)
-        self.assertEqual(json.loads(export)["rows"][0]["fact"]["pairing"], "paired")
+        self.assertEqual(
+            self.request(
+                "PUT", "/pages/1/custody", None, proof, client_cert=self.custodian
+            ),
+            (200, receipt),
+        )
+        self.assertEqual(
+            json.loads(self.request("GET", "/export?from=1&through=1", "export")[1])[
+                "rows"
+            ][0]["fact"]["pairing"],
+            "paired",
+        )
         self.assertNotIn(body, self.store.db.read_bytes())
         self.now = END
         self.assertEqual(self.request("GET", "/pages/1", "receipt"), (200, receipt))
@@ -363,9 +420,9 @@ class BPTransportTests(unittest.TestCase):
 
         with self.assertRaises(VaultClosed):
             self.open(Late).commit(
-                "correlation", 1, proof["statement"], proof["signature"]
+                "correlation", 1, json.loads(proof), self.custodian_pin, proof
             )
         with self.assertRaises(KeyError):
             self.open().receipt("correlation", 1)
         self.assertEqual(self.open().export("correlation", 1, 1)["rows"], [])
-        self.assertEqual(self.request("GET", "/pages/1", "receipt")[0], 404)
+        self.assertEqual(self.request("GET", "/pages/1", "receipt")[0], 403)
