@@ -76,7 +76,9 @@ python -B -m integrations.mse_archive_service.selected_server serve \
   --bind "$assigned_guest_ipv4" --port 8446 --cert "$leaf_chain" --key "$leaf_key"
 ```
 
-Run `init` once. It refuses a populated root. Ordinary start and restart use
+Run `init` once. It refuses a populated root. This release uses
+`selected-healthkit-pilot-sqlite/2` and refuses earlier staged layouts on
+reopen. Preserve any earlier qualification root and stage in a fresh one. Ordinary start and restart use
 `serve` with the same configured identity. Explicit private IPv4 and port
 are required, and a wildcard is refused. Verify hostname and CA against the
 client-facing private hostname and use guest-terminated TLS. The service
@@ -101,15 +103,20 @@ trusted UTC and external phone ingress expiry still need operator verification.
   start and observed by the server before cutoff are admitted. Deletes
   require an already accepted or same-batch eligible upsert under the same
   metric/UUID key. There is no old data import or boundary clipping.
-- A full-sync custody transaction is followed by a durable-time check.
-  Only a transaction observed durable inside the window can receive a
-  publication record. An over-cutoff or interrupted custody transaction
-  keeps any durable raw bytes sealed but unpublished. They do not appear
-  in normalized reads or advance a terminal receipt. A pending transaction
-  blocks new admission for independent reconciliation. Do not delete,
-  replay, or normalize it automatically. Stop phone access at cutoff and
-  retain the root and restricted evidence. A response lost near cutoff
-  can only be resolved by authorized historical operator readback.
+- Full-sync custody and receipt transactions each need an in-window
+  verification after SQLite commit returns. The final witness records when
+  the already-durable receipt was observed. A crash or cutoff before either
+  observation leaves durable bytes and any candidate receipt sealed and
+  absent from operator receipt, original and export endpoints. No restart
+  infers a witness from an unwitnessed candidate. A pending transaction
+  blocks new admission for independent reconciliation.
+- A witness can prove only an already-durable in-window receipt. If
+  witness persistence or the response reaches cutoff, the phone receives
+  no success. Authorized operator readback can reconcile a witnessed
+  pre-cutoff receipt historically. The witness cannot add a batch or
+  change the receipt or its sequence. Stop phone access at cutoff and
+  retain the root and restricted evidence. Do not delete, replay, or
+  normalize incomplete custody automatically.
 - Reader GET uses `/v2/archive/operator/receipts/{batch_id}` or
   `/v2/archive/operator/rows?from=1&through=1`. Exporter uses
   `/v2/archive/operator/export` with the same bounds. Evidence GET uses

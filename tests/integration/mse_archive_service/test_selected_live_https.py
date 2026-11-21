@@ -290,33 +290,108 @@ class SelectedLiveTests(unittest.TestCase):
             self.archive().put("rollback-clock", self.body("rollback-clock", [point]))
         self.assertEqual(self.archive().get("point")["status"], "normalized")
 
-    def test_inflight_durable_after_cutoff_is_never_published(self):
+    def assert_cutoff_during_commit(self, targeted_phase):
         owner = self
 
         class LateCommit(SelectedArchive):
+            writes = 0
+
             @contextmanager
             def _connection(self, *, write=False):
                 with super()._connection(write=write) as db:
                     yield db
                 if write:
-                    owner.now = END
+                    self.writes += 1
+                    if self.writes == targeted_phase:
+                        owner.now = END
 
         archive = self.archive()
         archive.initialize()
         archive.prepare_release()
+        initial = self.records[0]
+        archive.put("prior", self.body("prior", [initial]))
+        deletion = {
+            key: initial[key]
+            for key in ("metric", "native_id", "collector_received_at")
+        }
+        deletion["operation"] = "delete"
         late = self.archive(cls=LateCommit)
-        with self.assertRaises(PilotClosed):
-            late.put("late-durable", self.body("late-durable"))
+        self.start(late)
+        body = self.body("late-durable", [deletion])
+        self.assertEqual(
+            self.request("PUT", BATCH + "late-durable", "phone", body)[0], 403
+        )
+        for role, path in (
+            ("reader", "receipts/late-durable"),
+            ("evidence", "originals/late-durable"),
+        ):
+            self.assertEqual(self.request("GET", OP + path, role)[0], 404)
+        for role, path in (("reader", "rows"), ("exporter", "export")):
+            status, data = self.request("GET", OP + path + "?from=2&through=2", role)
+            self.assertEqual(status, 200)
+            self.assertEqual(json.loads(data)["view"]["rows"], [])
+            status, data = self.request(
+                "GET", OP + path + "?from=1&through=2&mode=current", role
+            )
+            self.assertEqual(status, 200)
+            self.assertEqual(
+                [row["record"] for row in json.loads(data)["view"]["rows"]], [initial]
+            )
+        reopened = self.archive()
+        reopened.prepare_release()
         with self.assertRaises(KeyError):
-            self.archive().get("late-durable")
-        self.assertEqual(json.loads(archive.export(1, 1))["view"]["rows"], [])
-        with sqlite3.connect(archive.path) as db:
+            reopened.get("late-durable")
+        with closing(sqlite3.connect(archive.path)) as db:
             self.assertEqual(
-                db.execute("SELECT COUNT(*) FROM batches").fetchone(), (1,)
+                db.execute("SELECT original FROM batches WHERE sequence=2").fetchone(),
+                (body,),
             )
             self.assertEqual(
-                db.execute("SELECT COUNT(*) FROM pilot_publication").fetchone(), (0,)
+                db.execute(
+                    "SELECT COUNT(*) FROM pilot_publication WHERE sequence=2 AND receipt_verified_at IS NOT NULL"
+                ).fetchone(),
+                (0,),
             )
+            self.assertEqual(
+                db.execute(
+                    "SELECT COUNT(*) FROM pilot_publication WHERE sequence=2"
+                ).fetchone(),
+                (targeted_phase - 1,),
+            )
+
+    def test_cutoff_after_custody_commit_withholds_receipt_and_views(self):
+        self.assert_cutoff_during_commit(1)
+
+    def test_cutoff_after_receipt_commit_withholds_receipt_and_views(self):
+        self.assert_cutoff_during_commit(2)
+
+    def test_cutoff_after_witness_preserves_already_durable_receipt(self):
+        owner = self
+
+        class LateResponse(SelectedArchive):
+            writes = 0
+
+            @contextmanager
+            def _connection(self, *, write=False):
+                with super()._connection(write=write) as db:
+                    yield db
+                if write:
+                    self.writes += 1
+                    if self.writes == 3:
+                        owner.now = END
+
+        archive = self.archive()
+        archive.initialize()
+        archive.prepare_release()
+        frozen_body = self.body("already-durable")
+        with self.assertRaises(PilotClosed):
+            self.archive(cls=LateResponse).put("already-durable", frozen_body)
+        reopened = self.archive()
+        receipt = reopened.get("already-durable")
+        self.assertEqual(receipt["committed_at"], NOW)
+        self.assertEqual(receipt["commit_sequence"], 1)
+        self.assertEqual(reopened.original("already-durable"), frozen_body)
+        self.assertGreater(len(json.loads(reopened.export(1, 1))["view"]["rows"]), 0)
 
     def test_capacity_rate_and_expiry(self):
         archive = self.archive(replace(self.pilot, max_commits=1))

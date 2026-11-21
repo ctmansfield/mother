@@ -207,6 +207,7 @@ class SelectedArchive:
             "processing_version": PROCESSING,
         }
         if pilot is not None:
+            identity["layout"] = "selected-healthkit-pilot-sqlite/2"
             identity["enrollment_id"] = pilot.enrollment_id
             identity["lane"] = "synthetic" if synthetic else "live"
         self.identity = canonical_json(identity)
@@ -256,7 +257,9 @@ class SelectedArchive:
                 db.execute(
                     """CREATE TABLE pilot_publication (
                         sequence INTEGER PRIMARY KEY REFERENCES batches(sequence),
-                        durable_at TEXT NOT NULL
+                        durable_at TEXT NOT NULL,
+                        receipt_verified_at TEXT
+                            CHECK(receipt_verified_at IS NULL OR receipt_verified_at>=durable_at)
                     )"""
                 )
         self.check_startup()
@@ -476,11 +479,12 @@ class SelectedArchive:
                     raise PilotClosed("selected release is not registered")
                 if db.execute(
                     """SELECT 1 FROM batches b LEFT JOIN pilot_publication p
-                       ON p.sequence=b.sequence WHERE p.sequence IS NULL LIMIT 1"""
+                       ON p.sequence=b.sequence
+                       WHERE p.receipt_verified_at IS NULL LIMIT 1"""
                 ).fetchone():
                     raise PendingAcceptance("selected custody requires reconciliation")
                 last = db.execute(
-                    "SELECT durable_at FROM pilot_publication ORDER BY sequence DESC LIMIT 1"
+                    "SELECT receipt_verified_at FROM pilot_publication ORDER BY sequence DESC LIMIT 1"
                 ).fetchone()
                 if last is not None and received < last[0]:
                     raise PilotClosed("selected clock regressed")
@@ -548,8 +552,22 @@ class SelectedArchive:
                     (canonical_json(receipt), pending_sequence),
                 )
                 db.execute(
-                    "INSERT INTO pilot_publication VALUES (?,?)",
+                    "INSERT INTO pilot_publication VALUES (?,?,NULL)",
                     (pending_sequence, durable_at),
+                )
+                self.pilot.writable(self.clock())
+            # The receipt transaction has returned from SQLite FULL-sync commit.
+            # Persist only a witness of that already-durable receipt; a restart
+            # cannot infer the observation from an unwitnessed database row.
+            verified_at = self.clock()
+            self.pilot.writable(verified_at)
+            if verified_at < durable_at:
+                raise PilotClosed("selected clock regressed at receipt boundary")
+            with self._connection(write=True) as db:
+                self.pilot.writable(self.clock())
+                db.execute(
+                    "UPDATE pilot_publication SET receipt_verified_at=? WHERE sequence=?",
+                    (verified_at, pending_sequence),
                 )
                 self.pilot.writable(self.clock())
             self.pilot.writable(self.clock())
@@ -566,17 +584,18 @@ class SelectedArchive:
         receipt = json.loads(receipt_json)
         if self.pilot is not None:
             publication = db.execute(
-                "SELECT durable_at FROM pilot_publication WHERE sequence=?", (sequence,)
+                "SELECT durable_at,receipt_verified_at FROM pilot_publication WHERE sequence=?",
+                (sequence,),
             ).fetchone()
-            if publication is None:
+            if publication is None or publication[1] is None:
                 raise KeyError("selected receipt is unpublished")
             release = db.execute(
                 "SELECT start,end FROM pilot_release WHERE id=1"
             ).fetchone()
             if (
                 release is None
-                or publication != (receipt["committed_at"],)
-                or not release[0] <= publication[0] < release[1]
+                or publication[0] != receipt["committed_at"]
+                or not release[0] <= publication[0] <= publication[1] < release[1]
             ):
                 raise ValueError("selected publication or window integrity mismatch")
         if _digest(original) != artifact:
@@ -639,13 +658,15 @@ class SelectedArchive:
             else:
                 query = """SELECT b.batch FROM batches b JOIN pilot_publication p
                            ON b.sequence=p.sequence
-                           WHERE b.sequence BETWEEN ? AND ? ORDER BY b.sequence"""
+                           WHERE p.receipt_verified_at IS NOT NULL
+                             AND b.sequence BETWEEN ? AND ? ORDER BY b.sequence"""
             batches = db.execute(query, (start, through)).fetchall()
             prior_sighting = """SELECT 1 FROM sightings WHERE metric=? AND native_id=?
                                 AND sequence<=? AND (operation='delete' OR sequence<?)"""
             if self.pilot is not None:
                 prior_sighting += (
-                    " AND sequence IN (SELECT sequence FROM pilot_publication)"
+                    " AND sequence IN (SELECT sequence FROM pilot_publication"
+                    " WHERE receipt_verified_at IS NOT NULL)"
                 )
             for (batch,) in batches:
                 receipt, _, records, sightings = self._read(db, batch)
