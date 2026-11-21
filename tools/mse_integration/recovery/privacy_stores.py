@@ -1,0 +1,297 @@
+"""Rehearse selected pinned privacy-store recovery boundaries with synthetic data."""
+
+import argparse
+from contextlib import closing
+from dataclasses import replace
+from datetime import datetime, timedelta, timezone
+from io import BytesIO
+import json
+from pathlib import Path
+import sqlite3
+import subprocess
+import sys
+import tarfile
+from tempfile import TemporaryDirectory
+import unittest
+import uuid
+
+BASE = "b7aae4f2216d27f0544eab9fe9698286fe49d716"
+CUSTODY = "26895ab4cf090c75f5540dbab1f16d1f7d91db02"
+EXPORT = "ef8dded78ffdce643db394fa3f6ef91e3fa36854"
+LINEAGE = "05b571ad8610d21d99bd2dacc070d063c3ff1f1c"
+REFERENCE = "research/mse/reference-v0.1.0/prototype"
+CONTRACT = "docs/mse/integration/contracts/offline-integration.schema.json"
+
+
+def git(checkout, *args):
+    return subprocess.check_output(["git", "-C", str(checkout), *args])
+
+
+def load_sources(checkout, root):
+    for pin, *paths in (
+        (
+            BASE,
+            "integrations/healthbridge",
+            "integrations/mse_ingest",
+            "integrations/mse_snapshot",
+            "mother",
+            REFERENCE,
+            CONTRACT,
+        ),
+        (CUSTODY, "integrations/mse_privacy/custody"),
+        (EXPORT, "integrations/mse_privacy/export"),
+        (LINEAGE, "integrations/mse_privacy/lineage"),
+    ):
+        with tarfile.open(
+            fileobj=BytesIO(git(checkout, "archive", pin, *paths))
+        ) as bundle:
+            bundle.extractall(root, filter="data")
+    sys.path[:0] = [str(root), str(root / REFERENCE)]
+
+
+def sqlite_copy(source, destination):
+    """Copy a quiesced, fixture-owned member to an exclusive local pathname."""
+    if source.is_symlink() or not source.is_file():
+        raise ValueError("Expected a regular synthetic database")
+    destination.touch(mode=0o600, exist_ok=False)
+    with closing(sqlite3.connect(source.as_uri() + "?mode=ro", uri=True)) as reader:
+        with closing(sqlite3.connect(destination)) as target:
+            reader.backup(target)
+            if target.execute("PRAGMA journal_mode=DELETE").fetchone() != ("delete",):
+                raise ValueError("Expected a standalone backup member")
+            if target.execute("PRAGMA integrity_check").fetchone() != ("ok",):
+                raise ValueError("Invalid backup member")
+
+
+def rehearse(checkout, source_root):
+    load_sources(checkout, source_root)
+    from integrations.healthbridge.ingest import ingest_capture
+    from integrations.mse_ingest import Scope
+    from integrations.mse_ingest.connected import ConnectedIngest, NORMALIZER_VERSION
+    from integrations.mse_privacy.custody import (
+        AccessDenied,
+        Grant,
+        StoreUnavailable,
+        open_custody,
+    )
+    from integrations.mse_privacy.custody.projection import POLICY, PURPOSE
+    from integrations.mse_privacy.export import AnalyticalExporter, ProjectionGrant
+    from integrations.mse_privacy.lineage import LineageDenied, LineageResolver
+    from mse.contracts import canonical
+
+    class PublishedComponentRecovery(unittest.TestCase):
+        def setUp(self):
+            temporary = TemporaryDirectory(prefix="mse-privacy-real-stores-")
+            self.addCleanup(temporary.cleanup)
+            self.root = Path(temporary.name).resolve()
+            self.roots = {
+                name + "_root": self.directory(name)
+                for name in ("evidence", "vault", "projection")
+            }
+            self.registry = self.directory("registry")
+            self.backup_root = self.directory("backup")
+            self.now = datetime(2026, 11, 21, 3, tzinfo=timezone.utc)
+            self.scope = Scope(
+                "privacy-subject-marker",
+                "healthkit",
+                "privacy-source-marker",
+                "healtharchive",
+            )
+            self.archive_id = "privacy-archive-marker"
+            grant = Grant(
+                "projection_writer",
+                self.scope.fields(),
+                PURPOSE,
+                POLICY,
+                1,
+                "privacy-recipient-marker",
+                self.now + timedelta(hours=1),
+            )
+            self.grants = {
+                "writer": grant,
+                "reader": replace(grant, role="analyst"),
+                "audit": replace(grant, role="lineage_auditor"),
+                "revoke": replace(grant, role="retention_recovery"),
+                "evidence": replace(
+                    grant, role="evidence_writer", purpose="evidence_ingest"
+                ),
+            }
+            self.service, self.creds = self.boot(initialize=True)
+            rows = [
+                dict(
+                    id=str(uuid.uuid4()),
+                    kind="HRV (SDNN)",
+                    value=value,
+                    unit="ms",
+                    start=index + 1,
+                    end=index + 2,
+                    receivedAt=9,
+                    source="private-capture-marker",
+                    bundleID="example.synthetic",
+                )
+                for index, value in enumerate((41.5, 42.5, 43.5))
+            ]
+            self.original = json.dumps(
+                dict(readings=rows, anchors={}, tombstones={}, backfillStart=0)
+            ).encode()
+            self.service.put_evidence(self.creds["evidence"], self.original)
+            self.ledger = ConnectedIngest(
+                self.directory("ledger"),
+                archive_id=self.archive_id,
+                scope=self.scope,
+                schema=json.loads((source_root / CONTRACT).read_text()),
+            )
+            batch = "restore-" + uuid.uuid4().hex
+            delivery = ingest_capture(
+                self.ledger,
+                self.original,
+                batch_id=batch,
+                capture_id=batch,
+                capture_kind="full_file",
+            )
+            snapshot = self.ledger.build_snapshot(
+                measurement_start="2001-01-01T00:00:00.000000Z",
+                measurement_end="2001-01-02T00:00:00.000000Z",
+                knowledge_cutoff_sequence=delivery.receipt["commit_sequence"],
+                normalizer_version=NORMALIZER_VERSION,
+            )
+            self.view = self.service.issue_view(self.creds["writer"])
+            # Historical components expose a preview grant and a distinct storage
+            # reservation. Persist the real aggregate under the reserved view.
+            preview = ProjectionGrant(
+                tuple(self.scope.fields().items()),
+                self.archive_id,
+                snapshot["snapshot_sha256"],
+            )
+            analytical = AnalyticalExporter(self.ledger, preview).export(snapshot)
+            self.payload = dict(analytical, view_id=self.view)
+            self.assertEqual(
+                self.payload["rows"],
+                [
+                    dict(
+                        bucket_index=0, channel="hrv_sdnn", unit="ms", mean_value="42.5"
+                    )
+                ],
+            )
+            self.service.put_projection(self.creds["writer"], self.view, self.payload)
+            self.resolver(self.service).bind(
+                self.creds["writer"],
+                self.view,
+                ledger=self.ledger,
+                snapshot_bytes=canonical(snapshot).encode(),
+                projection_bytes=canonical(self.payload).encode(),
+                max_snapshot_bytes=64_000,
+                max_projection_bytes=16_000,
+            )
+            for name, store in self.stores().items():
+                sqlite_copy(store, self.backup_root / name)
+
+        def directory(self, name):
+            path = self.root / name
+            path.mkdir(mode=0o700)
+            return path
+
+        def stores(self):
+            return {
+                name: root / "store.sqlite3" for name, root in self.roots.items()
+            } | {"registry": self.registry / "lineage.sqlite3"}
+
+        def boot(self, *, initialize=False, grants=None):
+            return open_custody(
+                **self.roots,
+                initialize=initialize,
+                grants=self.grants if grants is None else grants,
+                clock=lambda: self.now,
+            )
+
+        def resolver(self, service):
+            return LineageResolver(
+                self.registry, custody=service, archive_id=self.archive_id
+            )
+
+        def recover(self, *names):
+            for name in names:
+                destination = self.stores()[name]
+                destination.unlink()
+                sqlite_copy(self.backup_root / name, destination)
+
+        def test_real_projection_restore_does_not_expose_raw_or_privileged_lineage(
+            self,
+        ):
+            self.recover("projection_root")
+            service, creds = self.boot()
+            aggregate = service.read_projection(creds["reader"], self.view)
+            self.assertEqual(aggregate, self.payload)
+            text = canonical(aggregate)
+            for marker in (
+                self.scope.subject_id,
+                self.scope.source_instance,
+                "private-capture-marker",
+                "2001-01-01",
+                self.archive_id,
+            ):
+                self.assertNotIn(marker, text)
+            with self.assertRaises(LineageDenied):
+                self.resolver(service).resolve(creds["reader"], self.view)
+            self.assertEqual(
+                self.resolver(service).resolve(creds["audit"], self.view).archive_id,
+                self.archive_id,
+            )
+
+        def test_current_generation_supplied_after_restore_denies_older_view(self):
+            generation = self.service.revoke(self.creds["revoke"])
+            self.recover("vault_root", "projection_root", "registry")
+            current = {
+                name: replace(grant, generation=generation)
+                for name, grant in self.grants.items()
+            }
+            service, creds = self.boot(grants=current)
+            with self.assertRaises(AccessDenied):
+                service.read_projection(creds["reader"], self.view)
+            with self.assertRaises(LineageDenied):
+                self.resolver(service).resolve(creds["audit"], self.view)
+
+        def test_baseline_reopens_old_grants_if_bootstrap_supplies_stale_state(self):
+            self.service.revoke(self.creds["revoke"])
+            self.recover("vault_root", "projection_root", "registry")
+            service, creds = self.boot()
+            # This is the historical defect, not an acceptable recovery path.
+            self.assertEqual(
+                service.read_projection(creds["reader"], self.view), self.payload
+            )
+
+        def test_absent_trusted_grants_deny_reopened_projection(self):
+            self.recover("vault_root", "projection_root", "registry")
+            service, creds = self.boot(grants={})
+            self.assertEqual(creds, {})
+            with self.assertRaises(AccessDenied):
+                service.read_projection(self.creds["reader"], self.view)
+            with self.assertRaises(LineageDenied):
+                self.resolver(service).resolve(self.creds["audit"], self.view)
+
+        def test_baseline_aggregate_with_identity_vault_missing_is_unavailable(self):
+            self.recover("projection_root")
+            service, creds = self.boot()
+            self.stores()["evidence_root"].unlink()
+            self.assertEqual(
+                service.read_projection(creds["reader"], self.view),
+                self.payload,
+            )
+            self.stores()["vault_root"].unlink()
+            with self.assertRaises(StoreUnavailable):
+                service.read_projection(creds["reader"], self.view)
+            with self.assertRaises(LineageDenied):
+                self.resolver(service).resolve(creds["audit"], self.view)
+            with self.assertRaises(StoreUnavailable):
+                self.boot()
+
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(PublishedComponentRecovery)
+    return int(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful())
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--object-store", required=True, type=Path)
+    args = parser.parse_args()
+    with TemporaryDirectory(prefix="mse-privacy-pinned-source-") as source:
+        sys.exit(rehearse(args.object_store.resolve(), Path(source)))
