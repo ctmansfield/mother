@@ -7,11 +7,24 @@ from tempfile import TemporaryDirectory
 import unittest
 from zipfile import ZipFile
 
+from integrations.mse_health_history.blood_pressure import source_time
 from integrations.mse_health_history.catalog import SyntheticHistoryCatalog
 from integrations.mse_health_history.files import CHUNK, InvalidHistory
 
 
 class NativeUniversalTests(unittest.TestCase):
+    def test_native_clock_conversion_accepts_basic_offsets_and_variable_fraction(self):
+        self.assertEqual(
+            source_time("2026-01-01 08:00:00 +1000"),
+            "2025-12-31T22:00:00.000000Z",
+        )
+        self.assertEqual(
+            source_time("2026-01-01T08:00:00.1Z"),
+            "2026-01-01T08:00:00.100000Z",
+        )
+        with self.assertRaises(ValueError):
+            source_time("2026-01-01T08:00:00+0060")
+
     def test_exact_members_ordered_fallback_typed_quarantine_and_reopen(self):
         with TemporaryDirectory() as private:
             root = Path(private).resolve()
@@ -67,6 +80,7 @@ class NativeUniversalTests(unittest.TestCase):
             self.assertEqual(report["source_occurrences"], 10)
             self.assertEqual(
                 report["typed_occurrences"]
+                + report["descriptor_occurrences"]
                 + report["fallback_occurrences"]
                 + report["quarantined_occurrences"],
                 10,
@@ -222,10 +236,10 @@ def verify_universal_transfer(test, root, catalog, artifact, start, end):
             database_bytes=64 * 1024**2,
         )
 
-    def stage(store):
+    def stage(store, raw=None):
         prior = None
-        raw = spool.getvalue()
-        for i in range(manifest["parts"]):
+        raw = spool.getvalue() if raw is None else raw
+        for i in range(store.manifest["parts"]):
             part = raw[i * PART_BYTES : (i + 1) * PART_BYTES]
             digest = sha256(part).hexdigest()
             test.assertEqual(
@@ -275,17 +289,86 @@ def verify_universal_transfer(test, root, catalog, artifact, start, end):
     with test.assertRaises(Indeterminate):
         open_store("late.sqlite3").finish()
 
+    def invalid_structure(kind):
+        frames = [json.loads(line) for line in spool.getvalue().splitlines()]
+        if kind == "nested":
+            index = next(
+                i
+                for i, (table, row) in enumerate(frames)
+                if table == "native_source_elements" and row[6] == "MetadataEntry"
+            )
+            frames[index][1][6] = "rebinding"
+        elif kind == "top":
+            index = next(
+                i
+                for i, (table, row) in enumerate(frames)
+                if table == "native_source_occurrences"
+            )
+            frames[index][1][3] = "wrong-family"
+        else:
+            index = next(
+                i
+                for i, (table, _) in enumerate(frames)
+                if table == "native_source_refs"
+            )
+            del frames[index]
+        raw = b"".join(encoded(frame) + b"\n" for frame in frames)
+        altered = dict(
+            manifest,
+            wire_bytes=len(raw),
+            wire_sha256=sha256(raw).hexdigest(),
+            parts=(len(raw) + PART_BYTES - 1) // PART_BYTES,
+        )
+        store = UniversalStore(
+            root / (kind + ".sqlite3"),
+            altered,
+            trusted_manifest_sha256=sha256(encoded(altered)).hexdigest(),
+            starts=start,
+            ends=end,
+            clock=clock,
+            database_bytes=64 * 1024**2,
+        )
+        store.initialize()
+        stage(store, raw)
+        with test.assertRaises(InvalidHistory):
+            store.finish()
+        with test.assertRaises(KeyError):
+            store.receipt()
+
+    for kind in ("nested", "top", "reference"):
+        invalid_structure(kind)
+
     network = open_store("network.sqlite3")
     network.initialize()
     member = next(
         row for row in catalog.members(artifact) if row["kind"] == "attachment"
     )
+    fallback = next(
+        row
+        for row in catalog.source_occurrences(artifact)
+        if row["source_type"] == "HKClinicalTypeIdentifierLabResultRecord"
+    )
+    element = next(
+        item
+        for item in catalog.source_elements(artifact, fallback["member"])
+        if item["occurrence"] == fallback["ordinal"]
+    )
     verify_universal_https(
-        test, root / "tls", network, spool.getvalue(), start, end, member
+        test,
+        root / "tls",
+        network,
+        spool.getvalue(),
+        start,
+        end,
+        member,
+        fallback,
+        element,
     )
 
 
-def verify_universal_https(test, root, store, spool, start, end, member):
+def verify_universal_https(
+    test, root, store, spool, start, end, member, fallback, element
+):
     """Use actual hostname-verified mTLS over loopback with fabricated records."""
     from hashlib import sha256
     from http.client import HTTPSConnection
@@ -299,7 +382,15 @@ def verify_universal_https(test, root, store, spool, start, end, member):
     from integrations.mse_health_history.native_universal_https import UniversalServer
 
     root.mkdir(mode=0o700)
-    roles = ("writer", "receipt", "source", "mother", "coach")
+    roles = (
+        "writer",
+        "receipt",
+        "source",
+        "mother",
+        "coach",
+        "fallback-grant",
+        "attachment-grant",
+    )
 
     def issue(role, extra):
         cert, key = root / (role + ".pem"), root / (role + ".key")
@@ -350,7 +441,7 @@ def verify_universal_https(test, root, store, spool, start, end, member):
         "units": ["count"],
         "states": ["FabricatedState"],
         "timeless": True,
-        "limit": 4,
+        "limit": 1,
     }
     policies = {
         "mother": dict(
@@ -366,6 +457,31 @@ def verify_universal_https(test, root, store, spool, start, end, member):
             types=["HKCategoryTypeIdentifierSleepAnalysis"],
         ),
     }
+    reviewed = {
+        "fallback-grant": {
+            "purpose": "mother",
+            "audience": "fabricated-audience",
+            "attachment": None,
+            "fallback": {
+                "member": fallback["member"],
+                "ordinal": fallback["ordinal"],
+                "element": element["element"],
+                "fields": ["type"],
+            },
+        },
+        "attachment-grant": {
+            "purpose": "coach",
+            "audience": "fabricated-audience",
+            "fallback": None,
+            "attachment": {
+                "member": member["ordinal"],
+                "sha256": member["sha256"],
+                "start": 1,
+                "before": 5,
+                "budget": 4,
+            },
+        },
+    }
     with patch(
         "integrations.mse_health_history.native_universal_https.PRIVATE",
         (IPv4Network("127.0.0.1/32"),),
@@ -377,6 +493,8 @@ def verify_universal_https(test, root, store, spool, start, end, member):
             grants,
             policies,
             check_storage=lambda: None,
+            cursor_key=b"c" * 32,
+            reviewed=reviewed,
         )
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -425,17 +543,84 @@ def verify_universal_https(test, root, store, spool, start, end, member):
     test.assertEqual(request("receipt", "GET", "/receipt")[0], 404)
     test.assertEqual(sender.transfer(), sender.verify_receipt())
     test.assertEqual(request("receipt", "GET", "/manifest")[0], 200)
+    test.assertEqual(request("mother", "GET", "/source/coverage")[0], 403)
+    coverage_code, coverage_body = request("source", "GET", "/source/coverage")
+    test.assertEqual(coverage_code, 200)
+    test.assertIn("descriptor_occurrences", json.loads(coverage_body))
+    discovery_code, discovery_body = request(
+        "mother", "GET", "/purposes/mother/discovery"
+    )
+    test.assertEqual(discovery_code, 200)
+    test.assertEqual(
+        json.loads(discovery_body)["fields"], {"quantity": ["value", "source_unit"]}
+    )
+    test.assertEqual(request("coach", "GET", "/purposes/mother/discovery")[0], 403)
+
     test.assertEqual(request("coach", "GET", "/purposes/mother")[0], 403)
     test.assertEqual(request("mother", "GET", "/source?member=0&ordinal=0")[0], 403)
     test.assertEqual(request("mother", "GET", "/receipt")[0], 403)
-    for role, expectation in (
-        ("mother", {"value": "9", "source_unit": "count"}),
-        ("coach", {"source_state": "FabricatedState"}),
-    ):
-        status, raw = request(role, "GET", f"/purposes/{role}")
-        test.assertEqual(status, 200)
-        items = json.loads(raw)["rows"]
-        test.assertEqual([item["fields"] for item in items], [expectation])
+    from base64 import urlsafe_b64decode
+
+    status, raw = request("mother", "GET", "/purposes/mother")
+    test.assertEqual(status, 200)
+    first = json.loads(raw)
+    cursor = first["next"]
+    test.assertIsInstance(cursor, str)
+    decoded = urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4))
+    test.assertEqual(len(json.loads(decoded[:-32])), 3)
+    test.assertTrue(all(isinstance(item, str) for item in json.loads(decoded[:-32])))
+    status, raw = request("mother", "GET", "/purposes/mother?after=" + cursor)
+    test.assertEqual(status, 200)
+    second = json.loads(raw)
+    test.assertEqual(
+        {first["rows"][0]["fields"]["value"], second["rows"][0]["fields"]["value"]},
+        {"9", "10"},
+    )
+    test.assertEqual(request("coach", "GET", "/purposes/coach?after=" + cursor)[0], 400)
+    changed = ("B" if cursor[0] == "A" else "A") + cursor[1:]
+    test.assertEqual(
+        request("mother", "GET", "/purposes/mother?after=" + changed)[0], 400
+    )
+    status, raw = request("coach", "GET", "/purposes/coach")
+    test.assertEqual(status, 200)
+    test.assertEqual(
+        [item["fields"] for item in json.loads(raw)["rows"]],
+        [{"source_state": "FabricatedState"}],
+    )
+    fallback_path = (
+        f"/reviewed/fallback-grant/fabricated-audience/fallback/"
+        f"{fallback['member']}/{fallback['ordinal']}/{element['element']}"
+    )
+    test.assertEqual(request("mother", "GET", fallback_path)[0], 403)
+    fallback_status, fallback_raw = request("fallback-grant", "GET", fallback_path)
+    test.assertEqual(fallback_status, 200)
+    test.assertEqual(
+        json.loads(fallback_raw), {"fields": {"type": fallback["source_type"]}}
+    )
+    test.assertEqual(
+        request(
+            "fallback-grant",
+            "GET",
+            fallback_path.replace("fabricated-audience", "other-audience"),
+        )[0],
+        403,
+    )
+    approved_payload = f"/reviewed/attachment-grant/fabricated-audience/payload/{member['ordinal']}?sha256={member['sha256']}"
+    test.assertEqual(
+        request("coach", "GET", approved_payload + "&offset=1&length=4")[0], 403
+    )
+    test.assertEqual(
+        request("attachment-grant", "GET", approved_payload + "&offset=0&length=4")[0],
+        403,
+    )
+    granted, chunk = request(
+        "attachment-grant", "GET", approved_payload + "&offset=1&length=4"
+    )
+    test.assertEqual((granted, len(chunk)), (200, 4))
+    test.assertEqual(
+        request("attachment-grant", "GET", approved_payload + "&offset=1&length=1")[0],
+        413,
+    )
     suffix = f"/source/{member['ordinal']}/payload?sha256={member['sha256']}&offset=0&length={member['byte_length']}"
     test.assertEqual(request("mother", "GET", suffix)[0], 403)
     status, payload = request("source", "GET", suffix)

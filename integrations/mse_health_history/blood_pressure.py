@@ -26,14 +26,28 @@ def source_uuid(value):
 
 
 def source_time(raw):
-    if not isinstance(raw, str) or not re.fullmatch(
-        r"[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2}"
-        r"(?:\.[0-9]{1,6})? ?(?:Z|[+-][0-9]{2}:?[0-9]{2})",
-        raw,
-    ):
+    if not isinstance(raw, str):
         raise ValueError("unusable HealthData clock")
+    match = re.fullmatch(
+        r"([0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2})"
+        r"(?:\.([0-9]{1,6}))? ?(Z|([+-])([0-9]{2}):?([0-9]{2}))",
+        raw,
+    )
+    if match is None:
+        raise ValueError("unusable HealthData clock")
+    base, fraction, zone, sign, hours, minutes = match.groups()
+    if zone == "Z":
+        offset = "+00:00"
+    else:
+        if int(hours) > 23 or int(minutes) > 59:
+            raise ValueError("unusable HealthData offset")
+        offset = f"{sign}{hours}:{minutes}"
+    # Python 3.9 only accepts colon-separated offsets and fixed fractional widths.
+    canonical_input = (
+        f"{base.replace(' ', 'T')}.{(fraction or '').ljust(6, '0')}{offset}"
+    )
     return (
-        datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        datetime.fromisoformat(canonical_input)
         .astimezone(timezone.utc)
         .isoformat(timespec="microseconds")
         .replace("+00:00", "Z")

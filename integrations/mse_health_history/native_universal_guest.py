@@ -84,11 +84,15 @@ def load_policy(path, pin):
             "purposes",
             "start",
             "max_bytes",
+            "reviewed_reads",
+            "cursor_key_file",
+            "cursor_key_sha256",
         }
         and type(guest["port"]) is int
         and 1024 <= guest["port"] <= 65535
         and type(guest["max_bytes"]) is int
-        and guest["max_bytes"] == policy["manifest"]["wire_bytes"],
+        and guest["max_bytes"] == policy["manifest"]["wire_bytes"]
+        and PIN.fullmatch(guest["cursor_key_sha256"]),
         "invalid universal guest configuration",
     )
     return policy
@@ -107,6 +111,11 @@ def main():
         guest = policy["guest"]
         check_storage(policy, preflight=True)
         store, context = open_service(policy, pin)
+        cursor_key = private_bytes(guest["cursor_key_file"], 32)
+        require(
+            compare_digest(sha256(cursor_key).hexdigest(), guest["cursor_key_sha256"]),
+            "universal cursor key pin mismatch",
+        )
         if args.mode == "init":
             store.writable()
             require(
@@ -123,6 +132,8 @@ def main():
             guest["grants"],
             guest["purposes"],
             check_storage=lambda: check_storage(policy, check_reserve=False),
+            cursor_key=cursor_key,
+            reviewed=guest["reviewed_reads"],
         ) as server:
             server.serve_forever()
     except (AttributeError, KeyError, OSError, ValueError, TypeError, sqlite3.Error):
