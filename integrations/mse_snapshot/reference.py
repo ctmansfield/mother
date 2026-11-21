@@ -1,4 +1,5 @@
 """Execute a synthetic snapshot projection through the preserved MSE reference."""
+
 from __future__ import annotations
 
 from hashlib import sha256
@@ -11,7 +12,9 @@ from mse.contracts import ContractError, digest
 from mse.model import replay
 from mse.storage import Store
 
-REFERENCE_CODE_SHA256 = "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1"
+REFERENCE_CODE_SHA256 = (
+    "998ad8654a801945bd0fa10b93de75755bee929317b49b3701584372e0e7dbf1"
+)
 BRIDGE_VERSION = "mse-snapshot-reference/0.1"
 
 
@@ -22,7 +25,9 @@ def _replay_projection(snapshot_bytes: bytes, projection_bytes: bytes) -> dict:
 
     observations, tombstones, metadata = native_replay(projection_bytes)
     if not metadata["synthetic"]:
-        raise ContractError("The offline bridge requires an explicit synthetic projection")
+        raise ContractError(
+            "The offline bridge requires an explicit synthetic projection"
+        )
     observation_ids = {record["observation_id"] for record in observations}
     if len(observation_ids) != len(observations):
         raise ContractError("Projection must select one revision per observation")

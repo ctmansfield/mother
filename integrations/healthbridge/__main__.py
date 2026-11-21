@@ -1,4 +1,5 @@
 """Summarize a bounded, synthetic capture from stdin without retaining it."""
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +22,9 @@ def main() -> int:
     parser.add_argument("--source-instance", required=True)
     parser.add_argument("--batch-id", required=True)
     parser.add_argument("--capture-id", required=True)
-    parser.add_argument("--capture-kind", required=True, choices=("full_file", "partial"))
+    parser.add_argument(
+        "--capture-kind", required=True, choices=("full_file", "partial")
+    )
     for name, ceiling in vars(defaults).items():
         parser.add_argument(
             "--max-" + name.replace("_", "-"),
@@ -31,7 +34,9 @@ def main() -> int:
         )
     args = parser.parse_args()
     requested = {name: getattr(args, "max_" + name) for name in vars(defaults)}
-    if any(not 1 <= value <= getattr(defaults, name) for name, value in requested.items()):
+    if any(
+        not 1 <= value <= getattr(defaults, name) for name, value in requested.items()
+    ):
         parser.error("Limits outside permitted range")
     limits = CaptureLimits(**requested)
     try:
@@ -55,11 +60,15 @@ def main() -> int:
     summary = {
         "artifact_sha256": export["artifact"]["sha256"],
         "byte_length": export["artifact"]["byte_length"],
-        "deletion_count": sum(row["operation"] == "delete" for row in export["revisions"]),
+        "deletion_count": sum(
+            row["operation"] == "delete" for row in export["revisions"]
+        ),
         "export_sha256": export_sha256(export),
         "loss_count": len(export["losses"]),
         "schema_version": export["schema_version"],
-        "upsert_count": sum(row["operation"] == "upsert" for row in export["revisions"]),
+        "upsert_count": sum(
+            row["operation"] == "upsert" for row in export["revisions"]
+        ),
     }
     sys.stdout.buffer.write(canonical_json(summary) + b"\n")
     return 0

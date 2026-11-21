@@ -1,4 +1,5 @@
 """Validate an immutable synthetic HealthArchive capture without writing files."""
+
 from __future__ import annotations
 
 import base64
@@ -10,8 +11,12 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_EVEN, localcontext
 from uuid import UUID
 
-ANCHOR_KEYS = {"heartRate": "Heart rate", "hrvSDNN": "HRV (SDNN)",
-               "Heart rate": "Heart rate", "HRV (SDNN)": "HRV (SDNN)"}
+ANCHOR_KEYS = {
+    "heartRate": "Heart rate",
+    "hrvSDNN": "HRV (SDNN)",
+    "Heart rate": "Heart rate",
+    "HRV (SDNN)": "HRV (SDNN)",
+}
 
 
 @dataclass(frozen=True)
@@ -22,15 +27,33 @@ class CaptureLimits:
     numeric_token_length: int = 256
 
     def __post_init__(self) -> None:
-        for limit in (self.byte_length, self.records, self.depth, self.numeric_token_length):
+        for limit in (
+            self.byte_length,
+            self.records,
+            self.depth,
+            self.numeric_token_length,
+        ):
             if type(limit) is not int or limit <= 0:
                 raise CaptureError("Capture limits must be positive integers")
+
+
 SWIFT_EPOCH = datetime(2001, 1, 1, tzinfo=timezone.utc)
-METRICS = {"Heart rate": ("heart_rate", "bpm", "unknown"),
-           "HRV (SDNN)": ("hrv_sdnn", "ms", "vendor_derived")}
+METRICS = {
+    "Heart rate": ("heart_rate", "bpm", "unknown"),
+    "HRV (SDNN)": ("hrv_sdnn", "ms", "vendor_derived"),
+}
 ARCHIVE_KEYS = {"readings", "anchors", "tombstones", "backfillStart"}
-READING_KEYS = {"id", "kind", "value", "unit", "start", "end", "source",
-                "bundleID", "receivedAt"}
+READING_KEYS = {
+    "id",
+    "kind",
+    "value",
+    "unit",
+    "start",
+    "end",
+    "source",
+    "bundleID",
+    "receivedAt",
+}
 
 
 class CaptureError(ValueError):
@@ -47,7 +70,9 @@ class Number:
         try:
             value = Decimal(self.lexeme)
         except InvalidOperation as exc:
-            raise CaptureError("Number exponent exceeds local normalization limit") from exc
+            raise CaptureError(
+                "Number exponent exceeds local normalization limit"
+            ) from exc
         if not value.is_finite() or abs(value.as_tuple().exponent) > 256:
             raise CaptureError("Number exponent exceeds local normalization limit")
         return value
@@ -103,19 +128,27 @@ def _pointer(base: str, field: str) -> str:
     return base + "/" + field.replace("~", "~0").replace("/", "~1")
 
 
-def _loss(losses: list[dict], field: str, reason: str, locator: str | None = None) -> None:
+def _loss(
+    losses: list[dict], field: str, reason: str, locator: str | None = None
+) -> None:
     finding = {"field": field, "reason": reason}
     finding["locator"] = locator
     losses.append(finding)
 
 
-def _unknown_fields(value: dict, known: set[str], base: str, losses: list[dict]) -> None:
+def _unknown_fields(
+    value: dict, known: set[str], base: str, losses: list[dict]
+) -> None:
     for key in sorted(value.keys() - known):
         _text(key)
-        _loss(losses, "source_extension", "retained_in_original_only", _pointer(base, key))
+        _loss(
+            losses, "source_extension", "retained_in_original_only", _pointer(base, key)
+        )
 
 
-def _date(value: object, field: str, locator: str, losses: list[dict]) -> tuple[str, Decimal]:
+def _date(
+    value: object, field: str, locator: str, losses: list[dict]
+) -> tuple[str, Decimal]:
     seconds = _number(value).decimal()
     with localcontext() as context:
         context.prec = 270
@@ -173,10 +206,13 @@ def _check_depth(text: str, limit: int) -> None:
             depth -= 1
 
 
-def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -> Capture:
+def parse_capture(
+    original: bytes, *, limits: CaptureLimits = CaptureLimits()
+) -> Capture:
     """Parse caller-owned, coherent bytes. Locators refer to these exact bytes."""
     if not isinstance(original, bytes) or not 0 < len(original) <= limits.byte_length:
         raise CaptureError("Expected bounded immutable capture bytes")
+
     def number_token(lexeme: str) -> Number:
         if len(lexeme) > limits.numeric_token_length:
             raise CaptureError("Number exceeds caller capture limit")
@@ -185,10 +221,15 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
     try:
         text = original.decode("utf-8")
         _check_depth(text, limits.depth)
-        archive = _object(json.loads(
-            text, object_pairs_hook=_unique_object,
-            parse_int=number_token, parse_float=number_token, parse_constant=_reject_constant,
-        ))
+        archive = _object(
+            json.loads(
+                text,
+                object_pairs_hook=_unique_object,
+                parse_int=number_token,
+                parse_float=number_token,
+                parse_constant=_reject_constant,
+            )
+        )
     except (UnicodeDecodeError, json.JSONDecodeError, RecursionError):
         raise CaptureError("Invalid UTF-8 JSON capture") from None
     if not ARCHIVE_KEYS <= archive.keys() or not isinstance(archive["readings"], list):
@@ -199,7 +240,9 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
         raise CaptureError("Capture record count exceeds local limit")
     losses: list[dict] = []
     _unknown_fields(archive, ARCHIVE_KEYS, "", losses)
-    backfill, _ = _date(archive["backfillStart"], "backfill_start", "/backfillStart", losses)
+    backfill, _ = _date(
+        archive["backfillStart"], "backfill_start", "/backfillStart", losses
+    )
     anchors = {}
     for metric, encoded in sorted(_object(archive["anchors"]).items()):
         try:
@@ -208,8 +251,12 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
             raise CaptureError("Malformed opaque anchor encoding") from None
         label = ANCHOR_KEYS.get(metric)
         if label is None:
-            _loss(losses, "anchor_sha256", "unmapped_anchor_retained_in_original",
-                  _pointer("/anchors", _text(metric)))
+            _loss(
+                losses,
+                "anchor_sha256",
+                "unmapped_anchor_retained_in_original",
+                _pointer("/anchors", _text(metric)),
+            )
             continue
         if label in anchors:
             raise CaptureError("Ambiguous opaque anchor key")
@@ -242,25 +289,42 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
         end, exact_end = _date(row["end"], "event_end", path + "/end", losses)
         if exact_end < exact_start:
             raise CaptureError("Reversed original measurement interval")
-        received, _ = _date(row["receivedAt"], "collector_received_at", path + "/receivedAt", losses)
+        received, _ = _date(
+            row["receivedAt"], "collector_received_at", path + "/receivedAt", losses
+        )
         observation = {
-            "channel": channel, "original_value": number.lexeme, "original_unit": unit,
-            "value": _decimal_text(value), "unit": unit, "event_start": start,
-            "event_end": end, "collector_received_at": received,
+            "channel": channel,
+            "original_value": number.lexeme,
+            "original_unit": unit,
+            "value": _decimal_text(value),
+            "unit": unit,
+            "event_start": start,
+            "event_end": end,
+            "collector_received_at": received,
             "original_start": _number(row["start"]).lexeme,
             "original_end": _number(row["end"]).lexeme,
             "original_received_at": _number(row["receivedAt"]).lexeme,
-            "source_name": _text(row["source"]), "bundle_id": _text(row["bundleID"]),
-            "epistemic_type": epistemic_type, "device_id": None,
-            "calibration_id": None, "source_available_at": None,
-            "classification_basis": "healthkit_sdnn" if channel == "hrv_sdnn"
-                                    else "capture_derivation_unavailable",
+            "source_name": _text(row["source"]),
+            "bundle_id": _text(row["bundleID"]),
+            "epistemic_type": epistemic_type,
+            "device_id": None,
+            "calibration_id": None,
+            "source_available_at": None,
+            "classification_basis": (
+                "healthkit_sdnn"
+                if channel == "hrv_sdnn"
+                else "capture_derivation_unavailable"
+            ),
             "classification_evidence_sha256": None,
         }
         fact = {
-            "channel": channel, "unit": unit, "value": observation["value"],
-            "start": _decimal_text(exact_start), "end": _decimal_text(exact_end),
-            "source_name": observation["source_name"], "bundle_id": observation["bundle_id"],
+            "channel": channel,
+            "unit": unit,
+            "value": observation["value"],
+            "start": _decimal_text(exact_start),
+            "end": _decimal_text(exact_end),
+            "source_name": observation["source_name"],
+            "bundle_id": observation["bundle_id"],
         }
         # Traversal follows original numeric reading index, so the first
         # complete observation is the representative, regardless of pointer sort.
@@ -268,7 +332,12 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
         if previous[1] != fact:
             raise CaptureError("Ambiguous same-UUID upserts")
         if previous[0] != observation:
-            _loss(losses, "source_sighting", "alternate_sighting_retained_in_original", path)
+            _loss(
+                losses,
+                "source_sighting",
+                "alternate_sighting_retained_in_original",
+                path,
+            )
         previous[2].append(path)
         if value <= 0:
             _loss(losses, "value", "outside_reference_positive_domain", path + "/value")
@@ -279,8 +348,13 @@ def parse_capture(original: bytes, *, limits: CaptureLimits = CaptureLimits()) -
         record_delete(_uuid(raw_id), value, _pointer("/tombstones", raw_id))
 
     return Capture(
-        hashlib.sha256(original).hexdigest(), len(original), backfill,
+        hashlib.sha256(original).hexdigest(),
+        len(original),
+        backfill,
         min((row[0]["event_start"] for row in upserts.values()), default=None),
         max((row[0]["event_end"] for row in upserts.values()), default=None),
-        anchors, upserts, deletions, losses,
+        anchors,
+        upserts,
+        deletions,
+        losses,
     )

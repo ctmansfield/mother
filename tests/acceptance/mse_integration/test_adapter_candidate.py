@@ -15,7 +15,9 @@ class AdapterAcceptance(unittest.TestCase):
         except ModuleNotFoundError as error:
             if error.name not in {"integrations", "integrations.healthbridge"}:
                 raise
-            raise unittest.SkipTest("assemble the pinned HealthBridge adapter candidate")
+            raise unittest.SkipTest(
+                "assemble the pinned HealthBridge adapter candidate"
+            )
         cls.normalize = staticmethod(normalize_capture)
         cls.error = CaptureError
 
@@ -26,8 +28,11 @@ class AdapterAcceptance(unittest.TestCase):
         expected_hash = case.get("source_compatible_sha256", case["sha256"])
         self.assertEqual(hashlib.sha256(raw).hexdigest(), expected_hash)
         export = self.normalize(
-            raw, subject_id="synthetic-acceptance", source_instance="synthetic-store",
-            batch_id=case["batch_id"], capture_id=f"capture-{name}",
+            raw,
+            subject_id="synthetic-acceptance",
+            source_instance="synthetic-store",
+            batch_id=case["batch_id"],
+            capture_id=f"capture-{name}",
             capture_kind="partial" if case["coverage"] == "partial" else "full_file",
         )
         self.assertEqual(export["artifact"]["sha256"], expected_hash)
@@ -39,11 +44,21 @@ class AdapterAcceptance(unittest.TestCase):
             with self.subTest(name=name):
                 case = CASES[name]
                 rows = self.normalize_case(name)["revisions"]
-                upserts = {row["native_id"] for row in rows if row["operation"] == "upsert"}
-                deletes = {row["native_id"] for row in rows if row["operation"] == "delete"}
-                self.assertEqual(upserts, {key.lower() for key, _ in case["observed_revisions"]})
-                self.assertEqual(deletes, {key.lower() for key in case["tombstone_ids"]})
-                self.assertEqual(upserts - deletes, {key.lower() for key in case["live_ids"]})
+                upserts = {
+                    row["native_id"] for row in rows if row["operation"] == "upsert"
+                }
+                deletes = {
+                    row["native_id"] for row in rows if row["operation"] == "delete"
+                }
+                self.assertEqual(
+                    upserts, {key.lower() for key, _ in case["observed_revisions"]}
+                )
+                self.assertEqual(
+                    deletes, {key.lower() for key in case["tombstone_ids"]}
+                )
+                self.assertEqual(
+                    upserts - deletes, {key.lower() for key in case["live_ids"]}
+                )
 
     def test_bad_capture_is_rejected(self):
         for name in ("conflicting-uuid", "malformed"):
