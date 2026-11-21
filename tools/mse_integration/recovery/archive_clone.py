@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -150,6 +151,19 @@ def define(args):
     plan = preflight(args)
     VM_DIR.mkdir(mode=0o711)
     VM_DIR.chmod(0o711)
+    receipt = VM_DIR / "intent.json"
+    fd = os.open(receipt, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as handle:
+        json.dump(
+            {**plan, "seed_sha256": args.seed_sha256, "boot": str(args.boot)}, handle
+        )
+        handle.flush()
+        os.fsync(handle.fileno())
+    directory_fd = os.open(VM_DIR, os.O_DIRECTORY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
     disk = VM_DIR / "system.qcow2"
     # The exclusive new directory contains only this task's state.
     run(
@@ -177,6 +191,37 @@ def define(args):
     run(*VIRSH, "define", "--validate", str(xml))
     defined = ET.fromstring(run(*VIRSH, "dumpxml", NAME, "--inactive"))
     check(defined.findtext("uuid") == str(args.uuid), "Defined UUID mismatch")
+    devices = defined.find("devices")
+    check(devices is not None, "Missing defined devices")
+    disks = devices.findall("disk")
+    check(
+        len(disks) == 1
+        and disks[0].get("device") == "disk"
+        and disks[0].get("type") == "file",
+        "Unexpected defined disk set",
+    )
+    source = disks[0].find("source")
+    driver = disks[0].find("driver")
+    check(
+        source is not None
+        and source.get("file") == str(disk)
+        and driver is not None
+        and driver.get("type") == "qcow2",
+        "Defined disk binding mismatch",
+    )
+    check(
+        not any(devices.findall(tag) for tag in ("hostdev", "filesystem", "graphics")),
+        "Unexpected external device",
+    )
+    chain = json.loads(
+        run("qemu-img", "info", "--output=json", "--backing-chain", str(disk))
+    )
+    check(
+        len(chain) == 1
+        and chain[0]["format"] == "qcow2"
+        and chain[0]["virtual-size"] == 64 * GIB,
+        "Defined disk is not standalone",
+    )
     check(
         not defined.findall("./devices/interface"), "New domain unexpectedly has a NIC"
     )
